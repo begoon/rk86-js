@@ -4,7 +4,7 @@
 Это эмулятор культового компьютера восьмидесятых Радио-86РК на JavaScript'е.
 Эмуляция происходит на уровне команд процессора Intel 8080.
 
-Собранную версию можно запустить с [demin.ws/rk][].
+Собранная версия -- [demin.ws/rk][]
 
 [demin.ws/rk]: http://demin.ws/rk
 
@@ -15,7 +15,7 @@
 
 Например, на Mac:
 
-    open -a "Google Chrome" --args --allow-file-access-from-files index.html
+    open -a "Google Chrome" --args --allow-file-access-from-files file://$PWD/index.html
 
 Старые версии (до 0.6 включительно) доступны на [radio86.googlecode.com][].
 
@@ -23,7 +23,7 @@
 
 Данная версия (1.0 и выше) основана на проекте [i8080-js][].
 
-[i8080-js]: http://github/begoon/i8080-js/
+[i8080-js]: http://github.com/begoon/i8080-js/
 
 [Пост с описанием проекта][].
 
