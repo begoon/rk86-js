@@ -26,7 +26,8 @@ function UI(tape_catalog, runner, memory, autoexec) {
   this.canvas = document.getElementById("canvas");
   this.panel = document.getElementById("back");
 
-  this.screenshot_filename = "rk86-screen.png";
+  this.screenshot_name = "rk86-screen";
+  this.screenshot_count = 1;
 
   if (!this.canvas.getContext) {
     alert("Tag <canvas> is not support is the browser")
@@ -162,7 +163,8 @@ function UI(tape_catalog, runner, memory, autoexec) {
       return;
     }
 
-    this.screenshot_filename = file.name + ".png";
+    this.screenshot_name = file.name;
+    this.screenshot_count = 1;
 
     if (this.load_mode == "load") {
       var sz = file.start + file.image.length - 1;
@@ -202,8 +204,11 @@ function UI(tape_catalog, runner, memory, autoexec) {
 
   this.save_screen = function() {
     var save_screen_this = this;
+    var filename = save_screen_this.screenshot_name + "-" +
+                   save_screen_this.screenshot_count + ".png";
+    save_screen_this.screenshot_count += 1;
     this.canvas.toBlob(function(blob) {
-      saveAs(blob, save_screen_this.screenshot_filename);
+      saveAs(blob, filename);
     });  
   }
   
