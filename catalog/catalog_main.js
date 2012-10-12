@@ -9,16 +9,13 @@ function main() {
   var images = document.getElementsByTagName('img'); 
   for(var i = 0; i < images.length; i++) {
     var img = images[i];
-    if (img.getAttribute("class") == "screen") {
+    if (img.getAttribute("class") == "_screen") {
       img.onmouseover = function() {
         this.setAttribute("original_height", this.height);
-        var preview = document.getElementById("preview");
-        preview.src = this.src;
-        preview.style.visibility = "visible";
+        this.style.height = this.height * 2;
       };
-      img.onmouseout = function() { 
-        var preview = document.getElementById("preview");
-        preview.style.visibility = "hidden";
+      img.onmouseout = function() {
+        this.style.height = this.getAttribute("original_height");
       };
     }
   }

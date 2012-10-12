@@ -66,7 +66,9 @@ function UI(tape_catalog, runner, memory, autoexec) {
     this.runner.cpu.memory.keyboard.reset();
     this.runner.cpu.jump(0xf800);
     console.log("Reset");
-    this.autorun();
+
+    reset_this = this;
+    window.setTimeout(function() { reset_this.autorun(); }, 1000);
   }
 
   this.restart = function() {
@@ -134,7 +136,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
       file.size = file.end - file.start + 1;
       file.image = v.substr(i, file.size);
     }
-    file.entry = (name == "PVO.GAM" ? 0x3100 : file.start);
+    file.entry = (name == "PVO.GAM" ? 0x3400 : file.start);
     return file;
   }
 
@@ -152,6 +154,9 @@ function UI(tape_catalog, runner, memory, autoexec) {
     }
     var file = this.parse_rk86_binary(name, binary);
     this.memory.load_file(file);
+    console.log(file.start, file.end, file.entry)
+    console.log("!!!", file.image.charCodeAt(0));
+    console.log("###", this.memory.buf[1]);
 
     if (this.disassembler_available()) 
       window.frames.disassembler_frame.i8080disasm.refresh(this.memory);
@@ -172,7 +177,9 @@ function UI(tape_catalog, runner, memory, autoexec) {
             "(" + file.start.toString(16) + "-" + sz.toString(16) + "), " +
             "Run by 'G" + file.entry.toString(16) + "'");
     } else {
-      this.runner.cpu.jump(file.start);
+      console.log("Started", file.name, "from", file.entry.toString(16));
+      screen.init_cache();
+      this.runner.cpu.jump(file.entry);
     }
   }
 
