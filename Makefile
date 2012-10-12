@@ -5,8 +5,10 @@ all: build files
 ifeq ($(OS),Windows_NT)
   CC = c:/tcc/tcc
   EXE = .exe
+  OPENER = start
 else
   CC = cc
+  OPENER = open
 endif
 
 build:
@@ -20,11 +22,7 @@ release:
 	7z a rk86js-0.00.zip *.js *.html *.bmp *.md tape/
 
 run:
-ifeq ($(OS),Windows_NT)
-	start index.html
-else
-	open index.html
-endif
+	$(OPENER) index.html
 
 chrome:
 	open -a "Google Chrome" --args \
