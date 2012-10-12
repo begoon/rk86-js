@@ -150,8 +150,6 @@ int main(int argc, char* argv[]) {
     p = line + strlen(line) - 1;
     while (p != line && (*p == '\r' || *p == '\n')) *p-- = 0;
 
-    dump_file(line);
-
     printf("    \"%s\",\n", line);
   }
 

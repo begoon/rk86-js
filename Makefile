@@ -14,14 +14,17 @@ build:
 
 files:
 	(cd files && ls -1 >../files.lst)
-	-mkdir tape
 	./rkdump$(EXE) < files.lst > rk86_tape_catalog.js
 
 release:
 	7z a rk86js-0.00.zip *.js *.html *.bmp *.md tape/
 
 run:
+ifeq ($(OS),Windows_NT)
+	start index.html
+else
 	open index.html
+endif
 
 chrome:
 	open -a "Google Chrome" --args \
@@ -32,4 +35,3 @@ safari:
 
 clean:
 	-rm files.lst rkdump$(EXE) rk86_tape_catalog.js
-	-rm tape/*

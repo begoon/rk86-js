@@ -78,16 +78,15 @@ function UI(tape_catalog, runner, memory) {
   }
 
   this.tape_file_name = function(name) {
-    return "tape/" + name + ".js";
+    return "files/" + name;
   }
 
   this.load_tape_file = function(name) {
-    var tape_name = this.tape_file_name(name);
-    var ref = document.createElement('script')
-    ref.setAttribute("type", "text/javascript");
-    ref.setAttribute("src", tape_name);
-    if (typeof ref != "undefined")
-      document.getElementsByTagName("head")[0].appendChild(ref);
+    var load_tape_file_this = this;
+    var callback = function(image) {
+      load_tape_file_this.file_loaded(name, image);
+    }
+    GetBinaryFile(this.tape_file_name(name), callback, true);
   }
 
   this.selected_file_name = function() {
@@ -108,8 +107,40 @@ function UI(tape_catalog, runner, memory) {
     return window.frames.disassembler_frame.loaded;
   }
 
-  this.file_loaded = function(file) {
-    if (file == null) return;
+  this.extract_rk86_word = function(v, i) {
+    return ((v.charCodeAt(i) & 0xff) << 8) | (v.charCodeAt(i + 1) & 0xff);
+  }
+
+  this.parse_rk86_binary = function(name, image) {
+    var file = {};
+    file.name = name;
+
+    var v = image.Content;
+
+    if (name.match(/\.bin$/)) {
+      file.size = v.length;
+      file.start = name.match(/^mon/) ? 0x10000 - file.size : 0;
+      file.end = file.start + file.size - 1;
+      file.image = v;
+    } else {
+      var i = 0;
+      if ((v.charCodeAt(i) & 0xff) == 0xe6) ++i;
+      file.start = this.extract_rk86_word(v, i);
+      file.end = this.extract_rk86_word(v, i + 2);
+      i += 4;
+      file.size = file.end - file.start + 1;
+      file.image = v.substr(i, file.size);
+    }
+    file.entry = (name == "PVO.GAM" ? 0x3100 : file.start);
+    return file;
+  }
+
+  this.file_loaded = function(name, binary) {
+    if (binary == null) {
+      alert("Error loading a file '" + name + "'");
+      return;
+    }
+    var file = this.parse_rk86_binary(name, binary);
     this.memory.load_file(file);
 
     if (this.disassembler_available()) 
