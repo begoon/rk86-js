@@ -16,11 +16,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-function UI(tape_catalog, runner, memory) {
+function UI(tape_catalog, runner, memory, autoexec) {
 
   this.tape_catalog = tape_catalog;
   this.runner = runner;
   this.memory = memory;
+  this.autoexec = autoexec;
 
   this.canvas = document.getElementById("canvas");
   this.panel = document.getElementById("back");
@@ -64,6 +65,7 @@ function UI(tape_catalog, runner, memory) {
     this.runner.cpu.memory.keyboard.reset();
     this.runner.cpu.jump(0xf800);
     console.log("Reset");
+    this.autorun();
   }
 
   this.restart = function() {
@@ -135,6 +137,13 @@ function UI(tape_catalog, runner, memory) {
     return file;
   }
 
+  this.autorun = function() {
+    if (this.autoexec.file) {
+      this.load_mode = this.autoexec.loadonly ? "load" : "run";
+      this.load_tape_file(this.autoexec.file);
+    }
+  }
+
   this.file_loaded = function(name, binary) {
     if (binary == null) {
       alert("Error loading a file '" + name + "'");
@@ -149,6 +158,7 @@ function UI(tape_catalog, runner, memory) {
     if (/^mon.+\.bin$/.exec(file.name) && this.load_mode == "run") {
       this.runner.execute();
       console.log("Monitor started");
+      this.reset();
       return;
     }
 
