@@ -12,6 +12,7 @@ else
 endif
 
 build:
+	$(MAKE) -C catalog
 	$(CC) -o rkdump$(EXE) rkdump.c
 
 files:
@@ -34,4 +35,3 @@ safari:
 clean:
 	-rm files.lst rkdump$(EXE) rk86_tape_catalog.js
 	$(MAKE) -C catalog clean
-
