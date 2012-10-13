@@ -80,16 +80,22 @@ def build_file_entry(name)
   title = descr.shift
   title = title.strip if title != nil
   descr = descr.join.strip
+
+  action = "run"
+  action_title = "Запустить"
+  
+  if name == "JUMP.RK" then
+    action = "load"
+    action_title = "Загрузить"
+  end
   
   file_entry_template = ""
   file_entry_template = <<-EOS
-  <tr>
-    <td colspan="2"><hr/></td>
-  </tr>
-  <tr>
-    <td valign="top" width="40%">
-      <b>#{title}</b>.
-      #{descr}<br/>
+  </style>
+  <tr name="#{name}" id="#{name}_section" class="cart">
+    <td valign="top" width="40%" class="cart">
+      <b id=#{name}_title>#{title}</b>.
+      <span id=#{name}_descr>#{descr}</span><br/>
       - - -
       <br/>
       <table>
@@ -116,9 +122,9 @@ def build_file_entry(name)
           </td>
         </tr>
       </table>
-      <button class="run" name="#{name}">Запустить</button>
+      <button class="#{action}" name="#{name}">#{action_title}</button>
     </td>
-    <td valign="top" style="padding-left: 5em">
+    <td valign="top" class="cart">
        #{ build_file_screens(name) }
     </td>
   </tr>
@@ -148,10 +154,36 @@ html_template = <<EOS
 <body onload="main()">
 
 <style>
-img.screen { width: auto; height: 150; vertical-align: text-top; }
+img.screen { 
+  width: auto; 
+  height: 150; 
+  vertical-align: text-top;
+  margin: 4px;
+}
+td.cart { 
+  border-radius: 15px;
+  -moz-border-radius: 15px;
+  padding: 1em;
+  background: #eee
+}
 </style>
 
-<img src="images/rk.gif" style="width: auto; height: 80px"/ >
+<!img src="images/rk.gif" style="width: auto; height: 80px"/ >
+<h1>Каталог программ для Радио-86РК</h1>
+<input type="text" id="search"/>
+<small>
+Готовые фильты:
+<a class="filter">игра</a>,
+<a class="filter">бейсик</a>,
+<a class="filter">ассемблер</a>
+<a class="filter">микрон</a>
+</small>
+<br/><small>Поиск работает крайне примитивно: карточка программы
+игры отображается, если введенное слово длиной три или более символов
+встречается в имени файла, названии или описании игры. Например, для
+отображения игр введите <i><b>игра</b></i>, или, например,
+<i><b>шахматы</b></i>.</small>
+<p/>
 <table>
 
 #{ build_catalog() }
