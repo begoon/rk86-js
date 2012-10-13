@@ -154,9 +154,6 @@ function UI(tape_catalog, runner, memory, autoexec) {
     }
     var file = this.parse_rk86_binary(name, binary);
     this.memory.load_file(file);
-    console.log(file.start, file.end, file.entry)
-    console.log("!!!", file.image.charCodeAt(0));
-    console.log("###", this.memory.buf[1]);
 
     if (this.disassembler_available()) 
       window.frames.disassembler_frame.i8080disasm.refresh(this.memory);
