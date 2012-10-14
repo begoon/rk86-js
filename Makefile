@@ -20,7 +20,8 @@ files:
 	./rkdump$(EXE) < files.lst > rk86_tape_catalog.js
 
 release:
-	7z a rk86js-0.00.zip *.js *.html *.bmp *.md files/ catalog/ js/
+	7z a rk86js-1.2C.zip -xr!\*rb -xr!\*md -xr!Makefile -xr!.DS_Store \
+		*.html *.js *.bmp files/ catalog/ js/
 
 run:
 	$(OPENER) index.html
