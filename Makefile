@@ -1,7 +1,7 @@
 .PHONY: build files
 
 all: build files
-	
+
 ifeq ($(OS),Windows_NT)
   CC = c:/tcc/tcc
   EXE = .exe
@@ -20,7 +20,7 @@ files:
 	./rkdump$(EXE) < files.lst > rk86_tape_catalog.js
 
 release:
-	7z a rk86js-0.00.zip *.js *.html *.bmp *.md tape/
+	7z a rk86js-0.00.zip *.js *.html *.bmp *.md files/ catalog/ js/
 
 run:
 	$(OPENER) index.html

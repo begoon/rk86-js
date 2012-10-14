@@ -159,6 +159,21 @@ html_template = <<EOS
 <script src="js/jquery-1.7.2.min.js"></script>
 <script src="js/lightbox.js"></script>
 <link href="css/lightbox.css" rel="stylesheet" />
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-3017739-19']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
 </head>
 <body onload="main()">
 
@@ -187,7 +202,7 @@ td.cart:hover {
 <h1>Каталог программ для Радио-86РК</h1>
 <input type="text" id="search"/>
 <small>
-Готовые фильты:
+Готовые фильтры:
 <a class="filter">игра</a>,
 <a class="filter">бейсик</a>,
 <a class="filter">тетрис</a>,
@@ -205,6 +220,23 @@ td.cart:hover {
 
 #{ build_catalog() }
 </table>
+
+<h1>Комментарии</h1>
+
+<div id="disqus_thread"></div>
+
+<script type="text/javascript">
+  var disqus_shortname = 'demin-ws';
+  var disqus_developer = 0;
+  var disqus_identifier = '/rk/catalog/';
+  var disqus_url = 'http://demin.ws/rk/catalog/';
+  var disqus_script = 'embed.js';
+  (function () {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  }());
+</script>
 
 </body>
 </html>
