@@ -9,6 +9,7 @@
     EOS
     screens << screen_link
   end
+  screens = "Нет скриншотов." if screens.empty?
   return screens
 end
 
@@ -28,7 +29,7 @@ class RK86File
       @entry = 0
       if name.start_with? "mon" then
         @start = 0x10000 - @size
-        @entry = @start
+        @entry = 0xf800
       end
       @end = @start + @size - 1
       @real_check_sum = rk86_checksum(image.byteslice(0, @size))
@@ -52,6 +53,7 @@ class RK86File
       
       @entry = @start
       @entry = 0x3400 if name == "PVO.GAM"
+      @entry = 0x3600 if name == "RAMDOS.PKI"
     end
   end
 
@@ -84,14 +86,13 @@ def build_file_entry(name)
   action = "run"
   action_title = "Запустить"
   
-  if name == "JUMP.RK" then
+  if name == "JUMP.RK" or name == "mon32x4.bin" then
     action = "load"
     action_title = "Загрузить"
   end
   
   file_entry_template = ""
   file_entry_template = <<-EOS
-  </style>
   <tr name="#{name}" id="#{name}_section" class="cart">
     <td valign="top" width="40%" class="cart">
       <b id=#{name}_title>#{title}</b>.
@@ -121,7 +122,16 @@ def build_file_entry(name)
           </td>
         </tr>
       </table>
-      <button class="#{action}" name="#{name}">#{action_title}</button>
+      <table style="width: 100%">
+        <tr>
+          <td><button class="#{action}" name="#{name}">#{action_title}</button></td>
+          <td align="right">
+            <small>
+              <a href="#" onclick="window.scrollTo(0, 0); return false;">В начало</a>
+            </small>
+          </td>
+        </tr>
+      </table>
     </td>
     <td valign="top" class="cart">
        #{ build_file_screens(name) }
@@ -165,6 +175,12 @@ td.cart {
   padding: 1em;
   background: #eee
 }
+td.cart:hover { 
+  border-radius: 15px;
+  -moz-border-radius: 15px;
+  padding: 1em;
+  background: #ccc
+}
 </style>
 
 <!img src="images/rk.gif" style="width: auto; height: 80px"/ >
@@ -174,6 +190,8 @@ td.cart {
 Готовые фильты:
 <a class="filter">игра</a>,
 <a class="filter">бейсик</a>,
+<a class="filter">тетрис</a>,
+<a class="filter">xonix</a>,
 <a class="filter">ассемблер</a>
 <a class="filter">микрон</a>
 </small>

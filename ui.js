@@ -66,14 +66,13 @@ function UI(tape_catalog, runner, memory, autoexec) {
     this.runner.cpu.memory.keyboard.reset();
     this.runner.cpu.jump(0xf800);
     console.log("Reset");
-
-    reset_this = this;
-    window.setTimeout(function() { reset_this.autorun(); }, 1000);
   }
 
   this.restart = function() {
     this.runner.cpu.memory.zero_ram();
     this.reset();
+    restart_this = this;
+    window.setTimeout(function() { restart_this.autorun(); }, 1000);
   }
 
   this.pause = function() {
@@ -161,7 +160,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
     if (/^mon.+\.bin$/.exec(file.name) && this.load_mode == "run") {
       this.runner.execute();
       console.log("Monitor started");
-      this.reset();
+      this.restart();
       return;
     }
 
