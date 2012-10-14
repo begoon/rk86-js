@@ -96,8 +96,7 @@ def build_file_entry(name)
     <td valign="top" width="40%" class="cart">
       <b id=#{name}_title>#{title}</b>.
       <span id=#{name}_descr>#{descr}</span><br/>
-      - - -
-      <br/>
+      <hr style="height: 1px solid black"/>
       <table>
         <tr>
           <td>Файл:</td>
