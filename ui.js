@@ -215,6 +215,12 @@ function UI(tape_catalog, runner, memory, autoexec) {
     });  
   }
   
+  this.console = function() {
+    this.console_window = window.open("console.html", '_blank',
+      'toolbar=yes, location=yes, status=no, menubar=yes, scrollbars=yes, ' +
+      'resizable=yes, width=700, height=600');
+  }
+
   this.load_mode = "run";
   this.load_tape_file("mon32.bin");
 }
