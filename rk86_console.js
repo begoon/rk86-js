@@ -49,16 +49,9 @@ function Console() {
   ];
 
   this.last_dump_address = 0;
-  this.last_dump_length = 16;
+  this.last_dump_length = 256;
 
-  function dump_cmd(self, term, argc, argv) {
-    if (window.opener == null) { 
-      alert("ERROR: No parent window");
-      return;
-    }
-
-    var mem = window.opener.ui.memory;
-
+  function dump_cmd(self, term, argc, argv, cpu, mem) {
     var from = parseInt(argv[argc++]);
     if (isNaN(from)) from = self.last_dump_address;
 
@@ -112,15 +105,7 @@ function Console() {
     return addr;
   }
 
-  function cpu_cmd(self, term, argc, argv) {
-    if (window.opener == null) { 
-      alert("ERROR: No parent window");
-      return;
-    }
-
-    var cpu = window.opener.ui.runner.cpu;
-    var mem = window.opener.ui.memory;
-
+  function cpu_cmd(self, term, argc, argv, cpu, mem) {
     term.write("PC=%04X A=%02X F=%s%s%s%s%s HL=%04X DE=%04X BC=%04X SP=%04X"
                .format(
                  cpu.pc, cpu.a(), 
@@ -175,14 +160,7 @@ function Console() {
     self.last_disasm_address = self.disasm_print(self, term, mem, from, sz);
   }
 
-  function write_cmd(self, term, argc, argv) {
-    if (window.opener == null) { 
-      alert("ERROR: No parent window");
-      return;
-    }
-
-    var mem = window.opener.ui.memory;
-                  
+  function write_cmd(self, term, argc, argv, cpu, mem) {
     var addr = parseInt(argv[argc++]);
     if (isNaN(addr)) addr = 0;
 
@@ -197,13 +175,16 @@ function Console() {
   }
 
   this.commands = {
-    "dump": dump_cmd,
-    "cpu": cpu_cmd,
-    "disasm": disasm_cmd,
-    "write": write_cmd,
+    "d": dump_cmd,
+    "i": cpu_cmd,
+    "z": disasm_cmd,
+    "w": write_cmd,
   };
 
   this.terminal_handler = function(term) {
+    var cpu = window.opener.ui.runner.cpu;
+    var mem = window.opener.ui.memory;
+
     term.newLine();
     var line = this.lineBuffer;
 
@@ -215,7 +196,7 @@ function Console() {
       var cmd = term.argv[term.argc++];
       cmd = cmd.toLowerCase();
       var fn = this.commands[cmd];
-      if (fn) fn(this, term, term.argc, term.argv);
+      if (fn) fn(this, term, term.argc, term.argv, cpu, mem);
       else term.write("?");
     }
     term.prompt();
