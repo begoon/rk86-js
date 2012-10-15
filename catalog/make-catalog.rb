@@ -95,8 +95,8 @@ def build_file_entry(name)
   file_entry_template = <<-EOS
   <tr name="#{name}" id="#{name}_section" class="cart">
     <td valign="top" width="40%" class="cart">
-      <b id=#{name}_title>#{title}</b>.
-      <span id=#{name}_descr>#{descr}</span><br/>
+      <b id="#{name}_title">#{title}</b>.
+      <span id="#{name}_descr">#{descr}</span><br/>
       <hr style="height: 1px solid black"/>
       <table>
         <tr>
