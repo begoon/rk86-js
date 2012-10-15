@@ -174,11 +174,25 @@ function Console() {
     }
   }
 
+  function help_cmd(self, term, argc, argv, cpu, mem) {
+    for (var cmd in self.commands) {
+      term.write("%s - %s".format(cmd, self.commands[cmd][1]));
+      term.newLine();
+    }
+  }
+  
   this.commands = {
-    "d": dump_cmd,
-    "i": cpu_cmd,
-    "z": disasm_cmd,
-    "w": write_cmd,
+    "d": [ dump_cmd, 
+           "[d]ump memory / d [start_address [, number_of_bytes]]" 
+         ],
+    "i": [ cpu_cmd, "CPU [i]formation / i" ],
+    "z": [ disasm_cmd, 
+           "Disassemble / z [start_address [, number_of_instructions]]" 
+         ],
+    "w": [ write_cmd,
+           "Write / w start_address byte1, [byte2, [byte3]...]"
+         ],
+    "?": [ help_cmd, "This help / ?"]
   };
 
   this.terminal_handler = function(term) {
@@ -190,13 +204,14 @@ function Console() {
 
     this.parser.parseLine(term);
 
-    if (term.argv.length == 0) {
-      // no commmand line input
-    } else {
+    if (term.argv.length > 0) {
       var cmd = term.argv[term.argc++];
       cmd = cmd.toLowerCase();
       var fn = this.commands[cmd];
-      if (fn) fn(this, term, term.argc, term.argv, cpu, mem);
+      if (fn) {
+        fn = fn[0];
+        fn(this, term, term.argc, term.argv, cpu, mem);
+      }
       else term.write("?");
     }
     term.prompt();
