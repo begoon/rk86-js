@@ -1,6 +1,6 @@
 .PHONY: build files
 
-all: build files
+all: build files build-catalog
 
 ifeq ($(OS),Windows_NT)
   CC = c:/tcc/tcc
@@ -12,8 +12,10 @@ else
 endif
 
 build:
-	$(MAKE) -C catalog
 	$(CC) -o rkdump$(EXE) rkdump.c
+
+build-catalog:
+	$(MAKE) -C catalog
 
 files:
 	(cd files && ls -1 >../files.lst)
