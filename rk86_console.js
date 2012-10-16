@@ -51,13 +51,15 @@ function Console() {
   this.last_dump_address = 0;
   this.last_dump_length = 256;
 
-  function dump_cmd(self, term, argc, argv, cpu, mem) {
-    var from = parseInt(argv[argc++]);
+  this.dump_cmd = function(self) {
+    var from = parseInt(self.term.argv[self.term.argc++]);
     if (isNaN(from)) from = self.last_dump_address;
 
-    var sz = parseInt(argv[argc++]);
+    var sz = parseInt(self.term.argv[self.term.argc++]);
     if (isNaN(sz)) sz = self.last_dump_length;
     self.last_dump_length = sz;
+
+    var mem = self.runner.cpu.memory;
 
     const width = 16;
     while (sz > 0) {
@@ -73,15 +75,16 @@ function Console() {
         bytes += " ".repeat((width - sz) * 3);
         chars += " ".repeat(width - sz);
       }
-      term.write("%04X: %s | %s".format(from, bytes, chars));
-      term.newLine();
+      self.term.write("%04X: %s | %s".format(from, bytes, chars));
+      self.term.newLine();
       sz -= chunk_sz;
       from = (from + chunk_sz) & 0xffff;
     }
     self.last_dump_address = from;
   }
 
-  this.disasm_print = function(self, term, mem, addr, nb_instr) {
+  this.disasm_print = function(self, addr, nb_instr) {
+    var mem = self.runner.cpu.memory;
     while (nb_instr-- > 0) {
       var binary = [];
       for (var i = 0; i < 3; ++i)
@@ -98,26 +101,28 @@ function Console() {
       bytes += " ".repeat((binary.length - instr.length) * 2);
       chars += " ".repeat(binary.length - instr.length);
 
-      term.write("%04X: %s %s %s".format(addr, bytes, chars, instr.instr));
-      term.newLine();
+      self.term.write("%04X: %s %s %s".format(addr, bytes, chars, instr.instr));
+      self.term.newLine();
       addr += instr.length;
     }
     return addr;
   }
 
-  function cpu_cmd(self, term, argc, argv, cpu, mem) {
-    term.write("PC=%04X A=%02X F=%s%s%s%s%s HL=%04X DE=%04X BC=%04X SP=%04X"
-               .format(
-                 cpu.pc, cpu.a(), 
-                 (cpu.cf ? "C":"-"),
-                 (cpu.pf ? "P":"-"),
-                 (cpu.hf ? "H":"-"),
-                 (cpu.zf ? "Z":"-"),
-                 (cpu.sf ? "S":"-"),
-                 cpu.hl(), cpu.de(), cpu.bc(), cpu.sp));
-    term.newLine();
+  this.cpu_cmd = function(self) {
+    var cpu = self.runner.cpu;
+    var mem = cpu.memory;
+    self.term.write("PC=%04X A=%02X F=%s%s%s%s%s HL=%04X DE=%04X BC=%04X SP=%04X"
+                    .format(
+                      cpu.pc, cpu.a(), 
+                      (cpu.cf ? "C":"-"),
+                      (cpu.pf ? "P":"-"),
+                      (cpu.hf ? "H":"-"),
+                      (cpu.zf ? "Z":"-"),
+                      (cpu.sf ? "S":"-"),
+                      cpu.hl(), cpu.de(), cpu.bc(), cpu.sp));
+    self.term.newLine();
 
-    self.disasm_print(self, term, mem, cpu.pc, 4);
+    self.disasm_print(self, cpu.pc, 4);
 
     hex = function(addr, title) {
       var bytes = "";
@@ -127,8 +132,8 @@ function Console() {
         bytes += "%02X ".format(ch);
         chars += ch >=32 && ch < 127 ? from_rk86_table[ch] : ".";
       }
-      term.write("%s=%04X: %s | %s".format(title, addr, bytes, chars));
-      term.newLine();
+      self.term.write("%s=%04X: %s | %s".format(title, addr, bytes, chars));
+      self.term.newLine();
     }
 
     hex(cpu.pc, "PC");
@@ -141,32 +146,74 @@ function Console() {
   this.last_disasm_address = 0;
   this.last_disasm_length = 16;
 
-  function disasm_cmd(self, term, argc, argv) {
-    if (window.opener == null) { 
-      alert("ERROR: No parent window");
-      return;
-    }
+  this.disasm_cmd = function(self) {
+    var cpu = self.runner.cpu;
+    var mem = cpu.memory;
 
-    var cpu = window.opener.ui.runner.cpu;
-    var mem = window.opener.ui.memory;
-
-    var from = parseInt(argv[argc++]);
+    var from = parseInt(self.term.argv[self.term.argc++]);
     if (isNaN(from)) from = self.last_disasm_address;
 
-    var sz = parseInt(argv[argc++]);
+    var sz = parseInt(self.term.argv[self.term.argc++]);
     if (isNaN(sz)) sz = self.last_disasm_length;
     self.last_disasm_length = sz;
 
-    self.last_disasm_address = self.disasm_print(self, term, mem, from, sz);
+    self.last_disasm_address = self.disasm_print(self, from, sz);
   }
 
-  function write_cmd(self, term, argc, argv, cpu, mem) {
-    var addr = parseInt(argv[argc++]);
+  this.write_byte_cmd = function(self) {
+    var mem = self.runner.cpu.memory;
+
+    var addr = parseInt(self.term.argv[self.term.argc++]);
     if (isNaN(addr)) addr = 0;
 
     while (1) {
-      var ch = parseInt(argv[argc++]);
+      var ch = parseInt(self.term.argv[self.term.argc++]);
       if (isNaN(ch)) break;
+      self.term.write("%04X: %02X -> %02X".format(addr, mem.read_raw(addr), ch));
+      self.term.newLine();
+      mem.write_raw(addr, ch);
+      ++addr;
+    }
+  }
+
+  this.write_word_cmd = function(self) {
+    var mem = self.runner.cpu.memory;
+
+    var addr = parseInt(self.term.argv[self.term.argc++]);
+    if (isNaN(addr)) addr = 0;
+
+    var term = self.term;
+    while (1) {
+      var w16 = parseInt(self.term.argv[self.term.argc++]);
+      if (isNaN(w16)) break;
+      var l = w16 & 0xff;
+      var h = w16 >> 8;
+
+      term.write("%04X: %02X -> %02X".format(addr, mem.read_raw(addr), l));
+      term.newLine();
+      mem.write_raw(addr, l);
+      ++addr;
+
+      term.write("%04X: %02X -> %02X".format(addr, mem.read_raw(addr), h));
+      term.newLine();
+      mem.write_raw(addr, h);
+      ++addr;
+    }
+  }
+
+  this.write_char_cmd = function(self) {
+    var mem = self.runner.cpu.memory;
+
+    var addr = parseInt(self.term.argv[self.term.argc++]);
+    if (isNaN(addr)) addr = 0;
+
+    var s = self.term.argv[self.term.argc++];
+    if (!s || s.length == 0) return;
+
+    var term = self.term;
+    for (var i = 0; i < s.length; ++i) {
+      var ch = s.charCodeAt(i) & 0xff;
+
       term.write("%04X: %02X -> %02X".format(addr, mem.read_raw(addr), ch));
       term.newLine();
       mem.write_raw(addr, ch);
@@ -174,28 +221,64 @@ function Console() {
     }
   }
 
-  function help_cmd(self, term, argc, argv, cpu, mem) {
+  this.single_step_callback = function(self, cpu) {
+    if (cpu.pc == 0xf86c) {
+      self.term.write("Monitor warm restart: %04X".format(cpu.pc));
+      self.term.newLine();
+      self.cpu_cmd(self);
+      self.term.prompt();
+    }
+  }
+
+  this.debug_cmd = function(self) {
+    var tracer = self.runner.tracer;
+    if (tracer) {
+      self.runner.tracer = null;
+      self.term.write("Tracing is off");
+    } else {
+      var trace_cmd_this = self;
+      self.term.write("Tracing is on");
+      self.term.newLine();
+      var debug_cmd_this = self;
+      self.runner.tracer = function() {
+        var cpu = self.runner.cpu;
+        self.single_step_callback(self, cpu);
+      }
+    }
+  }
+
+  this.help_cmd = function(self) {
     for (var cmd in self.commands) {
-      term.write("%s - %s".format(cmd, self.commands[cmd][1]));
-      term.newLine();
+      self.term.write("%s - %s".format(cmd, self.commands[cmd][1]));
+      self.term.newLine();
     }
   }
   
   this.commands = {
-    "d": [ dump_cmd, 
+    "d": [ this.dump_cmd, 
            "[d]ump memory / d [start_address [, number_of_bytes]]" 
          ],
-    "i": [ cpu_cmd, "CPU [i]formation / i" ],
-    "z": [ disasm_cmd, 
-           "Disassemble / z [start_address [, number_of_instructions]]" 
+    "i": [ this.cpu_cmd, "CPU [i]formation / i" ],
+    "z": [ this.disasm_cmd, 
+           "disassemble / z [start_address [, number_of_instructions]]" 
          ],
-    "w": [ write_cmd,
-           "Write / w start_address byte1, [byte2, [byte3]...]"
+    "w": [ this.write_byte_cmd,
+           "[w]rite bytes / w start_address byte1, [byte2, [byte3]...]"
          ],
-    "?": [ help_cmd, "This help / ?"]
+    "ww": [ this.write_word_cmd,
+           "[w]rite [w]ords / ww start_address word1, [word2, [word3]...]"
+         ],
+    "wc": [ this.write_char_cmd,
+           "[w]rite [c]haracters / ww start_address string"
+         ],
+    "t": [ this.debug_cmd,
+           "debug con[t]rol / t on|off"
+         ],
+    "?": [ this.help_cmd, "This help / ?"]
   };
 
   this.terminal_handler = function(term) {
+    var runner = window.opener.ui.runner;
     var cpu = window.opener.ui.runner.cpu;
     var mem = window.opener.ui.memory;
 
@@ -210,7 +293,7 @@ function Console() {
       var fn = this.commands[cmd];
       if (fn) {
         fn = fn[0];
-        fn(this, term, term.argc, term.argv, cpu, mem);
+        fn(this);
       }
       else term.write("?");
     }
@@ -218,6 +301,8 @@ function Console() {
   }
 
   this.init = function() {
+    this.runner = window.opener.ui.runner;
+
     var init_this = this;
     this.term = new Terminal( {
       handler: function() { init_this.terminal_handler(this); },

@@ -19,6 +19,7 @@
 function Runner(cpu) {
   this.cpu = cpu;
   this.pause = false;
+  this.tracer = null;
 
   const FREQ = 2000000;
   const TICK_PER_MS = FREQ / 100;
@@ -29,6 +30,7 @@ function Runner(cpu) {
     if (!this.pause) {
       var ticks = 0;
       while (ticks < TICK_PER_MS) {
+        if (this.tracer) this.tracer(this);
         ticks += this.cpu.instruction();
       }
     }
