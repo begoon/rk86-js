@@ -239,19 +239,25 @@ function Console() {
   }
 
   this.debug_cmd = function(self) {
+    var state = self.term.argv[self.term.argc++];
     var tracer = self.runner.tracer;
-    if (tracer) {
-      self.runner.tracer = null;
-      self.term.write("Tracing is off");
-    } else {
-      var trace_cmd_this = self;
-      self.term.write("Tracing is on");
-      self.term.newLine();
-      var debug_cmd_this = self;
-      self.runner.tracer = function() {
-        var cpu = self.runner.cpu;
-        self.single_step_callback(self, cpu);
+    
+    if (state == "on" || state == "off") {
+      if (state == "on") {
+        var trace_cmd_this = self;
+        self.term.write("Tracing is on");
+        self.term.newLine();
+        var debug_cmd_this = self;
+        self.runner.tracer = function() {
+          var cpu = self.runner.cpu;
+          self.single_step_callback(self, cpu);
+        }
+      } else {
+        self.runner.tracer = null;
+        self.term.write("Tracing is off");
       }
+    } else {
+      self.term.write("Trace is %s".format(tracer ? "on" : "off"));
     }
   }
 
