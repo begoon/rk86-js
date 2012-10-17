@@ -48,16 +48,20 @@ function Console() {
     "Ь",  "Ы",  "З",  "Ш",  "Э",  "Щ",  "Ч",  "~",
   ];
 
-  this.last_dump_address = 0;
-  this.last_dump_length = 256;
-
   this.dump_cmd = function(self) {
+
+    if (typeof self.dump_cmd.last_address == 'undefined')
+      self.dump_cmd.last_address = 0;
+
+    if (typeof self.dump_cmd.last_length == 'undefined')
+      self.dump_cmd.last_length = 128;
+
     var from = parseInt(self.term.argv[self.term.argc++]);
-    if (isNaN(from)) from = self.last_dump_address;
+    if (isNaN(from)) from = self.dump_cmd.last_address;
 
     var sz = parseInt(self.term.argv[self.term.argc++]);
-    if (isNaN(sz)) sz = self.last_dump_length;
-    self.last_dump_length = sz;
+    if (isNaN(sz)) sz = self.dump_cmd.last_length;
+    self.dump_cmd.last_length = sz;
 
     var mem = self.runner.cpu.memory;
 
@@ -80,7 +84,7 @@ function Console() {
       sz -= chunk_sz;
       from = (from + chunk_sz) & 0xffff;
     }
-    self.last_dump_address = from;
+    self.dump_cmd.last_address = from;
   }
 
   this.disasm_print = function(self, addr, nb_instr) {
@@ -143,21 +147,25 @@ function Console() {
     hex(cpu.bc(), "BC");
   }
 
-  this.last_disasm_address = 0;
-  this.last_disasm_length = 16;
-
   this.disasm_cmd = function(self) {
+
+    if (typeof self.disasm_cmd.last_address == 'undefined')
+      self.disasm_cmd.last_address = 0;
+
+    if (typeof self.dump_cmd.last_length == 'undefined')
+      self.dump_cmd.last_length = 20;
+    
     var cpu = self.runner.cpu;
     var mem = cpu.memory;
 
     var from = parseInt(self.term.argv[self.term.argc++]);
-    if (isNaN(from)) from = self.last_disasm_address;
+    if (isNaN(from)) from = self.disasm_cmd.last_address;
 
     var sz = parseInt(self.term.argv[self.term.argc++]);
-    if (isNaN(sz)) sz = self.last_disasm_length;
-    self.last_disasm_length = sz;
+    if (isNaN(sz)) sz = self.dump_cmd.last_length;
+    self.dump_cmd.last_length = sz;
 
-    self.last_disasm_address = self.disasm_print(self, from, sz);
+    self.disasm_cmd.last_address = self.disasm_print(self, from, sz);
   }
 
   this.write_byte_cmd = function(self) {
