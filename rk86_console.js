@@ -286,10 +286,6 @@ function Console() {
   };
 
   this.terminal_handler = function(term) {
-    var runner = window.opener.ui.runner;
-    var cpu = window.opener.ui.runner.cpu;
-    var mem = window.opener.ui.memory;
-
     term.newLine();
     var line = this.lineBuffer;
 
