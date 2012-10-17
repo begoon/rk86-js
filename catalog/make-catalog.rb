@@ -78,10 +78,15 @@ end
 def build_file_entry(name)
   file = RK86File.new name
 
-  descr = File.open("%s/info.md" % name).readlines
-  title = descr.shift
+  descr_filename = "%s/info.md" % name
+  descr = File.open(descr_filename).readlines
+  title = descr.shift.force_encoding('UTF-8')
   title = title.strip if title != nil
-  descr = descr.join.strip
+  descr = descr.join.strip.force_encoding('UTF-8')
+
+  if (not title.valid_encoding?) || (not descr.valid_encoding?) then
+    raise "Non-UTF-8 encoding in %s description [file %s]" % [name, descr_filename]
+  end
 
   action = "run"
   action_title = "Запустить"
