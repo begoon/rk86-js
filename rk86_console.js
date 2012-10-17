@@ -322,9 +322,23 @@ function Console() {
     this.adjust_window();
   }
 
+  this.pause_handler = function() {
+    this.term.write("Paused at %04X".format(this.runner.cpu.pc));
+    this.term.newLine();
+    this.cpu_cmd(this);
+    this.term.prompt();
+  }
+
+  this.resume_handler = function() {
+    this.term.write("Resumed");
+    this.term.prompt();
+  }
+
   this.init();
 }
 
+var console;
+
 function main() {
-  var console = new Console();
+  console = new Console();
 }

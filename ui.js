@@ -76,9 +76,18 @@ function UI(tape_catalog, runner, memory, autoexec) {
   }
 
   this.pause = function() {
-    if (!this.runner.pause)
-      console.log("Pause at " + this.runner.cpu.pc.toString(16));
+    if (!this.runner.pause) {
+      console.log("Paused at " + this.runner.cpu.pc.toString(16));
+      if (this.console_window)
+        this.console_window.console.pause_handler();
+    } else {
+      console.log("Resumed");
+      if (this.console_window)
+        this.console_window.console.resume_handler();
+    }
     this.runner.pause = !this.runner.pause;
+    document.getElementById("pause_button").innerHTML = 
+      this.runner.pause ? "Resume" : "Pause";
   }
 
   this.tape_file_name = function(name) {
