@@ -229,13 +229,24 @@ function Console() {
     }
   }
 
+  this.print_breakpoint = function(self, n, b) {
+    self.term.write("Breakpoint #%s type:%s address:%04X"
+      .format(n, b.type, b.address));
+    self.term.newLine();
+  }
+
   this.single_step_callback = function(self, cpu) {
-    if (cpu.pc == 0xf86c) {
-      self.term.write("Monitor warm restart: %04X".format(cpu.pc));
-      self.term.newLine();
-      self.cpu_cmd(self);
-      self.term.prompt();
+    for (var i in self.breaks) {
+      var b = self.breaks[i];
+      if (b.active == "yes" && b.address == cpu.pc) {
+        self.print_breakpoint(self, i, b);
+        self.pause_cmd(this);
+        self.term.prompt();
+        self.term.write("$$$ %04X\n".format(cpu.pc));
+        return true;
+      }
     }
+    return false;
   }
 
   this.debug_cmd = function(self) {
@@ -250,7 +261,7 @@ function Console() {
         var debug_cmd_this = self;
         self.runner.tracer = function() {
           var cpu = self.runner.cpu;
-          self.single_step_callback(self, cpu);
+          return self.single_step_callback(self, cpu);
         }
       } else {
         self.runner.tracer = null;
@@ -261,6 +272,18 @@ function Console() {
     }
   }
 
+  this.pause_cmd = function(self) {
+    self.runner.pause = 1;
+    self.pause();
+    self.ui.update_pause_button();
+  }
+  
+  this.continue_cmd = function(self) {
+    self.runner.pause = 0;
+    self.resume();
+    self.ui.update_pause_button();
+  }
+  
   this.help_cmd = function(self) {
     for (var cmd in self.commands) {
       self.term.write("%s - %s".format(cmd, self.commands[cmd][1]));
@@ -288,9 +311,19 @@ function Console() {
     "t": [ this.debug_cmd,
            "debug con[t]rol / t on|off"
          ],
+    "p": [ this.pause_cmd,
+           "[p]ause / p"
+         ],
+    "c": [ this.continue_cmd,
+           "[c]ontinue execution / c"
+         ],
     "?": [ this.help_cmd, "This help / ?"]
   };
 
+  this.breaks = {
+    1: { type:"exec", address:0xf86c, active:"yes" }  
+  }
+  
   this.terminal_handler = function(term) {
     term.newLine();
     var line = this.lineBuffer;
@@ -311,7 +344,8 @@ function Console() {
   }
 
   this.init = function() {
-    this.runner = window.opener.ui.runner;
+    this.ui = window.opener.ui;
+    this.runner = this.ui.runner;
 
     var init_this = this;
     this.term = new Terminal( {
@@ -332,15 +366,23 @@ function Console() {
     this.adjust_window();
   }
 
-  this.pause_handler = function() {
+  this.pause = function() {
     this.term.write("Paused at %04X".format(this.runner.cpu.pc));
     this.term.newLine();
     this.cpu_cmd(this);
+  }
+  
+  this.pause_ui_callback = function() {
+    this.pause();
     this.term.prompt();
   }
 
-  this.resume_handler = function() {
+  this.resume = function() {
     this.term.write("Resumed");
+  }
+  
+  this.resume_ui_callback = function() {
+    this.resume();
     this.term.prompt();
   }
 

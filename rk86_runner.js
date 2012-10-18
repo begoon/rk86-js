@@ -30,7 +30,9 @@ function Runner(cpu) {
     if (!this.pause) {
       var ticks = 0;
       while (ticks < TICK_PER_MS) {
-        if (this.tracer) this.tracer(this);
+        if (this.tracer) {
+          if (this.tracer(this)) break;
+        }
         ticks += this.cpu.instruction();
       }
     }

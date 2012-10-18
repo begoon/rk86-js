@@ -75,19 +75,23 @@ function UI(tape_catalog, runner, memory, autoexec) {
     window.setTimeout(function() { restart_this.autorun(); }, 1000);
   }
 
+  this.update_pause_button = function() {
+    document.getElementById("pause_button").innerHTML = 
+      this.runner.pause ? "Resume" : "Pause";
+  }
+
   this.pause = function() {
     if (!this.runner.pause) {
       console.log("Paused at " + this.runner.cpu.pc.toString(16));
       if (this.console_window)
-        this.console_window.console.pause_handler();
+        this.console_window.console.pause_ui_callback();
     } else {
       console.log("Resumed");
       if (this.console_window)
-        this.console_window.console.resume_handler();
+        this.console_window.console.resume_ui_callback();
     }
     this.runner.pause = !this.runner.pause;
-    document.getElementById("pause_button").innerHTML = 
-      this.runner.pause ? "Resume" : "Pause";
+    this.update_pause_button();
   }
 
   this.tape_file_name = function(name) {
