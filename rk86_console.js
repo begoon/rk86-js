@@ -56,10 +56,10 @@ function Console() {
     if (typeof self.dump_cmd.last_length == 'undefined')
       self.dump_cmd.last_length = 128;
 
-    var from = parseInt(self.term.argv[self.term.argc++]);
+    var from = parseInt(self.term.argv[1]);
     if (isNaN(from)) from = self.dump_cmd.last_address;
 
-    var sz = parseInt(self.term.argv[self.term.argc++]);
+    var sz = parseInt(self.term.argv[2]);
     if (isNaN(sz)) sz = self.dump_cmd.last_length;
     self.dump_cmd.last_length = sz;
 
@@ -148,7 +148,6 @@ function Console() {
   }
 
   this.disasm_cmd = function(self) {
-
     if (typeof self.disasm_cmd.last_address == 'undefined')
       self.disasm_cmd.last_address = 0;
 
@@ -158,10 +157,10 @@ function Console() {
     var cpu = self.runner.cpu;
     var mem = cpu.memory;
 
-    var from = parseInt(self.term.argv[self.term.argc++]);
+    var from = parseInt(self.term.argv[1]);
     if (isNaN(from)) from = self.disasm_cmd.last_address;
 
-    var sz = parseInt(self.term.argv[self.term.argc++]);
+    var sz = parseInt(self.term.argv[2]);
     if (isNaN(sz)) sz = self.dump_cmd.last_length;
     self.dump_cmd.last_length = sz;
 
@@ -171,11 +170,12 @@ function Console() {
   this.write_byte_cmd = function(self) {
     var mem = self.runner.cpu.memory;
 
-    var addr = parseInt(self.term.argv[self.term.argc++]);
+    if (self.term.argc < 3) { self.term.write("?"); return; }
+    var addr = parseInt(self.term.argv[1]);
     if (isNaN(addr)) addr = 0;
 
-    while (1) {
-      var ch = parseInt(self.term.argv[self.term.argc++]);
+    for (var i = 2; i < self.term.argc; ++i) {
+      var ch = parseInt(self.term.argv[i]);
       if (isNaN(ch)) break;
       self.term.write("%04X: %02X -> %02X".format(addr, mem.read_raw(addr), ch));
       self.term.newLine();
@@ -187,12 +187,13 @@ function Console() {
   this.write_word_cmd = function(self) {
     var mem = self.runner.cpu.memory;
 
-    var addr = parseInt(self.term.argv[self.term.argc++]);
+    if (self.term.argc < 3) { self.term.write("?"); return; }
+    var addr = parseInt(self.term.argv[1]);
     if (isNaN(addr)) addr = 0;
 
     var term = self.term;
-    while (1) {
-      var w16 = parseInt(self.term.argv[self.term.argc++]);
+    for (var i = 2; i < self.term.argc; ++i) {
+      var w16 = parseInt(self.term.argv[i]);
       if (isNaN(w16)) break;
       var l = w16 & 0xff;
       var h = w16 >> 8;
@@ -212,10 +213,11 @@ function Console() {
   this.write_char_cmd = function(self) {
     var mem = self.runner.cpu.memory;
 
-    var addr = parseInt(self.term.argv[self.term.argc++]);
+    if (self.term.argc < 3) { self.term.write("?"); return; }
+    var addr = parseInt(self.term.argv[1]);
     if (isNaN(addr)) addr = 0;
 
-    var s = self.term.argv[self.term.argc++];
+    var s = self.term.argv[2];
     if (!s || s.length == 0) return;
 
     var term = self.term;
@@ -250,7 +252,7 @@ function Console() {
   }
 
   this.debug_cmd = function(self) {
-    var state = self.term.argv[self.term.argc++];
+    var state = self.term.argv[1];
     var tracer = self.runner.tracer;
     
     if (state == "on" || state == "off") {
@@ -331,7 +333,8 @@ function Console() {
     this.parser.parseLine(term);
 
     if (term.argv.length > 0) {
-      var cmd = term.argv[term.argc++];
+      var cmd = term.argv[0];
+      term.argc = term.argv.length;
       cmd = cmd.toLowerCase();
       var fn = this.commands[cmd];
       if (fn) {
