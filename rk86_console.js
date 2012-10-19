@@ -232,8 +232,10 @@ function Console() {
   }
 
   this.print_breakpoint = function(self, n, b) {
-    self.term.write("Breakpoint #%s type:%s address:%04X"
-      .format(n, b.type, b.address));
+    self.term.write("Breakpoint #%s %s %s %04X"
+      .format(n, b.type, b.active == "yes" ? "active" : "disabled", b.address));
+    if (b.count)
+      self.term.write(" count:%d/%d".format(b.count, b.hits));
     self.term.newLine();
   }
 
