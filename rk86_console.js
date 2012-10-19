@@ -151,8 +151,8 @@ function Console() {
     if (typeof self.disasm_cmd.last_address == 'undefined')
       self.disasm_cmd.last_address = 0;
 
-    if (typeof self.dump_cmd.last_length == 'undefined')
-      self.dump_cmd.last_length = 20;
+    if (typeof self.disasm_cmd.last_length == 'undefined')
+      self.disasm_cmd.last_length = 20;
     
     var cpu = self.runner.cpu;
     var mem = cpu.memory;
@@ -161,8 +161,8 @@ function Console() {
     if (isNaN(from)) from = self.disasm_cmd.last_address;
 
     var sz = parseInt(self.term.argv[2]);
-    if (isNaN(sz)) sz = self.dump_cmd.last_length;
-    self.dump_cmd.last_length = sz;
+    if (isNaN(sz)) sz = self.disasm_cmd.last_length;
+    self.disasm_cmd.last_length = sz;
 
     self.disasm_cmd.last_address = self.disasm_print(self, from, sz);
   }
