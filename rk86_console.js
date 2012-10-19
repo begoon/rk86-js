@@ -239,18 +239,59 @@ function Console() {
     self.term.newLine();
   }
 
-  this.single_step_callback = function(self, cpu) {
+  this.execute_after_breakpoint = false;
+
+  this.process_breakpoint = function(self, i, b) {
+    self.print_breakpoint(self, i, b);
+    self.pause_cmd(this);
+    self.term.prompt();
+    window.focus();
+    self.execute_after_breakpoint = true;
+  }
+
+  this.stop_after_next_instruction = -1;
+  this.step_over_address = -1;
+	
+  this.tracer_callback = function(self, cpu) {
+    // After entering into the single step mode ('s' command) we have to
+    // execute one instruction (because CPU commands are executed AFTER
+    // processing console commands) and then stop before the next one.
+    // So the 's' command sets "stop_after_next_instruction" to 0, we
+    // catch that in this callback, execute and current command, then set
+    // "stop_after_next_instruction" to 1 and then use this as the
+    // condition to stop before the next instruction.
+    if (self.stop_after_next_instruction == 1) {
+      self.pause_cmd(this);
+      self.term.prompt();
+      self.stop_after_next_instruction = -1;
+      return;
+    }
+
+    if (self.stop_after_next_instruction == 0)
+      self.stop_after_next_instruction = 1;
+
+    // After hitting a breakpoint, we have to forcibly execute the current
+    // instruction. Otherwise it will hit the same breakpoint immediatelly
+    // and execution will be stuck.
+    if (self.execute_after_breakpoint) {
+      self.execute_after_breakpoint = false;
+      return false;
+    }
+
     for (var i in self.breaks) {
       var b = self.breaks[i];
-      if (b.active == "yes" && b.address == cpu.pc) {
-        self.print_breakpoint(self, i, b);
-        self.pause_cmd(this);
-        self.term.prompt();
-        self.term.write("$$$ %04X\n".format(cpu.pc));
-        return true;
+      if (b.active == "yes" && b.address == cpu.pc && b.type == "exec") {
+        if (!b.count) {
+          self.process_breakpoint(self, i, b);
+        } else {
+          ++b.hits;
+          if (b.hits == b.count) {
+            self.process_breakpoint(self, i, b);
+            b.hits = 0;
+          }
+        }
       }
     }
-    return false;
   }
 
   this.debug_cmd = function(self) {
@@ -265,7 +306,7 @@ function Console() {
         var debug_cmd_this = self;
         self.runner.tracer = function() {
           var cpu = self.runner.cpu;
-          return self.single_step_callback(self, cpu);
+          return self.tracer_callback(self, cpu);
         }
       } else {
         self.runner.tracer = null;
@@ -276,18 +317,82 @@ function Console() {
     }
   }
 
+  this.check_tracer_active = function(self) {
+    if (self.runner.tracer == null) {
+      self.term.write("Tracing is not active. Use 't' command to activate.");
+      self.term.newLine();
+      return false;
+    }
+    return true;
+  }
+
+  this.list_breakpoints_cmd = function(self) {
+    for (var i in self.breaks) {
+      var b = self.breaks[i];
+      self.print_breakpoint(self, i, b);
+    }
+  }
+
+  this.edit_breakpoints_cmd = function(self) {
+    var term = self.term;
+
+    if (self.term.argc < 3) { term.write("?"); return; }
+    var n = parseInt(term.argv[1]);
+    if (isNaN(n)) { term.write("?"); return; }
+    if (self.breaks[n] == null)
+      self.breaks[n] = { type:"?", active:"no", address:0 };
+    var b = self.breaks[n];
+
+    for (var i = 2; i < self.term.argc; ++i) {
+      var args = term.argv[i].split(/[:=]/);
+      var arg = args.shift();
+      var value = args.shift();
+      if (["count", "address", "hits"].indexOf(arg) != -1) {
+        var num = parseInt(value);
+        if (isNaN(num)) { term.write("?"); return; }
+        b[arg] = num;
+        if (arg == "count") b.hits = 0;
+      } else
+        b[arg] = value;
+    }
+  }
+
   this.pause_cmd = function(self) {
-    self.runner.pause = 1;
+    self.runner.pause();
     self.pause();
-    self.ui.update_pause_button();
+    self.ui.update_pause_button(self.runner.paused);
   }
   
-  this.continue_cmd = function(self) {
-    self.runner.pause = 0;
+  this.resume_cmd = function(self) {
+    self.runner.resume();
     self.resume();
-    self.ui.update_pause_button();
+    self.ui.update_pause_button(self.runner.paused);
+    window.opener.focus();
   }
   
+  this.reset_cmd = function(self) {
+    self.ui.reset();
+    window.opener.focus();
+  }
+  
+  this.restart_cmd = function(self) {
+    self.ui.restart();
+    window.opener.focus();
+  }
+
+  this.go_cmd = function(self) {
+    if (self.term.argc < 2) { self.term.write("?"); return; }
+    var addr = parseInt(self.term.argv[1]);
+    if (isNaN(addr)) { self.term.write("?"); return; };
+    self.runner.cpu.jump(addr);
+  }
+  
+  this.single_step_cmd = function(self) {
+    if (!self.check_tracer_active(self)) return;
+    self.stop_after_next_instruction = 0;
+    self.resume_cmd(self);
+  }
+
   this.help_cmd = function(self) {
     for (var cmd in self.commands) {
       self.term.write("%s - %s".format(cmd, self.commands[cmd][1]));
@@ -297,35 +402,41 @@ function Console() {
   
   this.commands = {
     "d": [ this.dump_cmd, 
-           "[d]ump memory / d [start_address [, number_of_bytes]]" 
+           "dump memory / d [start_address [, number_of_bytes]]" 
          ],
-    "i": [ this.cpu_cmd, "CPU [i]formation / i" ],
+    "i": [ this.cpu_cmd, "CPU iformation / i" ],
     "z": [ this.disasm_cmd, 
            "disassemble / z [start_address [, number_of_instructions]]" 
          ],
     "w": [ this.write_byte_cmd,
-           "[w]rite bytes / w start_address byte1, [byte2, [byte3]...]"
+           "write bytes / w start_address byte1, [byte2, [byte3]...]"
          ],
     "ww": [ this.write_word_cmd,
-           "[w]rite [w]ords / ww start_address word1, [word2, [word3]...]"
+           "write words / ww start_address word1, [word2, [word3]...]"
          ],
     "wc": [ this.write_char_cmd,
-           "[w]rite [c]haracters / ww start_address string"
+           "write characters / ww start_address string"
          ],
-    "t": [ this.debug_cmd,
-           "debug con[t]rol / t on|off"
+    "t": [ this.debug_cmd, "debug control / t [on|off]" ],
+    "p": [ this.pause_cmd, "pause CPU / p"
          ],
-    "p": [ this.pause_cmd,
-           "[p]ause / p"
+    "r": [ this.resume_cmd, "resume CPU / r" ],
+    "g": [ this.go_cmd, "go to an address / g 0xf86c" ],
+    "gr": [ this.reset_cmd, "reset / gr" ],
+    "gs": [ this.restart_cmd, "restart / gs" ],
+    "s": [ this.single_step_cmd, "single step" ],
+    "bl": [ this.list_breakpoints_cmd,
+           "list breakpoints / bl"
          ],
-    "c": [ this.continue_cmd,
-           "[c]ontinue execution / c"
+    "be": [ this.edit_breakpoints_cmd,
+           "edit breakpoints / be 1 type:exec address:0xf86c count:3"
          ],
-    "?": [ this.help_cmd, "This help / ?"]
+    "?": [ this.help_cmd, "this help / ?"]
   };
 
   this.breaks = {
-    1: { type:"exec", address:0xf86c, active:"yes" }  
+    1: { type:"exec", address:0xf86c, active:"yes", count:0, hits:0 },
+    2: { type:"exec", address:0xfca5, active:"yes", count:7, hits:0 },
   }
   
   this.terminal_handler = function(term) {
