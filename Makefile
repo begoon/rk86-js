@@ -23,7 +23,7 @@ files:
 
 release:
 	7z a rk86js-1.3.zip -xr!\*rb -xr!\*md -xr!Makefile -xr!.DS_Store \
-		*.html *.js *.bmp files/ catalog/ js/
+		*.html *.js *.bmp files/ catalog/ js/ termlib/
 
 run:
 	$(OPENER) index.html
