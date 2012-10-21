@@ -280,6 +280,7 @@ function Console() {
 
     for (var i in self.breaks) {
       var b = self.breaks[i];
+      if (b == null) continue;
       if (b.active == "yes" && b.address == cpu.pc && b.type == "exec") {
         if (!b.count) {
           self.process_breakpoint(self, i, b);
@@ -290,6 +291,7 @@ function Console() {
             b.hits = 0;
           }
         }
+        if (b.temporary == "yes") self.breaks[i] = null;
       }
     }
   }
@@ -329,6 +331,7 @@ function Console() {
   this.list_breakpoints_cmd = function(self) {
     for (var i in self.breaks) {
       var b = self.breaks[i];
+      if (b == null) continue;
       self.print_breakpoint(self, i, b);
     }
   }
@@ -393,6 +396,23 @@ function Console() {
     self.resume_cmd(self);
   }
 
+  this.step_over_cmd = function(self) {
+    var cpu = self.runner.cpu;
+    var mem = cpu.memory;
+    var binary = [];
+    for (var i = 0; i < 3; ++i)
+      binary[binary.length] = mem.read_raw(cpu.pc + i);
+    var instr = i8080_disasm(binary);
+    var b = {
+      type: "exec",
+      address: (cpu.pc + instr.length) & 0xffff,
+      active: "yes",
+      temporary: "yes"
+    };
+    self.breaks[1000] = b;
+    self.resume_cmd(self);
+  }
+
   this.help_cmd = function(self) {
     for (var cmd in self.commands) {
       self.term.write("%s - %s".format(cmd, self.commands[cmd][1]));
@@ -425,6 +445,7 @@ function Console() {
     "gr": [ this.reset_cmd, "reset / gr" ],
     "gs": [ this.restart_cmd, "restart / gs" ],
     "s": [ this.single_step_cmd, "single step" ],
+    "so": [ this.step_over_cmd, "step over" ],
     "bl": [ this.list_breakpoints_cmd,
            "list breakpoints / bl"
          ],
