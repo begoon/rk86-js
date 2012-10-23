@@ -168,7 +168,7 @@ html_template = <<EOS
 <script type="text/javascript">
 
   var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-3017739-19']);
+  _gaq.push(['_setAccount', 'UA-35795751-1']);
   _gaq.push(['_trackPageview']);
 
   (function() {
