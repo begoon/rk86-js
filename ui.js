@@ -237,6 +237,12 @@ function UI(tape_catalog, runner, memory, autoexec) {
       'resizable=yes, width=700, height=600');
   }
 
+  this.visualizer = function() {
+    this.visualizer_window = window.open("i8080_visualizer.html", '_blank',
+      'toolbar=yes, location=yes, status=no, menubar=yes, scrollbars=yes, ' +
+      'resizable=yes, width=700, height=600');
+  }
+
   this.load_mode = "run";
   this.load_tape_file("mon32.bin");
 }
