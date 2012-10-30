@@ -56,6 +56,8 @@
 </head>
 <body onload="main()" bgcolor="#000000" text="#ffffff">
   <div id="loading">Loading...</div>
+  <div id="fullscreen_panel" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: black; visibility: hidden;"
+  ></div>
   <div id="main_panel" style="display: none">
     <button id="emulator_button" onclick="ui.switch_panel('emulator')"
       disabled="disabled"
@@ -90,6 +92,7 @@
         <button onclick="ui.save_screen()">Save screen</button>
         <button onclick="ui.console()">Console</button>
         <button onclick="ui.visualizer()">V</button>
+        <button onclick="ui.fullscreen()">Full screen</button>
       </div>
       <div style="float: left">
         <div id="disassembler_panel"
