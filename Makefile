@@ -28,6 +28,10 @@ release:
 run:
 	$(OPENER) index.html
 
+canary:
+	"$(LOCALAPPDATA)\Google\Chrome SxS\Application\chrome.exe" \
+		--allow-file-access-from-files file://$(PWD)/index.html
+
 chrome:
 	open -a "Google Chrome" --args \
 		--allow-file-access-from-files file://$(PWD)/index.html
