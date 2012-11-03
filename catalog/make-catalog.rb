@@ -235,7 +235,7 @@ td.cart:hover {
   var disqus_shortname = 'demin-ws';
   var disqus_developer = 0;
   var disqus_identifier = '/rk/catalog/';
-  var disqus_url = 'http://demin.ws/rk/catalog/';
+  var disqus_url = 'http://rk86.ru/catalog/';
   var disqus_script = 'embed.js';
   (function () {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
