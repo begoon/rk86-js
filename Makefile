@@ -22,7 +22,7 @@ files:
 	./rkdump$(EXE) < files.lst > rk86_tape_catalog.js
 
 release:
-	7z a rk86js-1.5.zip -xr!\*rb -xr!\*md -xr!Makefile -xr!.DS_Store \
+	7z a rk86js-1.51.zip -xr!\*rb -xr!\*md -xr!Makefile -xr!.DS_Store \
 		*.html *.js *.bmp files/ catalog/ js/ termlib/
 
 run:
