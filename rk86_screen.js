@@ -79,7 +79,13 @@ function Screen(font_image, ui, memory) {
 
   this.init = function() {
     this.ctx = this.ui.canvas.getContext("2d");
-    this.ctx.fillStyle = "rgb(0,0,0)";
+  }
+
+  this.disable_smoothing = function() {
+    this.ctx.fillStyle = "rgb(0, 0, 0)";
+    this.ctx.mozImageSmoothingEnabled = false;
+    this.ctx.webkitImageSmoothingEnabled = false;
+    this.ctx.imageSmoothingEnabled = false;
   }
 
   this.set_geometry = function(width, height, base) {
@@ -96,6 +102,7 @@ function Screen(font_image, ui, memory) {
     var canvas_height = this.height * (char_height + char_height_gap) * this.scale_y;
     this.ui.resize_canvas(canvas_width, canvas_height);
 
+    this.disable_smoothing();
     this.ctx.fillRect(0, 0, canvas_width, canvas_height);
 
     this.init_cache(this.video_memory_size);
