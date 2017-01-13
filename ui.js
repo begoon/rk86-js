@@ -206,6 +206,13 @@ function UI(tape_catalog, runner, memory, autoexec) {
     document.getElementById("emulator_button").disabled = name == "emulator";
     document.getElementById("assembler_button").disabled = name == "assembler";
     document.getElementById("keyboard_button").disabled = name == "keyboard";
+
+    if (name == "assembler" || name == "keyboard") {
+      var frame_name = name + "_frame";
+      var panel_name = name + "_panel";
+      document.getElementById(frame_name).style.width = document.getElementById(panel_name).offsetWidth;
+      document.getElementById(frame_name).style.height = document.getElementById(panel_name).offsetHeight;
+    }
   }
 
   this.toggle_panel = function(name) {
