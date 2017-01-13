@@ -29,8 +29,8 @@ run:
 	$(OPENER) index.html
 
 canary:
-	"$(LOCALAPPDATA)\Google\Chrome SxS\Application\chrome.exe" \
-		--allow-file-access-from-files file://$(PWD)/index.html
+	"${ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe" \
+		--allow-file-access-from-files file://$(CURDIR)/index.html
 
 chrome:
 	open -a "Google Chrome" --args \
