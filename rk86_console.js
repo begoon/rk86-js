@@ -18,13 +18,13 @@
 
 function Console() {
 
-  this.adjust_window = function() {
-    var callback = function() {
+  this.adjust_window = function () {
+    var callback = function () {
       var term_div = document.getElementById("termDiv");
       InnerWindowResizer(term_div.clientWidth + 16, term_div.clientHeight);
     }
     if (navigator.userAgent.toLowerCase().indexOf('chrome') > -1)
-      window.setTimeout(function() { callback(); }, 200);
+      window.setTimeout(function () { callback(); }, 200);
     else
       callback();
   }
@@ -34,21 +34,21 @@ function Console() {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    " ",  "!",  "\"",  "#",  "$",  "%%",  "&",  "'",
-    "(",  ")",  "*",  "+",  ",",  "-",  ".",  "/",
-    "0",  "1",  "2",  "3",  "4",  "5",  "6",  "7",
-    "8",  "9",  ":",  ";",  "<",  "=",  ">",  "?",
-    "@",  "A",  "B",  "C",  "D",  "E",  "F",  "G",
-    "H",  "I",  "J",  "K",  "L",  "M",  "N",  "O",
-    "P",  "Q",  "R",  "S",  "T",  "U",  "V",  "W",
-    "X",  "Y",  "Z",  "[",  "\\",  "]",  "^",  "_",
-    "Ю",  "А",  "Б",  "Ц",  "Д",  "Е",  "Ф",  "Г",
-    "Х",  "И",  "Й",  "К",  "Л",  "М",  "Н",  "О",
-    "П",  "Я",  "Р",  "С",  "Т",  "У",  "Ж",  "В",
-    "Ь",  "Ы",  "З",  "Ш",  "Э",  "Щ",  "Ч",  "~",
+    " ", "!", "\"", "#", "$", "%%", "&", "'",
+    "(", ")", "*", "+", ",", "-", ".", "/",
+    "0", "1", "2", "3", "4", "5", "6", "7",
+    "8", "9", ":", ";", "<", "=", ">", "?",
+    "@", "A", "B", "C", "D", "E", "F", "G",
+    "H", "I", "J", "K", "L", "M", "N", "O",
+    "P", "Q", "R", "S", "T", "U", "V", "W",
+    "X", "Y", "Z", "[", "\\", "]", "^", "_",
+    "Ю", "А", "Б", "Ц", "Д", "Е", "Ф", "Г",
+    "Х", "И", "Й", "К", "Л", "М", "Н", "О",
+    "П", "Я", "Р", "С", "Т", "У", "Ж", "В",
+    "Ь", "Ы", "З", "Ш", "Э", "Щ", "Ч", "~",
   ];
 
-  this.dump_cmd = function(self) {
+  this.dump_cmd = function (self) {
 
     if (typeof self.dump_cmd.last_address == 'undefined')
       self.dump_cmd.last_address = 0;
@@ -73,7 +73,7 @@ function Console() {
       for (var i = 0; i < chunk_sz; ++i) {
         var ch = mem.read_raw(from + i);
         bytes += "%02X ".format(ch);
-        chars += ch >=32 && ch < 127 ? from_rk86_table[ch] : ".";
+        chars += ch >= 32 && ch < 127 ? from_rk86_table[ch] : ".";
       }
       if (sz < width) {
         bytes += " ".repeat((width - sz) * 3);
@@ -87,7 +87,7 @@ function Console() {
     self.dump_cmd.last_address = from;
   }
 
-  this.disasm_print = function(self, addr, nb_instr) {
+  this.disasm_print = function (self, addr, nb_instr) {
     var mem = self.runner.cpu.memory;
     while (nb_instr-- > 0) {
       var binary = [];
@@ -100,7 +100,7 @@ function Console() {
       for (var i = 0; i < instr.length; ++i) {
         var ch = binary[i];
         bytes += "%02X".format(ch);
-        chars += ch >=32 && ch < 127 ? from_rk86_table[ch] : ".";
+        chars += ch >= 32 && ch < 127 ? from_rk86_table[ch] : ".";
       }
       bytes += " ".repeat((binary.length - instr.length) * 2);
       chars += " ".repeat(binary.length - instr.length);
@@ -112,29 +112,29 @@ function Console() {
     return addr;
   }
 
-  this.cpu_cmd = function(self) {
+  this.cpu_cmd = function (self) {
     var cpu = self.runner.cpu;
     var mem = cpu.memory;
     self.term.write("PC=%04X A=%02X F=%s%s%s%s%s HL=%04X DE=%04X BC=%04X SP=%04X"
-                    .format(
-                      cpu.pc, cpu.a(), 
-                      (cpu.cf ? "C":"-"),
-                      (cpu.pf ? "P":"-"),
-                      (cpu.hf ? "H":"-"),
-                      (cpu.zf ? "Z":"-"),
-                      (cpu.sf ? "S":"-"),
-                      cpu.hl(), cpu.de(), cpu.bc(), cpu.sp));
+      .format(
+        cpu.pc, cpu.a(),
+        (cpu.cf ? "C" : "-"),
+        (cpu.pf ? "P" : "-"),
+        (cpu.hf ? "H" : "-"),
+        (cpu.zf ? "Z" : "-"),
+        (cpu.sf ? "S" : "-"),
+        cpu.hl(), cpu.de(), cpu.bc(), cpu.sp));
     self.term.newLine();
 
     self.disasm_print(self, cpu.pc, 4);
 
-    hex = function(addr, title) {
+    hex = function (addr, title) {
       var bytes = "";
       var chars = "";
       for (var i = 0; i < 16; ++i) {
         var ch = mem.read_raw(addr + i);
         bytes += "%02X ".format(ch);
-        chars += ch >=32 && ch < 127 ? from_rk86_table[ch] : ".";
+        chars += ch >= 32 && ch < 127 ? from_rk86_table[ch] : ".";
       }
       self.term.write("%s=%04X: %s | %s".format(title, addr, bytes, chars));
       self.term.newLine();
@@ -147,13 +147,13 @@ function Console() {
     hex(cpu.bc(), "BC");
   }
 
-  this.disasm_cmd = function(self) {
+  this.disasm_cmd = function (self) {
     if (typeof self.disasm_cmd.last_address == 'undefined')
       self.disasm_cmd.last_address = 0;
 
     if (typeof self.disasm_cmd.last_length == 'undefined')
       self.disasm_cmd.last_length = 20;
-    
+
     var cpu = self.runner.cpu;
     var mem = cpu.memory;
 
@@ -167,7 +167,7 @@ function Console() {
     self.disasm_cmd.last_address = self.disasm_print(self, from, sz);
   }
 
-  this.write_byte_cmd = function(self) {
+  this.write_byte_cmd = function (self) {
     var mem = self.runner.cpu.memory;
 
     if (self.term.argc < 3) { self.term.write("?"); return; }
@@ -184,7 +184,7 @@ function Console() {
     }
   }
 
-  this.write_word_cmd = function(self) {
+  this.write_word_cmd = function (self) {
     var mem = self.runner.cpu.memory;
 
     if (self.term.argc < 3) { self.term.write("?"); return; }
@@ -210,7 +210,7 @@ function Console() {
     }
   }
 
-  this.write_char_cmd = function(self) {
+  this.write_char_cmd = function (self) {
     var mem = self.runner.cpu.memory;
 
     if (self.term.argc < 3) { self.term.write("?"); return; }
@@ -231,7 +231,7 @@ function Console() {
     }
   }
 
-  this.print_breakpoint = function(self, n, b) {
+  this.print_breakpoint = function (self, n, b) {
     self.term.write("Breakpoint #%s %s %s %04X"
       .format(n, b.type, b.active == "yes" ? "active" : "disabled", b.address));
     if (b.count)
@@ -241,7 +241,7 @@ function Console() {
 
   this.execute_after_breakpoint = false;
 
-  this.process_breakpoint = function(self, i, b) {
+  this.process_breakpoint = function (self, i, b) {
     self.print_breakpoint(self, i, b);
     self.pause_cmd(this);
     self.term.prompt();
@@ -251,8 +251,8 @@ function Console() {
 
   this.stop_after_next_instruction = -1;
   this.step_over_address = -1;
-	
-  this.tracer_callback = function(self, cpu) {
+
+  this.tracer_callback = function (self, cpu) {
     // After entering into the single step mode ('s' command) we have to
     // execute one instruction (because CPU commands are executed AFTER
     // processing console commands) and then stop before the next one.
@@ -296,17 +296,17 @@ function Console() {
     }
   }
 
-  this.debug_cmd = function(self) {
+  this.debug_cmd = function (self) {
     var state = self.term.argv[1];
     var tracer = self.runner.tracer;
-    
+
     if (state == "on" || state == "off") {
       if (state == "on") {
         var trace_cmd_this = self;
         self.term.write("Tracing is on");
         self.term.newLine();
         var debug_cmd_this = self;
-        self.runner.tracer = function() {
+        self.runner.tracer = function () {
           var cpu = self.runner.cpu;
           return self.tracer_callback(self, cpu);
         }
@@ -319,7 +319,7 @@ function Console() {
     }
   }
 
-  this.check_tracer_active = function(self) {
+  this.check_tracer_active = function (self) {
     if (self.runner.tracer == null) {
       self.term.write("Tracing is not active. Use 't' command to activate.");
       self.term.newLine();
@@ -328,7 +328,7 @@ function Console() {
     return true;
   }
 
-  this.list_breakpoints_cmd = function(self) {
+  this.list_breakpoints_cmd = function (self) {
     for (var i in self.breaks) {
       var b = self.breaks[i];
       if (b == null) continue;
@@ -336,14 +336,14 @@ function Console() {
     }
   }
 
-  this.edit_breakpoints_cmd = function(self) {
+  this.edit_breakpoints_cmd = function (self) {
     var term = self.term;
 
     if (self.term.argc < 3) { term.write("?"); return; }
     var n = parseInt(term.argv[1]);
     if (isNaN(n)) { term.write("?"); return; }
     if (self.breaks[n] == null)
-      self.breaks[n] = { type:"?", active:"no", address:0 };
+      self.breaks[n] = { type: "?", active: "no", address: 0 };
     var b = self.breaks[n];
 
     for (var i = 2; i < self.term.argc; ++i) {
@@ -360,43 +360,43 @@ function Console() {
     }
   }
 
-  this.pause_cmd = function(self) {
+  this.pause_cmd = function (self) {
     self.runner.pause();
     self.pause();
     self.ui.update_pause_button(self.runner.paused);
   }
-  
-  this.resume_cmd = function(self) {
+
+  this.resume_cmd = function (self) {
     self.runner.resume();
     self.resume();
     self.ui.update_pause_button(self.runner.paused);
     window.opener.focus();
   }
-  
-  this.reset_cmd = function(self) {
+
+  this.reset_cmd = function (self) {
     self.ui.reset();
     window.opener.focus();
   }
-  
-  this.restart_cmd = function(self) {
+
+  this.restart_cmd = function (self) {
     self.ui.restart();
     window.opener.focus();
   }
 
-  this.go_cmd = function(self) {
+  this.go_cmd = function (self) {
     if (self.term.argc < 2) { self.term.write("?"); return; }
     var addr = parseInt(self.term.argv[1]);
     if (isNaN(addr)) { self.term.write("?"); return; };
     self.runner.cpu.jump(addr);
   }
-  
-  this.single_step_cmd = function(self) {
+
+  this.single_step_cmd = function (self) {
     if (!self.check_tracer_active(self)) return;
     self.stop_after_next_instruction = 0;
     self.resume_cmd(self);
   }
 
-  this.step_over_cmd = function(self) {
+  this.step_over_cmd = function (self) {
     var cpu = self.runner.cpu;
     var mem = cpu.memory;
     var binary = [];
@@ -413,54 +413,54 @@ function Console() {
     self.resume_cmd(self);
   }
 
-  this.help_cmd = function(self) {
+  this.help_cmd = function (self) {
     for (var cmd in self.commands) {
       self.term.write("%s - %s".format(cmd, self.commands[cmd][1]));
       self.term.newLine();
     }
   }
-  
+
   this.commands = {
-    "d": [ this.dump_cmd, 
-           "dump memory / d [start_address [, number_of_bytes]]" 
-         ],
-    "i": [ this.cpu_cmd, "CPU iformation / i" ],
-    "z": [ this.disasm_cmd, 
-           "disassemble / z [start_address [, number_of_instructions]]" 
-         ],
-    "w": [ this.write_byte_cmd,
-           "write bytes / w start_address byte1, [byte2, [byte3]...]"
-         ],
-    "ww": [ this.write_word_cmd,
-           "write words / ww start_address word1, [word2, [word3]...]"
-         ],
-    "wc": [ this.write_char_cmd,
-           "write characters / ww start_address string"
-         ],
-    "t": [ this.debug_cmd, "debug control / t [on|off]" ],
-    "p": [ this.pause_cmd, "pause CPU / p"
-         ],
-    "r": [ this.resume_cmd, "resume CPU / r" ],
-    "g": [ this.go_cmd, "go to an address / g 0xf86c" ],
-    "gr": [ this.reset_cmd, "reset / gr" ],
-    "gs": [ this.restart_cmd, "restart / gs" ],
-    "s": [ this.single_step_cmd, "single step" ],
-    "so": [ this.step_over_cmd, "step over" ],
-    "bl": [ this.list_breakpoints_cmd,
-           "list breakpoints / bl"
-         ],
-    "be": [ this.edit_breakpoints_cmd,
-           "edit breakpoints / be 1 type:exec address:0xf86c count:3"
-         ],
-    "?": [ this.help_cmd, "this help / ?"]
+    "d": [this.dump_cmd,
+      "dump memory / d [start_address [, number_of_bytes]]"
+    ],
+    "i": [this.cpu_cmd, "CPU iformation / i"],
+    "z": [this.disasm_cmd,
+      "disassemble / z [start_address [, number_of_instructions]]"
+    ],
+    "w": [this.write_byte_cmd,
+      "write bytes / w start_address byte1, [byte2, [byte3]...]"
+    ],
+    "ww": [this.write_word_cmd,
+      "write words / ww start_address word1, [word2, [word3]...]"
+    ],
+    "wc": [this.write_char_cmd,
+      "write characters / ww start_address string"
+    ],
+    "t": [this.debug_cmd, "debug control / t [on|off]"],
+    "p": [this.pause_cmd, "pause CPU / p"
+    ],
+    "r": [this.resume_cmd, "resume CPU / r"],
+    "g": [this.go_cmd, "go to an address / g 0xf86c"],
+    "gr": [this.reset_cmd, "reset / gr"],
+    "gs": [this.restart_cmd, "restart / gs"],
+    "s": [this.single_step_cmd, "single step"],
+    "so": [this.step_over_cmd, "step over"],
+    "bl": [this.list_breakpoints_cmd,
+      "list breakpoints / bl"
+    ],
+    "be": [this.edit_breakpoints_cmd,
+      "edit breakpoints / be 1 type:exec address:0xf86c count:3"
+    ],
+    "?": [this.help_cmd, "this help / ?"]
   };
 
   this.breaks = {
-    1: { type:"exec", address:0xf86c, active:"yes", count:0, hits:0 },
-    2: { type:"exec", address:0xfca5, active:"yes", count:7, hits:0 },
+    1: { type: "exec", address: 0xf86c, active: "yes", count: 0, hits: 0 },
+    2: { type: "exec", address: 0xfca5, active: "yes", count: 7, hits: 0 },
   }
-  
-  this.terminal_handler = function(term) {
+
+  this.terminal_handler = function (term) {
     term.newLine();
     var line = this.lineBuffer;
 
@@ -480,19 +480,19 @@ function Console() {
     term.prompt();
   }
 
-  this.init = function() {
+  this.init = function () {
     this.ui = window.opener.ui;
     this.runner = this.ui.runner;
 
     var init_this = this;
-    this.term = new Terminal( {
-      handler: function() { init_this.terminal_handler(this); },
+    this.term = new Terminal({
+      handler: function () { init_this.terminal_handler(this); },
       x: 0, y: 0,
       cols: 80, rows: 30,
       closeOnESC: false,
       ps: "]",
       greeting: "Консоль Радио-86РК",
-    } );
+    });
     this.term.open();
 
     this.parser = new Parser();
@@ -503,22 +503,22 @@ function Console() {
     this.adjust_window();
   }
 
-  this.pause = function() {
+  this.pause = function () {
     this.term.write("Paused at %04X".format(this.runner.cpu.pc));
     this.term.newLine();
     this.cpu_cmd(this);
   }
-  
-  this.pause_ui_callback = function() {
+
+  this.pause_ui_callback = function () {
     this.pause();
     this.term.prompt();
   }
 
-  this.resume = function() {
+  this.resume = function () {
     this.term.write("Resumed");
   }
-  
-  this.resume_ui_callback = function() {
+
+  this.resume_ui_callback = function () {
     this.resume();
     this.term.prompt();
   }
