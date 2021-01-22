@@ -3,12 +3,12 @@
 all: build files build-catalog
 
 ifeq ($(OS),Windows_NT)
-  CC = c:/tcc/tcc
-  EXE = .exe
-  OPENER = start
+	CC = c:/tcc/tcc
+	EXE = .exe
+	OPENER = start
 else
-  CC = cc
-  OPENER = open
+	CC = cc
+	OPENER = open
 endif
 
 build:
