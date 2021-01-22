@@ -25,6 +25,8 @@ release:
 	7z a rk86js-1.52.zip -xr!\*rb -xr!\*md -xr!Makefile -xr!.DS_Store \
 		*.html *.js *.bmp files/ catalog/ js/ termlib/
 
+serve:
+	python3 -m http.server --bind 127.0.0.1 8000
 
 clean:
 	-rm files.lst rkdump$(EXE) rk86_tape_catalog.js
