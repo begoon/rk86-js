@@ -35,7 +35,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
     return;
   }
 
-  if (navigator.userAgent.toLowerCase().indexOf('chrome') < 0) {;
+  if (navigator.userAgent.toLowerCase().indexOf('chrome') < 0) {
     document.getElementById('assembler_frame').style.width = (window.innerWidth - 32) + "px";
     document.getElementById('assembler_frame').style.height = (window.innerHeight - 50) + "px";
   }
