@@ -50,7 +50,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
     this.file_selector.add(new Option(name, name), null);
   }
 
-  this.resize_screen = function() {
+  this.resize_screen = function () {
     var width = document.getElementById('screen_width').value;
     var height = document.getElementById('screen_height').value;
     var scale_x = document.getElementById('scale_x').value;
@@ -58,7 +58,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
     screen.set_view(width, height, scale_x, scale_y);
   }
 
-  this.resize_canvas = function(width, height) {
+  this.resize_canvas = function (width, height) {
     this.canvas.width = width;
     this.canvas.height = height;
 
@@ -66,27 +66,27 @@ function UI(tape_catalog, runner, memory, autoexec) {
     this.panel.height = this.canvas.height + 4;
   }
 
-  this.reset = function() {
+  this.reset = function () {
     this.runner.cpu.memory.keyboard.reset();
     this.runner.cpu.jump(0xf800);
     console.log("Reset");
   }
 
-  this.restart = function() {
+  this.restart = function () {
     this.runner.cpu.memory.zero_ram();
     this.reset();
     restart_this = this;
-    window.setTimeout(function() { restart_this.autorun(); }, 1000);
+    window.setTimeout(function () { restart_this.autorun(); }, 1000);
   }
 
-  this.update_pause_button = function(paused) {
+  this.update_pause_button = function (paused) {
     var button = document.getElementById("pause_button")
-    
+
     button.innerHTML = paused ? "Resume" : "Pause";
     button.style.background = paused ? "red" : "";
   }
 
-  this.pause = function() {
+  this.pause = function () {
     if (this.runner.paused) {
       this.runner.resume();
       console.log("Resumed");
@@ -101,41 +101,41 @@ function UI(tape_catalog, runner, memory, autoexec) {
     this.update_pause_button(this.runner.paused);
   }
 
-  this.tape_file_name = function(name) {
+  this.tape_file_name = function (name) {
     return "files/" + name;
   }
 
-  this.load_tape_file = function(name) {
+  this.load_tape_file = function (name) {
     var load_tape_file_this = this;
-    var callback = function(image) {
+    var callback = function (image) {
       load_tape_file_this.file_loaded(name, image);
     }
     GetBinaryFile(this.tape_file_name(name), callback, true);
   }
 
-  this.selected_file_name = function() {
+  this.selected_file_name = function () {
     return this.file_selector.options[this.file_selector.selectedIndex].value;
   }
 
-  this.run_selected = function() {
+  this.run_selected = function () {
     this.load_mode = "run";
     this.load_tape_file(this.selected_file_name());
   }
 
-  this.load_selected = function() {
+  this.load_selected = function () {
     this.load_mode = "load";
     this.load_tape_file(this.selected_file_name());
   }
 
-  this.disassembler_available = function() {
+  this.disassembler_available = function () {
     return window.frames.disassembler_frame.loaded;
   }
 
-  this.extract_rk86_word = function(v, i) {
+  this.extract_rk86_word = function (v, i) {
     return ((v.charCodeAt(i) & 0xff) << 8) | (v.charCodeAt(i + 1) & 0xff);
   }
 
-  this.parse_rk86_binary = function(name, image) {
+  this.parse_rk86_binary = function (name, image) {
     var file = {};
     file.name = name;
 
@@ -159,14 +159,14 @@ function UI(tape_catalog, runner, memory, autoexec) {
     return file;
   }
 
-  this.autorun = function() {
+  this.autorun = function () {
     if (this.autoexec.file) {
       this.load_mode = this.autoexec.loadonly ? "load" : "run";
       this.load_tape_file(this.autoexec.file);
     }
   }
 
-  this.file_loaded = function(name, binary) {
+  this.file_loaded = function (name, binary) {
     if (binary == null) {
       alert("Error loading a file '" + name + "'");
       return;
@@ -174,7 +174,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
     var file = this.parse_rk86_binary(name, binary);
     this.memory.load_file(file);
 
-    if (this.disassembler_available()) 
+    if (this.disassembler_available())
       window.frames.disassembler_frame.i8080disasm.refresh(this.memory);
 
     if (/^mon.+\.bin$/.exec(file.name) && this.load_mode == "run") {
@@ -189,9 +189,9 @@ function UI(tape_catalog, runner, memory, autoexec) {
 
     if (this.load_mode == "load") {
       var sz = file.start + file.image.length - 1;
-      alert("Loaded: " + file.name + 
-            "(" + file.start.toString(16) + "-" + sz.toString(16) + "), " +
-            "Run by 'G" + file.entry.toString(16) + "'");
+      alert("Loaded: " + file.name +
+        "(" + file.start.toString(16) + "-" + sz.toString(16) + "), " +
+        "Run by 'G" + file.entry.toString(16) + "'");
     } else {
       console.log("Started", file.name, "from", file.entry.toString(16));
       screen.init_cache();
@@ -199,7 +199,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
     }
   }
 
-  this.switch_panel = function(name) {
+  this.switch_panel = function (name) {
     document.getElementById("emulator_panel").style.display =
       name == "emulator" ? "block" : "none";
     document.getElementById("assembler_panel").style.display =
@@ -218,28 +218,30 @@ function UI(tape_catalog, runner, memory, autoexec) {
     }
   }
 
-  this.toggle_panel = function(name) {
+  this.toggle_panel = function (name) {
     if (name == "disassembler" && !this.disassembler_available()) {
       alert("Disassembler is not available.");
       return;
     }
     var name = name + "_panel";
-    document.getElementById(name).style.display = 
+    document.getElementById(name).style.display =
       document.getElementById(name).style.display == "block" ? "none" : "block";
   }
 
-  this.disassembler_available = function() {
+  this.disassembler_available = function () {
     return window.frames.disassembler_frame.loaded;
   }
 
-  this.save_screen = function() {
+  this.save_screen = function () {
     var save_screen_this = this;
     var filename = save_screen_this.screenshot_name + "-" +
-                   save_screen_this.screenshot_count + ".png";
+      save_screen_this.screenshot_count + ".png";
     save_screen_this.screenshot_count += 1;
-    this.canvas.toBlob(function(blob) {
+    this.canvas.toBlob(function (blob) {
       saveAs(blob, filename);
-    });  
+    });
+  }
+
   this.save_memory = function () {
     var save_memory_this = this;
     var filename = save_memory_this.memory_snapshot_name + "-" +
@@ -249,20 +251,20 @@ function UI(tape_catalog, runner, memory, autoexec) {
     var memory_blob = new Blob([memory], { type: "image/gif" });
     saveAs(memory_blob, filename);
   }
-  
-  this.console = function() {
+
+  this.console = function () {
     this.console_window = window.open("console.html", '_blank',
       'toolbar=yes, location=yes, status=no, menubar=yes, scrollbars=yes, ' +
       'resizable=yes, width=700, height=600');
   }
 
-  this.visualizer = function() {
+  this.visualizer = function () {
     this.visualizer_window = window.open("i8080_visualizer.html", '_blank',
       'toolbar=yes, location=yes, status=no, menubar=yes, scrollbars=yes, ' +
       'resizable=yes, width=700, height=600');
   }
 
-  this.clear_selection = function() {
+  this.clear_selection = function () {
     if (window.getSelection) {
       if (window.getSelection().empty) {  // Chrome
         window.getSelection().empty();
@@ -273,46 +275,46 @@ function UI(tape_catalog, runner, memory, autoexec) {
       document.selection.empty();
     }
   }
-  
-  this.fullscreen = function() {
+
+  this.fullscreen = function () {
     if (!this.canvas.fullscreen) {
       this.canvas.normal_width = parseInt(this.canvas.clientWidth);
       this.canvas.normal_height = parseInt(this.canvas.clientHeight);
     }
     this.canvas.fullscreen = true;
-    
+
     var normal_width = this.canvas.normal_width;
     var normal_height = this.canvas.normal_height;
-    
+
     fullscreen_panel.style.visibility = "visible";
     var width = fullscreen_panel.clientWidth;
     var height = fullscreen_panel.clientHeight;
-    var ratio = Math.min(width/normal_width, height/normal_height);
+    var ratio = Math.min(width / normal_width, height / normal_height);
     var ratio_width = ratio * normal_width;
     var ratio_height = ratio * normal_height;
 
     this.canvas.style.width = Math.floor(ratio_width) + "px;"
     this.canvas.style.height = Math.floor(ratio_height) + "px";
     this.canvas.style.position = "absolute";
-    this.canvas.style.left = Math.ceil((width - ratio_width)/2) + "px";
-    this.canvas.style.top  = Math.ceil((height - ratio_height)/2) + "px";
+    this.canvas.style.left = Math.ceil((width - ratio_width) / 2) + "px";
+    this.canvas.style.top = Math.ceil((height - ratio_height) / 2) + "px";
 
     this.panel.style.visibility = "hidden";
     fullscreen_panel.appendChild(this.canvas);
     window.scrollTo(0, 0);
-    
+
     var fullscreen_this = this;
-    this.canvas.ondblclick = function() { 
+    this.canvas.ondblclick = function () {
       fullscreen_this.fullscreen_off();
       fullscreen_this.clear_selection();
       return false;
     }
-    window.onresize = function() { fullscreen_this.fullscreen(); }
+    window.onresize = function () { fullscreen_this.fullscreen(); }
   }
-  
-  this.fullscreen_off = function() {
+
+  this.fullscreen_off = function () {
     this.canvas.fullscreen = false;
-    window.onresize = function() {};
+    window.onresize = function () { };
     this.canvas.style.width = this.canvas.normal_width + "px";
     this.canvas.style.height = this.canvas.normal_height + "px";
     this.canvas.style.position = "static";
