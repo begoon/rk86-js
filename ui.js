@@ -30,6 +30,9 @@ function UI(tape_catalog, runner, memory, autoexec) {
   this.screenshot_name = "rk86-screen";
   this.screenshot_count = 1;
 
+  this.memory_snapshot_name = "rk86-memory";
+  this.memory_snapshot_count = 1;
+
   if (!this.canvas.getContext) {
     alert("Tag <canvas> is not support is the browser")
     return;
@@ -237,6 +240,14 @@ function UI(tape_catalog, runner, memory, autoexec) {
     this.canvas.toBlob(function(blob) {
       saveAs(blob, filename);
     });  
+  this.save_memory = function () {
+    var save_memory_this = this;
+    var filename = save_memory_this.memory_snapshot_name + "-" +
+      save_memory_this.memory_snapshot_count + ".bin";
+    save_memory_this.memory_snapshot_count += 1;
+    var memory = new Uint8Array(this.memory.buf);
+    var memory_blob = new Blob([memory], { type: "image/gif" });
+    saveAs(memory_blob, filename);
   }
   
   this.console = function() {
