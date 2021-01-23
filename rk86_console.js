@@ -87,6 +87,36 @@ function Console() {
     self.dump_cmd.last_address = from;
   }
 
+  this.download_cmd = function (self) {
+    if (typeof self.download_cmd.snapshot_address == 'undefined')
+      self.download_cmd.snapshot_address = 0;
+
+    if (typeof self.download_cmd.snapshot_length == 'undefined')
+      self.download_cmd.snapshot_length = 0x8000;
+
+    if (typeof self.download_cmd.filename_count == 'undefined')
+      self.download_cmd.filename_count = 1;
+
+    var from = parseInt(self.term.argv[1]);
+    if (isNaN(from)) from = self.download_cmd.snapshot_address;
+    self.download_cmd.snapshot_address = from;
+
+    var sz = parseInt(self.term.argv[2]);
+    if (isNaN(sz)) sz = self.download_cmd.snapshot_length;
+    self.download_cmd.snapshot_length = sz;
+
+    var filename = "rk86-memory-%04X-%04X-%d.bin".format(
+      from, sz, self.download_cmd.filename_count,
+    );
+
+    var content = self.runner.cpu.memory.snapshot(from, sz);
+    var memory = new Uint8Array(content);
+    var memory_blob = new Blob([memory], { type: "image/gif" });
+    saveAs(memory_blob, filename);
+
+    self.download_cmd.filename_count += 1;
+  }
+
   this.disasm_print = function (self, addr, nb_instr) {
     var mem = self.runner.cpu.memory;
     while (nb_instr-- > 0) {
@@ -422,7 +452,10 @@ function Console() {
 
   this.commands = {
     "d": [this.dump_cmd,
-      "dump memory / d [start_address [, number_of_bytes]]"
+      "dump memory / d [start_address[, number_of_bytes]]"
+    ],
+    "dd": [this.download_cmd,
+      "download memory / dd [start_address=0 [, number_of_bytes=0x8000]]"
     ],
     "i": [this.cpu_cmd, "CPU iformation / i"],
     "z": [this.disasm_cmd,

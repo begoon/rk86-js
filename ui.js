@@ -244,12 +244,14 @@ function UI(tape_catalog, runner, memory, autoexec) {
 
   this.save_memory = function () {
     var save_memory_this = this;
-    var filename = save_memory_this.memory_snapshot_name + "-" +
-      save_memory_this.memory_snapshot_count + ".bin";
+    var snapshot = new Uint8Array(save_memory_this.memory.snapshot(0, 0x10000));
+    var snapshot_blob = new Blob([snapshot], { type: "image/gif" });
+    var filename = "%s-%d.bin".format(
+      save_memory_this.memory_snapshot_name,
+      save_memory_this.memory_snapshot_count
+    );
+    saveAs(snapshot_blob, filename);
     save_memory_this.memory_snapshot_count += 1;
-    var memory = new Uint8Array(this.memory.buf);
-    var memory_blob = new Blob([memory], { type: "image/gif" });
-    saveAs(memory_blob, filename);
   }
 
   this.console = function () {

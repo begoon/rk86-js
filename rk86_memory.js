@@ -29,7 +29,7 @@ function Memory(keyboard) {
   }
 
   this.snapshot = function (from, sz) {
-    return this.buf.slice(from, sz);
+    return this.buf.slice(from, from + sz);
   }
 
   this.vg75_c001_00_cmd = 0;
