@@ -2,7 +2,7 @@
 
 rkdump
 files.lst
-rk86_tape_catalog.js
+/rk86_tape_catalog.js
 catalog/index.html
 docs/catalog/Makefile
 docs/catalog/*.rb
