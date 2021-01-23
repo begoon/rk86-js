@@ -19,12 +19,12 @@
 function Memory(keyboard) {
   this.keyboard = keyboard;
 
-  this.init = function() {
+  this.init = function () {
     this.buf = [];
     for (var i = 0; i < 0x10000; ++i) this.buf[i] = 0;
   }
 
-  this.zero_ram = function() {
+  this.zero_ram = function () {
     for (var i = 0; i < 0x8000; ++i) this.buf[i] = 0;
   }
 
@@ -55,17 +55,17 @@ function Memory(keyboard) {
 
   this.init();
 
-  this.length = function() { return 0x10000; }
+  this.length = function () { return 0x10000; }
 
-  this.read_raw = function(addr) {
+  this.read_raw = function (addr) {
     addr &= 0xffff;
     return this.buf[addr] & 0xff;
   }
 
-  this.read = function(addr) {
+  this.read = function (addr) {
     addr &= 0xffff;
 
-    if (addr == 0x8002) 
+    if (addr == 0x8002)
       return this.keyboard.modifiers;
 
     if (addr == 0x8001) {
@@ -86,11 +86,11 @@ function Memory(keyboard) {
 
   this.last_written_byte = -1;
 
-  this.write_raw = function(addr, byte) {
+  this.write_raw = function (addr, byte) {
     this.buf[addr & 0xffff] = byte & 0xff;
   }
 
-  this.write = function(addr, byte) {
+  this.write = function (addr, byte) {
     addr &= 0xffff;
     byte &= 0xff;
 
@@ -190,8 +190,10 @@ function Memory(keyboard) {
         this.video_memory_base = this.video_memory_base_buf;
         this.video_memory_size = this.video_memory_size_buf;
         // Re-configure video.
-        screen.set_geometry(this.video_screen_size_x, this.video_screen_size_y,
-                            this.video_memory_base);
+        screen.set_geometry(
+          this.video_screen_size_x,
+          this.video_screen_size_y,
+          this.video_memory_base);
       }
 
       this.tape_8002_as_output = 0;
@@ -206,7 +208,7 @@ function Memory(keyboard) {
     }
   }
 
-  this.load_file = function(file) {
+  this.load_file = function (file) {
     for (var i = file.start; i <= file.end; ++i) {
       this.write_raw(i, file.image.charCodeAt(i - file.start));
     }
