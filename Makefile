@@ -25,6 +25,8 @@ release:
 	rm -rf docs
 	mkdir docs
 	cp -R catalog files js termlib *.html *.js *.bmp docs
+	rm docs/catalog/Makefile
+	rm docs/catalog/*.rb
 
 serve:
 	(cd docs && python3 -m http.server --bind 127.0.0.1 8000)
