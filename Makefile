@@ -22,7 +22,7 @@ files:
 	./rkdump$(EXE) < files.lst > rk86_tape_catalog.js
 
 release:
-	rm -rf docs
+	-rm -rf docs
 	mkdir docs
 	cp -R catalog files js termlib *.html *.js *.bmp docs
 	rm docs/catalog/Makefile
