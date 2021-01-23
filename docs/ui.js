@@ -233,25 +233,22 @@ function UI(tape_catalog, runner, memory, autoexec) {
   }
 
   this.save_screen = function () {
-    var save_screen_this = this;
-    var filename = save_screen_this.screenshot_name + "-" +
-      save_screen_this.screenshot_count + ".png";
-    save_screen_this.screenshot_count += 1;
+    var filename = this.screenshot_name + "-" + this.screenshot_count + ".png";
+    this.screenshot_count += 1;
     this.canvas.toBlob(function (blob) {
       saveAs(blob, filename);
     });
   }
 
   this.save_memory = function () {
-    var save_memory_this = this;
-    var snapshot = new Uint8Array(save_memory_this.memory.snapshot(0, 0x10000));
+    var snapshot = new Uint8Array(this.memory.snapshot(0, 0x10000));
     var snapshot_blob = new Blob([snapshot], { type: "image/gif" });
     var filename = "%s-%d.bin".format(
-      save_memory_this.memory_snapshot_name,
-      save_memory_this.memory_snapshot_count
+      this.memory_snapshot_name,
+      this.memory_snapshot_count
     );
     saveAs(snapshot_blob, filename);
-    save_memory_this.memory_snapshot_count += 1;
+    this.memory_snapshot_count += 1;
   }
 
   this.console = function () {
