@@ -24,7 +24,7 @@ files:
 release:
 	-rm -rf docs
 	mkdir docs
-	cp -R catalog files js termlib *.html *.js *.bmp docs
+	cp -R catalog files js termlib *.html *.js *.bmp CNAME docs
 	rm docs/catalog/Makefile
 	rm docs/catalog/*.rb
 
