@@ -28,6 +28,10 @@ function Memory(keyboard) {
     for (var i = 0; i < 0x8000; ++i) this.buf[i] = 0;
   }
 
+  this.snapshot = function (from, sz) {
+    return this.buf.slice(from, sz);
+  }
+
   this.vg75_c001_00_cmd = 0;
 
   this.screen_size_x_buf = 0;
