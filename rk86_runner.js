@@ -28,7 +28,7 @@ function Runner(cpu) {
 
   this.cpu.jump(0xf800);
 
-  this.execute = function() {
+  this.execute = function () {
     if (!this.paused) {
       var ticks = 0;
       while (ticks < TICK_PER_MS) {
@@ -47,10 +47,10 @@ function Runner(cpu) {
       }
     }
     runner_self = this;
-    window.setTimeout(function() { runner_self.execute(); }, 10);
+    window.setTimeout(function () { runner_self.execute(); }, 10);
   }
 
-  this.pause = function() {
+  this.pause = function () {
     this.paused = true;
   }
 
