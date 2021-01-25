@@ -57,17 +57,22 @@ function Memory(keyboard) {
   this.video_screen_cursor_x = 0;
   this.video_screen_cursor_y = 0;
 
+  this.last_access_address = 0;
+  this.last_access_operation = undefined; // read, write
+
   this.init();
 
   this.length = function () { return 0x10000; }
 
   this.read_raw = function (addr) {
-    addr &= 0xffff;
-    return this.buf[addr] & 0xff;
+    return this.buf[addr & 0xffff] & 0xff;
   }
 
   this.read = function (addr) {
     addr &= 0xffff;
+
+    this.last_access_address = addr;
+    this.last_access_operation = "read";
 
     if (addr == 0x8002)
       return this.keyboard.modifiers;
@@ -97,6 +102,9 @@ function Memory(keyboard) {
   this.write = function (addr, byte) {
     addr &= 0xffff;
     byte &= 0xff;
+
+    this.last_access_address = addr;
+    this.last_access_operation = "write";
 
     if (addr >= 0xF800) return;
 
