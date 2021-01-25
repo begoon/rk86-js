@@ -390,6 +390,16 @@ function Console() {
     }
   }
 
+  this.delete_breakpoints_cmd = function (self) {
+    var term = self.term;
+
+    if (self.term.argc < 2) { term.write("?"); return; }
+    var n = parseInt(term.argv[1]);
+    if (isNaN(n)) { term.write("?"); return; }
+
+    self.breaks[n] = null;
+  }
+
   this.pause_cmd = function (self) {
     self.runner.pause();
     self.pause();
@@ -485,6 +495,7 @@ function Console() {
     "be": [this.edit_breakpoints_cmd,
       "edit breakpoints / be 1 type:exec address:0xf86c count:3"
     ],
+    "bd": [this.delete_breakpoints_cmd, "delete breakpoints / bd 1"],
     "?": [this.help_cmd, "this help / ?"]
   };
 
