@@ -6,3 +6,5 @@ files.lst
 catalog/index.html
 docs/catalog/Makefile
 docs/catalog/*.rb
+.venv
+.vscode
