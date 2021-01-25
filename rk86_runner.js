@@ -21,6 +21,7 @@ function Runner(cpu) {
   this.paused = false;
   this.tracer = null;
   this.visualizer = null;
+  this.last_instructions = [];
 
   const FREQ = 2100000;
   const TICK_PER_MS = FREQ / 100;
@@ -34,6 +35,10 @@ function Runner(cpu) {
         if (this.tracer) { 
           this.tracer(this)
           if (this.paused) break;
+        }
+        this.last_instructions.push(cpu.pc);
+        if (this.last_instructions.length > 5) {
+          this.last_instructions.shift();
         }
         ticks += this.cpu.instruction();
         if (this.visualizer) {
