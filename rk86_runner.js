@@ -54,7 +54,7 @@ function Runner(cpu) {
     this.paused = true;
   }
 
-  this.resume = function() {
+  this.resume = function () {
     this.paused = false;
   }
 }
