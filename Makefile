@@ -25,6 +25,8 @@ release:
 	-rm -rf docs
 	mkdir docs
 	cp -R catalog files js termlib *.html *.js *.bmp CNAME docs
+	python version.py index.html >index.version.html
+	mv index.version.html docs/index.html
 	rm docs/catalog/Makefile
 	rm docs/catalog/*.rb
 
