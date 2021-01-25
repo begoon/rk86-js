@@ -57,10 +57,16 @@ function Memory(keyboard) {
   this.video_screen_cursor_x = 0;
   this.video_screen_cursor_y = 0;
 
-  this.last_access_address = 0;
-  this.last_access_operation = undefined; // read, write
+  this.last_access_address = 0;  // values: 0000-FFFF
+  this.last_access_operation = undefined;  // values: read, write
+
+  this.invalidate_access_variables = function () {
+    this.last_access_address = 0;
+    this.last_access_operation = undefined;
+  }
 
   this.init();
+  this.invalidate_access_variables();
 
   this.length = function () { return 0x10000; }
 

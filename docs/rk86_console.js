@@ -117,7 +117,7 @@ function Console() {
     self.download_cmd.filename_count += 1;
   }
 
-  this.disasm_print = function (self, addr, nb_instr) {
+  this.disasm_print = function (self, addr, nb_instr, current_addr) {
     var mem = self.runner.cpu.memory;
     while (nb_instr-- > 0) {
       var binary = [];
@@ -135,7 +135,8 @@ function Console() {
       bytes += " ".repeat((binary.length - instr.length) * 2);
       chars += " ".repeat(binary.length - instr.length);
 
-      self.term.write("%04X: %s %s %s".format(addr, bytes, chars, instr.instr));
+      var current = current_addr && addr == current_addr ? ">" : " ";
+      self.term.write("%04X: %s%s %s %s".format(addr, current, bytes, chars, instr.instr));
       self.term.newLine();
       addr += instr.length;
     }
@@ -156,7 +157,11 @@ function Console() {
         cpu.hl(), cpu.de(), cpu.bc(), cpu.sp));
     self.term.newLine();
 
-    self.disasm_print(self, cpu.pc, 4);
+    for (var i = 0; i < self.runner.last_instructions.length; ++i) {
+      var addr = self.runner.last_instructions[i];
+      self.disasm_print(self, addr, 1, cpu.pc);
+    }
+    self.disasm_print(self, cpu.pc, 5, cpu.pc);
 
     hex = function (addr, title) {
       var bytes = "";
@@ -282,7 +287,7 @@ function Console() {
   this.stop_after_next_instruction = -1;
   this.step_over_address = -1;
 
-  this.tracer_callback = function (self, cpu) {
+  this.tracer_callback = function (self, cpu, when) {
     // After entering into the single step mode ('s' command) we have to
     // execute one instruction (because CPU commands are executed AFTER
     // processing console commands) and then stop before the next one.
@@ -308,20 +313,33 @@ function Console() {
       return false;
     }
 
+    function breakpoint_hit(breakpoint, breakpoint_index) {
+      if (!b.count) {
+        self.process_breakpoint(self, breakpoint_index, breakpoint);
+      } else {
+        ++b.hits;
+        if (b.hits == b.count) {
+          self.process_breakpoint(self, breakpoint_index, breakpoint);
+          b.hits = 0;
+        }
+      }
+      if (b.temporary == "yes") self.breaks[i] = null;
+    }
+
     for (var i in self.breaks) {
       var b = self.breaks[i];
-      if (b == null) continue;
-      if (b.active == "yes" && b.address == cpu.pc && b.type == "exec") {
-        if (!b.count) {
-          self.process_breakpoint(self, i, b);
-        } else {
-          ++b.hits;
-          if (b.hits == b.count) {
-            self.process_breakpoint(self, i, b);
-            b.hits = 0;
-          }
+      if (b == null || b.active != "yes") continue;
+      // Process "exec" breakpoints only before the current instruction.
+      if (when == "before" && b.address == cpu.pc && b.type == "exec") {
+        breakpoint_hit(b, i);
+      }
+      // Process "read/write" breakpoints only after the current instruction.
+      if (when == "after") {
+        var address = cpu.memory.last_access_address;
+        var operation = cpu.memory.last_access_operation;
+        if (b.address == address && b.type == operation) {
+          breakpoint_hit(b, i);
         }
-        if (b.temporary == "yes") self.breaks[i] = null;
       }
     }
   }
@@ -332,13 +350,11 @@ function Console() {
 
     if (state == "on" || state == "off") {
       if (state == "on") {
-        var trace_cmd_this = self;
         self.term.write("Tracing is on");
         self.term.newLine();
-        var debug_cmd_this = self;
-        self.runner.tracer = function () {
+        self.runner.tracer = function (when) {
           var cpu = self.runner.cpu;
-          return self.tracer_callback(self, cpu);
+          return self.tracer_callback(self, cpu, when);
         }
       } else {
         self.runner.tracer = null;
@@ -388,6 +404,16 @@ function Console() {
       } else
         b[arg] = value;
     }
+  }
+
+  this.delete_breakpoints_cmd = function (self) {
+    var term = self.term;
+
+    if (self.term.argc < 2) { term.write("?"); return; }
+    var n = parseInt(term.argv[1]);
+    if (isNaN(n)) { term.write("?"); return; }
+
+    self.breaks[n] = null;
   }
 
   this.pause_cmd = function (self) {
@@ -479,18 +505,19 @@ function Console() {
     "gs": [this.restart_cmd, "restart / gs"],
     "s": [this.single_step_cmd, "single step"],
     "so": [this.step_over_cmd, "step over"],
-    "bl": [this.list_breakpoints_cmd,
-      "list breakpoints / bl"
-    ],
+    "bl": [this.list_breakpoints_cmd, "list breakpoints / bl"],
     "be": [this.edit_breakpoints_cmd,
-      "edit breakpoints / be 1 type:exec address:0xf86c count:3"
+      "create/edit breakpoints / be 1 type:exec address:0xf86c count:3"
     ],
+    "bd": [this.delete_breakpoints_cmd, "delete breakpoints / bd 1"],
     "?": [this.help_cmd, "this help / ?"]
   };
 
   this.breaks = {
-    1: { type: "exec", address: 0xf86c, active: "yes", count: 0, hits: 0 },
-    2: { type: "exec", address: 0xfca5, active: "yes", count: 7, hits: 0 },
+    1: { type: "exec", address: 0xf86c, active: "no", count: 0, hits: 0 },
+    2: { type: "read", address: 0x0100, active: "no", count: 0, hits: 0 },
+    3: { type: "write", address: 0x0200, active: "no", count: 0, hits: 0 },
+    4: { type: "exec", address: 0xfca5, active: "no", count: 7, hits: 0 },
   }
 
   this.terminal_handler = function (term) {

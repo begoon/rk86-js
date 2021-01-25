@@ -32,15 +32,20 @@ function Runner(cpu) {
     if (!this.paused) {
       var ticks = 0;
       while (ticks < TICK_PER_MS) {
-        if (this.tracer) { 
-          this.tracer(this)
+        if (this.tracer) {
+          this.tracer('before')
           if (this.paused) break;
         }
         this.last_instructions.push(cpu.pc);
         if (this.last_instructions.length > 5) {
           this.last_instructions.shift();
         }
+        this.cpu.memory.invalidate_access_variables();
         ticks += this.cpu.instruction();
+        if (this.tracer) {
+          this.tracer('after')
+          if (this.paused) break;
+        }
         if (this.visualizer) {
           this.visualizer.hit(this.cpu.memory.read_raw(this.cpu.pc));
         }
