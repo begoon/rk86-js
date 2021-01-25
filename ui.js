@@ -292,7 +292,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
     var ratio_width = ratio * normal_width;
     var ratio_height = ratio * normal_height;
 
-    this.canvas.style.width = Math.floor(ratio_width) + "px;"
+    this.canvas.style.width = Math.floor(ratio_width) + "px";
     this.canvas.style.height = Math.floor(ratio_height) + "px";
     this.canvas.style.position = "absolute";
     this.canvas.style.left = Math.ceil((width - ratio_width) / 2) + "px";
