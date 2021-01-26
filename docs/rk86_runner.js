@@ -21,17 +21,22 @@ function Runner(cpu) {
   this.paused = false;
   this.tracer = null;
   this.visualizer = null;
+
   this.last_instructions = [];
 
   const FREQ = 2100000;
+  this.previous_batch_time = 0;
+
+  this.total_ticks = 0;
   const TICK_PER_MS = FREQ / 100;
 
   this.cpu.jump(0xf800);
 
   this.execute = function () {
     if (!this.paused) {
-      var ticks = 0;
-      while (ticks < TICK_PER_MS) {
+      var batch_ticks = 0;
+      var batch_instructions = 0;
+      while (batch_ticks < TICK_PER_MS) {
         if (this.tracer) {
           this.tracer('before')
           if (this.paused) break;
@@ -41,7 +46,10 @@ function Runner(cpu) {
           this.last_instructions.shift();
         }
         this.cpu.memory.invalidate_access_variables();
-        ticks += this.cpu.instruction();
+        var instruction_ticks = this.cpu.instruction();
+        batch_ticks += instruction_ticks;
+        this.total_ticks += instruction_ticks;
+
         if (this.tracer) {
           this.tracer('after')
           if (this.paused) break;
@@ -49,7 +57,14 @@ function Runner(cpu) {
         if (this.visualizer) {
           this.visualizer.hit(this.cpu.memory.read_raw(this.cpu.pc));
         }
+        batch_instructions += 1;
       }
+      var now = +new Date();
+      var elapsed = now - this.previous_batch_time;
+      this.previous_batch_time = now;
+
+      this.instructions_per_millisecond = batch_instructions / elapsed;
+      this.ticks_per_millisecond = batch_ticks / elapsed;
     }
     runner_self = this;
     window.setTimeout(function () { runner_self.execute(); }, 10);
