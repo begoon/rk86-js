@@ -147,7 +147,7 @@ end
 
 def build_catalog()
   catalog = ""
-  Dir.glob("../files/*").each do |name|
+  Dir.glob("../files/*").sort.each do |name|
     name = name.split("/")[-1]
     catalog << build_file_entry(name)
   end
