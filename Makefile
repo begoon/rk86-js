@@ -30,6 +30,9 @@ release:
 	rm docs/catalog/Makefile
 	rm docs/catalog/*.rb
 
+dev-release: release
+	cp experiments/* docs
+
 serve:
 	(cd docs && python3 -m http.server --bind 127.0.0.1 8000)
 
