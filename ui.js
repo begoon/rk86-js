@@ -50,6 +50,18 @@ function UI(tape_catalog, runner, memory, autoexec) {
     this.file_selector.add(new Option(name, name), null);
   }
 
+  this.ips = document.getElementById('ips');
+  this.tps = document.getElementById('tps');
+  var update_perf_this = this;
+  this.update_perf = function () {
+    function update(element, value) {
+      element.innerHTML = Math.floor(value * 1000).toLocaleString();
+    }
+    update(ips, update_perf_this.runner.instructions_per_millisecond);
+    update(tps, update_perf_this.runner.ticks_per_millisecond);
+  }
+  setInterval(this.update_perf, 2000);
+
   this.resize_screen = function () {
     var width = document.getElementById('screen_width').value;
     var height = document.getElementById('screen_height').value;
