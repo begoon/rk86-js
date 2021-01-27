@@ -62,6 +62,10 @@ function UI(tape_catalog, runner, memory, autoexec) {
   }
   setInterval(this.update_perf, 2000);
 
+  this.sound_toggle = function (checkbox) {
+    this.runner.sound_enabled = checkbox.checked;;
+  }
+
   this.resize_screen = function () {
     var width = document.getElementById('screen_width').value;
     var height = document.getElementById('screen_height').value;

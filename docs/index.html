@@ -28,6 +28,7 @@
   <script src="js/FileSaver.js" type="application/javascript"></script>
   <script src="js/GetBinaryFile.js" type="application/javascript"></script>
   <script src="js/StringUtils.js" type="application/javascript"></script>
+  <script src="/js/SoundPlayer.js" type="application/javascript"></script>
   <!-- ||| -->
   <script src="i8080.js" type="application/javascript"></script>
   <script src="rk86_tape_catalog.js" type="application/javascript"></script>
@@ -35,6 +36,7 @@
   <script src="rk86_screen.js" type="application/javascript"></script>
   <script src="rk86_memory.js" type="application/javascript"></script>
   <script src="rk86_keyboard.js" type="application/javascript"></script>
+  <script src="rk86_sound.js" type="application/javascript"></script>
   <script src="rk86_runner.js" type="application/javascript"></script>
   <script src="ui.js" type="application/javascript"></script>
   <script src="main.js" type="application/javascript"></script>
@@ -73,7 +75,7 @@
         <div id="back" style="background: #000; padding: 1px; border: 1px solid #ccc">
           <canvas id="canvas" width="0" height="0"></canvas>
         </div>
-        <span title="Build 2021/01/25 20:05:33">2021/01/25</span>
+        <input type="checkbox" id="sound_enabled" onclick="ui.sound_toggle(this)" />Sound
         <div style="display: none">
           Screen: <input id="screen_width" value="78" style="width: 2em">
           x <input id="screen_height" value="30" style="width: 2em">

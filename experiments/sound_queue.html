@@ -1,0 +1,71 @@
+<html>
+
+<head>
+  <script src="/js/SoundPlayer.js" type="application/javascript"></script>
+  <script>
+    class Sound {
+      constructor() {
+        this.volume = 0.03;
+
+        this.player = null;
+        this.queue = [];
+      }
+
+      set_stop_timer(duration) {
+        return setTimeout(() => {
+          console.log(JSON.stringify(this.queue));
+          const [previous_tone, _] = this.queue.shift();
+          if (this.queue.length == 0) {
+            this.player.stop();
+          } else {
+            const [tone, duration] = this.queue[0];
+            if (previous_tone !== tone) {
+              this.player.stop();
+              this.player.play(tone, this.volume, "square");
+            }
+            this.set_stop_timer(duration);
+          }
+        }, duration);
+      }
+
+      play(tone, duration) {
+        if (!this.player) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.player = new SoundPlayer(new AudioContext());
+        }
+
+        this.queue.push([tone, duration]);
+        if (this.queue.length == 1) {
+          this.player.play(tone, this.volume, "square");
+          this.set_stop_timer(duration);
+        }
+      }
+    }
+
+    const sound_controller = new Sound();
+
+    const play = () => {
+      const tone = +document.getElementById('tone').value;
+      const duration = +document.getElementById('duration').value;
+      const volume = +document.getElementById('volume').value;
+      sound_controller.play(tone, duration);
+    }
+
+  </script>
+
+</head>
+
+<body>
+  <div>
+    Tone <input id="tone" value="400" />
+  </div>
+  <div>
+    Duration <input id="duration" value="3000" />
+  </div>
+  <div>
+    Volume <input id="volume" value="0.03" />
+  </div>
+  <button onclick="play()">Play</button>
+</body>
+
+</html>

@@ -28,9 +28,31 @@ function Runner(cpu) {
 
   this.total_ticks = 0;
 
-  const FREQ = 2100000;
+  this.last_iff_raise_ticks = 0;
+  this.last_iff = 0;
+  this.sound_enabled = false;
+
+  const FREQ = 1780000;
   const TICK_PER_MS = FREQ / 100;
 
+  var interrupt_this = this;
+  this.interrupt = function (iff) {
+    if (!interrupt_this.sound_enabled) return;
+    if (interrupt_this.last_iff == iff) return;
+    if (interrupt_this.last_iff == 0 && iff == 1) {
+      interrupt_this.last_iff_raise_ticks = interrupt_this.total_ticks;
+    }
+    if (interrupt_this.last_iff == 1 && iff == 0) {
+      var tone_ticks = interrupt_this.total_ticks - interrupt_this.last_iff_raise_ticks;
+      var tone = FREQ / (tone_ticks * 2);
+      var duration = 1 / tone;
+      if (!this.sound) this.sound = new Sound();
+      this.sound.play(tone, duration);
+    }
+    interrupt_this.last_iff = iff;
+  }
+
+  this.cpu.io.interrupt = this.interrupt;
   this.cpu.jump(0xf800);
 
   this.execute = function () {
