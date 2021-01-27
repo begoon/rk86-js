@@ -1,6 +1,6 @@
 ﻿def build_file_screens(name) 
   screens = ""
-  Dir.glob("%s/%s-*.png" % [name, name]) do |image|
+  Dir.glob("%s/%s-*.png" % [name, name]).sort.each do |image|
     screen_link = ""
     screen_link = <<-EOS
       <a rel="lightbox[#{name}]" href="#{image}">
