@@ -63,7 +63,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
   setInterval(this.update_perf, 2000);
 
   this.sound_toggle = function (checkbox) {
-    this.runner.sound_enabled = checkbox.checked;;
+    this.runner.init_sound(checkbox.checked);
   }
 
   this.resize_screen = function () {
