@@ -1620,15 +1620,28 @@
       }
     }
 
-    function upload(parent) {
+    function upload_to_emulator(confirmation = false) {
       var loaded = 0;
-      if (!parent.ui.memory) return;
+      var start_address = undefined;
+      if (!parent.ui) return;
       for (var i = 0; i < mem.length; ++i) {
         if (mem[i] == undefined) continue;
+        if (start_address == undefined) start_address = i;
         parent.ui.memory.write_raw(i, mem[i].valueOf());
         ++loaded;
       }
-      alert(loaded + " byte(s) uploaded");
+      if (confirmation) alert(loaded + " byte(s) uploaded");
+      return start_address;
+    }
+
+    function upload(parent) {
+      upload_to_emulator(true);
+    }
+
+    function run(parent) {
+      var start_address = upload_to_emulator();
+      parent.ui.switch_panel('emulator');
+      parent.ui.runner.cpu.jump(start_address);
     }
 
   </script>
@@ -1922,6 +1935,7 @@ msg:
   <input type="text" id="hex" name="hex" style="display:none;">
   <input type="text" id="formbinname" name="formbinname" style="display:none;">
   <button onclick="upload(parent)" )>Upload to emulator</button>
+  <button onclick="run(parent)" )>Run in emulator</button>
   <!--div id="debug">idebug</div-->
 </body>
 
