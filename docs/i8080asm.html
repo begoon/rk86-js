@@ -1164,7 +1164,7 @@
 
     var autotranslate = false;
 
-    function keypress(e) {
+    function keyup(e) {
       cock(1500);
     }
 
@@ -1916,7 +1916,7 @@
   <div id="textinput">
     <div id="list">�</div>
     <div id="ta">
-      <textarea onkeydown="return keydown(event);" onkeypress="keypress(event);return true;" id="source" rows="30">
+      <textarea onkeydown="return keydown(event);" onkeyup="keyup(event);return true;" id="source" rows="30">
         ; i8080 assembler code
 prompt  equ 0F86Ch
 puts    equ 0F818h
