@@ -3,6 +3,8 @@
 
 <head>
   <title>Pretty i8080 Assembler</title>
+  <script src="js/StringUtils.js" type="application/javascript"></script>
+  <script src="js/FileSaver.js" type="application/javascript"></script>
   <script type="text/javascript">
     //
     // Pretty i8080 Assembler
@@ -1669,6 +1671,43 @@
       parent.ui.runner.cpu.jump(start_address);
     }
 
+    var download_source_count = 0;
+    var download_source_this = this;
+    function download_source() {
+      var source = save_source();
+      var blob = new Blob([source], { type: "text/plain" });
+      var filename = "assembler-source-%d.asm".format(
+        download_source_this.download_source_count
+      );
+      download_source_this.download_source_count += 1;
+      saveAs(blob, filename);
+    }
+
+    function download_binary_snapshot() {
+      var binary = [];
+      var start_address = undefined;
+      for (var i = 0; i < mem.length; ++i) {
+        if (mem[i] == undefined) continue;
+        if (start_address == undefined) start_address = i;
+        binary.push(mem[i].valueOf());
+      }
+      return [start_address, binary];
+    }
+
+    var download_binary_count = 0;
+    var download_binary_this = this;
+    function download_binary() {
+      var [start_address, binary] = download_binary_snapshot();
+      var binary_array = new Uint8Array(binary);
+      var blob = new Blob([binary_array], { type: "image/gif" });
+      var filename = "assembler-binary-%04X-%04X-%d.bin".format(
+        start_address,
+        start_address + binary.length,
+        download_binary_this.download_binary_count
+      );
+      download_binary_this.download_binary_count += 1;
+      saveAs(blob, filename);
+    }
   </script>
 
   <style type="text/css" media="screen">
@@ -1963,6 +2002,8 @@ msg:
   <input type="text" id="formbinname" name="formbinname" style="display:none;">
   <button onclick="upload(parent)" )>Upload to emulator</button>
   <button onclick="run(parent)" )>Run in emulator</button>
+  <button onclick="download_source()" )>Download source</button>
+  <button onclick="download_binary()" )>Download binary</button>
   <button onclick="reset_source()" )>Reset source</button>
   <!--div id="debug">idebug</div-->
 </body>
