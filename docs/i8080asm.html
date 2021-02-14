@@ -993,12 +993,36 @@
       errors[line] = text;
     }
 
+    function load_source() {
+      var source = localStorage.getItem('source');
+      document.getElementById('source').innerHTML = source ?
+        source :
+        document.getElementById('default_source').innerHTML;
+      return source;
+    }
+
+    function save_source() {
+      var source = document.getElementById('source').value;
+      localStorage.setItem('source', source);
+      return source;
+    }
+
+    function reset_source() {
+      if (confirm("Are you sure to reset the source to default?")) {
+        document.getElementById('source').innerHTML =
+          document.getElementById('default_source').innerHTML;
+        localStorage.removeItem('source');
+        cock(500);
+      }
+    }
+
     // last known source to compare against
     var last_src = false;
 
     // assembler main entry point
     function assemble() {
       var src = document.getElementById('source').value;
+      save_source();
 
       if (last_src == src) {
         return;
@@ -1562,6 +1586,7 @@
 
       updateSizes();
 
+      load_source();
       cock(100);
     }
 
@@ -1917,6 +1942,8 @@
     <div id="list">�</div>
     <div id="ta">
       <textarea onkeydown="return keydown(event);" onkeyup="keyup(event);return true;" id="source" rows="30">
+      </textarea>
+      <textarea id="default_source" style="display: none;">
         ; i8080 assembler code
 prompt  equ 0F86Ch
 puts    equ 0F818h
@@ -1929,13 +1956,14 @@ puts    equ 0F818h
 
 msg:
         db 1fh,'radio-86rk snowa s nami!',0dh,0ah,7,0
-</textarea>
+      </textarea>
     </div>
   </div>
   <input type="text" id="hex" name="hex" style="display:none;">
   <input type="text" id="formbinname" name="formbinname" style="display:none;">
   <button onclick="upload(parent)" )>Upload to emulator</button>
   <button onclick="run(parent)" )>Run in emulator</button>
+  <button onclick="reset_source()" )>Reset source</button>
   <!--div id="debug">idebug</div-->
 </body>
 
