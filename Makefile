@@ -29,6 +29,7 @@ release:
 	mv rk86_keyboard_layout.version.html docs/rk86_keyboard_layout.html
 	rm docs/catalog/Makefile
 	rm docs/catalog/*.rb
+	touch docs/.nojekyll
 
 dev-release: release
 	cp experiments/* docs
