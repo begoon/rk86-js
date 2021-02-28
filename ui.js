@@ -92,7 +92,11 @@ function UI(tape_catalog, runner, memory, autoexec) {
     this.runner.cpu.memory.zero_ram();
     this.reset();
     restart_this = this;
-    window.setTimeout(function () { restart_this.autorun(); }, 1000);
+    if (this.autorun_executed) return;
+    window.setTimeout(function () {
+      restart_this.autorun();
+      restart_this.autorun_executed = true;
+    }, 1000);
   }
 
   this.update_pause_button = function (paused) {
