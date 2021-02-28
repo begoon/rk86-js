@@ -60,6 +60,7 @@ function Runner(cpu) {
   this.cpu.jump(0xf800);
 
   this.execute = function () {
+    clearTimeout(this.execute_timer);
     if (!this.paused) {
       var batch_ticks = 0;
       var batch_instructions = 0;
@@ -94,7 +95,7 @@ function Runner(cpu) {
       this.ticks_per_millisecond = batch_ticks / elapsed;
     }
     runner_self = this;
-    window.setTimeout(function () { runner_self.execute(); }, 10);
+    this.execute_timer = window.setTimeout(function () { runner_self.execute(); }, 10);
   }
 
   this.pause = function () {
