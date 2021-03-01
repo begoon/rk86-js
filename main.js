@@ -44,6 +44,10 @@ function main() {
   ui = new UI(tape_catalog(), runner, memory, new Autoexec());
   screen = new Screen(rk86_font_image(), ui, memory);
 
+  var tape = new Tape(runner);
+
+  memory.tape_write_bit = tape.write_bit;
+
   document.getElementById("loading").style.display = "none";
   document.getElementById("main_panel").style.display = "block";
 }
