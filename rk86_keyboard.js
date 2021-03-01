@@ -130,8 +130,18 @@ function Keyboard() {
     }, 100);
   };
 
+  meta_keys_buffer = null;
+
   document.onkeydown = function (evt) {
     const code = evt.keyCode;
+    if (code == 91 || code == 93) {
+      // let and right CMD (meta)
+      keyboard_this.meta_keys_buffer = [];
+    } else {
+      if (keyboard_this.meta_keys_buffer !== null) {
+        keyboard_this.meta_keys_buffer.push(code);
+      }
+    }
     keyboard_this.keydown(code);
     return false;
   };
@@ -139,6 +149,12 @@ function Keyboard() {
   document.onkeyup = function (evt) {
     const code = evt.keyCode;
     keyboard_this.keyup(code);
+    if (code == 91 || code == 93) {
+      for (const code of keyboard_this.meta_keys_buffer) {
+        keyboard_this.keyup(code);
+      }
+      this.meta_keys_buffer = null;
+    }
     return false;
   };
 
