@@ -131,13 +131,13 @@ function Keyboard() {
   };
 
   document.onkeydown = function (evt) {
-    var code = evt.keyCode + (evt.altKey ? 256 : 0);
+    const code = evt.keyCode;
     keyboard_this.keydown(code);
     return false;
   };
 
   document.onkeyup = function (evt) {
-    var code = evt.keyCode + (evt.altKey ? 256 : 0);
+    const code = evt.keyCode;
     keyboard_this.keyup(code);
     return false;
   };
