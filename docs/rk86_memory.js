@@ -220,8 +220,8 @@ function Memory(keyboard) {
     }
 
     if (addr == 0x8002) {
-      if (this.tape_8002_as_output && this.tape_write_bit) {
-        this.tape_write_bit(byte & 0x01);
+      if (this.tape_8002_as_output) {
+        this.tape_write_bit && this.tape_write_bit(byte & 0x01);
       }
       return;
     }
