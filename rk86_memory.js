@@ -22,15 +22,15 @@ function Memory(keyboard) {
   this.init = function () {
     this.buf = [];
     for (var i = 0; i < 0x10000; ++i) this.buf[i] = 0;
-  }
+  };
 
   this.zero_ram = function () {
     for (var i = 0; i < 0x8000; ++i) this.buf[i] = 0;
-  }
+  };
 
   this.snapshot = function (from, sz) {
     return this.buf.slice(from, from + sz);
-  }
+  };
 
   this.vg75_c001_00_cmd = 0;
 
@@ -57,22 +57,24 @@ function Memory(keyboard) {
   this.video_screen_cursor_x = 0;
   this.video_screen_cursor_y = 0;
 
-  this.last_access_address = 0;  // values: 0000-FFFF
-  this.last_access_operation = undefined;  // values: read, write
+  this.last_access_address = 0; // values: 0000-FFFF
+  this.last_access_operation = undefined; // values: read, write
 
   this.invalidate_access_variables = function () {
     this.last_access_address = 0;
     this.last_access_operation = undefined;
-  }
+  };
 
   this.init();
   this.invalidate_access_variables();
 
-  this.length = function () { return 0x10000; }
+  this.length = function () {
+    return 0x10000;
+  };
 
   this.read_raw = function (addr) {
     return this.buf[addr & 0xffff] & 0xff;
-  }
+  };
 
   this.read = function (addr) {
     addr &= 0xffff;
@@ -80,30 +82,27 @@ function Memory(keyboard) {
     this.last_access_address = addr;
     this.last_access_operation = "read";
 
-    if (addr == 0x8002)
-      return this.keyboard.modifiers;
+    if (addr == 0x8002) return this.keyboard.modifiers;
 
     if (addr == 0x8001) {
       var keyboard_state = this.keyboard.state;
       var ch = 0xff;
       var kbd_scanline = ~this.buf[0x8000];
       for (var i = 0; i < 8; i++)
-        if ((1 << i) & kbd_scanline)
-          ch &= keyboard_state[i];
+        if ((1 << i) & kbd_scanline) ch &= keyboard_state[i];
       return ch;
     }
 
-    if (addr == 0xC001)
-      return 0xff;
+    if (addr == 0xc001) return 0xff;
 
     return this.buf[addr];
-  }
+  };
 
   this.last_written_byte = -1;
 
   this.write_raw = function (addr, byte) {
     this.buf[addr & 0xffff] = byte & 0xff;
-  }
+  };
 
   this.write = function (addr, byte) {
     addr &= 0xffff;
@@ -112,7 +111,7 @@ function Memory(keyboard) {
     this.last_access_address = addr;
     this.last_access_operation = "write";
 
-    if (addr >= 0xF800) return;
+    if (addr >= 0xf800) return;
 
     this.buf[addr] = byte;
 
@@ -192,7 +191,8 @@ function Memory(keyboard) {
     }
 
     if (peripheral_reg == 0xe005 && this.ik57_e008_80_cmd == 4) {
-      this.video_memory_size_buf = ((this.video_memory_size_buf | (byte << 8)) & 0x3fff) + 1;
+      this.video_memory_size_buf =
+        ((this.video_memory_size_buf | (byte << 8)) & 0x3fff) + 1;
       this.ik57_e008_80_cmd = 0;
       return;
     }
@@ -211,7 +211,8 @@ function Memory(keyboard) {
         screen.set_geometry(
           this.video_screen_size_x,
           this.video_screen_size_y,
-          this.video_memory_base);
+          this.video_memory_base
+        );
       }
 
       this.tape_8002_as_output = 0;
@@ -224,11 +225,11 @@ function Memory(keyboard) {
       //   this.tape_write_bit(byte & 0x01);
       return;
     }
-  }
+  };
 
   this.load_file = function (file) {
     for (var i = file.start; i <= file.end; ++i) {
       this.write_raw(i, file.image.charCodeAt(i - file.start));
     }
-  }
+  };
 }
