@@ -20,9 +20,11 @@
 var ui, screen;
 
 function IO() {
-  this.input = function(port) { return 0; }
-  this.output = function(port, w8) {}
-  this.interrupt = function(iff) {}
+  this.input = function (port) {
+    return 0;
+  };
+  this.output = function (port, w8) {};
+  this.interrupt = function (iff) {};
 }
 
 function Autoexec() {
