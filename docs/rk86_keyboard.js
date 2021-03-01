@@ -135,10 +135,10 @@ function Keyboard() {
   document.onkeydown = function (evt) {
     const code = evt.keyCode;
     if (code == 91 || code == 93) {
-      // let and right CMD (meta)
+      // left and right CMD (meta)
       keyboard_this.meta_keys_buffer = [];
     } else {
-      if (keyboard_this.meta_keys_buffer !== null) {
+      if (Array.isArray(keyboard_this.meta_keys_buffer)) {
         keyboard_this.meta_keys_buffer.push(code);
       }
     }
@@ -148,12 +148,13 @@ function Keyboard() {
 
   document.onkeyup = function (evt) {
     const code = evt.keyCode;
-    keyboard_this.keyup(code);
     if (code == 91 || code == 93) {
       for (const code of keyboard_this.meta_keys_buffer) {
         keyboard_this.keyup(code);
       }
       this.meta_keys_buffer = null;
+    } else {
+      keyboard_this.keyup(code);
     }
     return false;
   };
