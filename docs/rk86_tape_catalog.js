@@ -167,6 +167,7 @@ function tape_catalog() {
     "mon32.bin",
     "mon32x4.bin",
     "mon_okoshki.bin",
+    "okoshki-demo.rkr",
     "psi_1v3.rkr",
     "rk8080pre.bin",
     "rk86demo.bin",
