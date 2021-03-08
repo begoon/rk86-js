@@ -288,7 +288,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
       "console.html",
       "_blank",
       "toolbar=yes, location=yes, status=no, menubar=yes, scrollbars=yes, " +
-        "resizable=yes, width=700, height=600"
+      "resizable=yes, width=700, height=600"
     );
   };
 
@@ -297,7 +297,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
       "i8080_visualizer.html",
       "_blank",
       "toolbar=yes, location=yes, status=no, menubar=yes, scrollbars=yes, " +
-        "resizable=yes, width=700, height=600"
+      "resizable=yes, width=700, height=600"
     );
   };
 
@@ -356,7 +356,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
 
   this.fullscreen_off = function () {
     this.canvas.fullscreen = false;
-    window.onresize = function () {};
+    window.onresize = function () { };
     this.canvas.style.width = this.canvas.normal_width + "px";
     this.canvas.style.height = this.canvas.normal_height + "px";
     this.canvas.style.position = "static";
