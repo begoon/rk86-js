@@ -32,6 +32,8 @@ function UI(tape_catalog, runner, memory, autoexec) {
   this.memory_snapshot_name = "rk86-memory";
   this.memory_snapshot_count = 1;
 
+  this.file_parser = new FileParser();
+
   if (!this.canvas.getContext) {
     alert("Tag <canvas> is not support is the browser");
     return;
@@ -121,15 +123,37 @@ function UI(tape_catalog, runner, memory, autoexec) {
   };
 
   this.tape_file_name = function (name) {
+    if (name.startsWith("http")) {
+      return name;
+    }
     return "files/" + name;
-  }
+  };
 
+  this.fetch_binary_file = function (url, success, failed) {
+    const check_status = function (response) {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+      }
+      return response;
+    };
+    fetch(url, { redirect: "follow" })
+      .then(response => check_status(response))
+      .then(response => response.arrayBuffer())
+      .then(buffer => success(Array.from(new Uint8Array(buffer))))
+      .catch(error => failed(error));
+  };
+
+  var load_tape_file_this = this;
   this.load_tape_file = function (name) {
-    var load_tape_file_this = this;
-    var callback = function (image) {
+    console.log(`Loading file ${name}`);
+    const success = function (image) {
+      console.log(`Loaded ${image.length} byte(s)`);
       load_tape_file_this.file_loaded(name, image);
     };
-    GetBinaryFile(this.tape_file_name(name), callback, true);
+    const failed = function (error) {
+      alert(`Error loading file "${name}"\n${error}`);
+    }
+    this.fetch_binary_file(this.tape_file_name(name), success, failed);
   };
 
   this.selected_file_name = function () {
@@ -150,34 +174,6 @@ function UI(tape_catalog, runner, memory, autoexec) {
     return window.frames.disassembler_frame.loaded;
   };
 
-  this.extract_rk86_word = function (v, i) {
-    return ((v.charCodeAt(i) & 0xff) << 8) | (v.charCodeAt(i + 1) & 0xff);
-  };
-
-  this.parse_rk86_binary = function (name, image) {
-    var file = {};
-    file.name = name;
-
-    var v = image.Content;
-
-    if (name.match(/\.bin$/)) {
-      file.size = v.length;
-      file.start = name.match(/^mon/) ? 0x10000 - file.size : 0;
-      file.end = file.start + file.size - 1;
-      file.image = v;
-    } else {
-      var i = 0;
-      if ((v.charCodeAt(i) & 0xff) == 0xe6) ++i;
-      file.start = this.extract_rk86_word(v, i);
-      file.end = this.extract_rk86_word(v, i + 2);
-      i += 4;
-      file.size = file.end - file.start + 1;
-      file.image = v.substr(i, file.size);
-    }
-    file.entry = name == "PVO.GAM" ? 0x3400 : file.start;
-    return file;
-  };
-
   this.autorun = function () {
     if (this.autoexec.file) {
       this.load_mode = this.autoexec.loadonly ? "load" : "run";
@@ -190,7 +186,13 @@ function UI(tape_catalog, runner, memory, autoexec) {
       alert("Error loading a file '" + name + "'");
       return;
     }
-    var file = this.parse_rk86_binary(name, binary);
+    let file;
+    try {
+      file = this.file_parser.parse_rk86_binary(name, binary);
+    } catch (e) {
+      alert(e.message);
+      return;
+    }
     this.memory.load_file(file);
 
     if (this.disassembler_available())
@@ -209,16 +211,12 @@ function UI(tape_catalog, runner, memory, autoexec) {
     if (this.load_mode == "load") {
       var sz = file.start + file.image.length - 1;
       alert(
-        "Loaded: " +
-          file.name +
-          "(" +
-          file.start.toString(16) +
-          "-" +
-          sz.toString(16) +
-          "), " +
-          "Run by 'G" +
-          file.entry.toString(16) +
-          "'"
+        "Loaded: %s (%04X-%04X), Run by 'G%04X'".format(
+          file.name,
+          file.start,
+          sz,
+          file.entry
+        )
       );
     } else {
       console.log("Started", file.name, "from", file.entry.toString(16));
@@ -288,7 +286,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
       "console.html",
       "_blank",
       "toolbar=yes, location=yes, status=no, menubar=yes, scrollbars=yes, " +
-        "resizable=yes, width=700, height=600"
+      "resizable=yes, width=700, height=600"
     );
   };
 
@@ -297,7 +295,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
       "i8080_visualizer.html",
       "_blank",
       "toolbar=yes, location=yes, status=no, menubar=yes, scrollbars=yes, " +
-        "resizable=yes, width=700, height=600"
+      "resizable=yes, width=700, height=600"
     );
   };
 
@@ -356,7 +354,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
 
   this.fullscreen_off = function () {
     this.canvas.fullscreen = false;
-    window.onresize = function () {};
+    window.onresize = function () { };
     this.canvas.style.width = this.canvas.normal_width + "px";
     this.canvas.style.height = this.canvas.normal_height + "px";
     this.canvas.style.position = "static";

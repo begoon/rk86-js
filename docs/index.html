@@ -26,7 +26,6 @@
   <title>Радио-86РК</title>
   <!-- ||| -->
   <script src="js/FileSaver.js" type="application/javascript"></script>
-  <script src="js/GetBinaryFile.js" type="application/javascript"></script>
   <script src="js/StringUtils.js" type="application/javascript"></script>
   <script src="/js/SoundPlayer.js" type="application/javascript"></script>
   <!-- ||| -->
@@ -39,6 +38,7 @@
   <script src="rk86_sound.js" type="application/javascript"></script>
   <script src="rk86_tape.js" type="application/javascript"></script>
   <script src="rk86_runner.js" type="application/javascript"></script>
+  <script src="rk86_file_parser.js" type="application/javascript"></script>
   <script src="ui.js" type="application/javascript"></script>
   <script src="main.js" type="application/javascript"></script>
 
@@ -67,6 +67,7 @@
     <button id="assembler_button" onclick="ui.switch_panel('assembler')">Assembler</button>
     <button id="disassembler_button" onclick="ui.toggle_panel('disassembler')">Disassembler</button>
     <button id="keyboard_button" onclick="ui.switch_panel('keyboard')">About / Keyboard</button>
+    <button onclick="window.open('help.html','_blank')">Help</button>
     IPS:
     <span id="ips">0</span>
     TPS:
