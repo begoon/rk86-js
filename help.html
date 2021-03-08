@@ -35,7 +35,7 @@
     2012.10.22: отладочная <a href="#console">консоль</a>
   </h4>
   <h4>
-    2012.10.14: <a href="https://rk86.ru/catalog/">онлайновый каталог</a>
+    2012.10.14: <a href="catalog/">онлайновый каталог</a>
     игр и остальных программ со скринами и описаниями
   </h4>
   <hr />
@@ -71,13 +71,13 @@
   </p>
   <p>
     Пример запуска эмулятора с локальным именем файла:
-    <a href="https://rk86.ru/index.html?file=RESCUE.GAM" target=_blank>
+    <a href="index.html?file=RESCUE.GAM" target=_blank>
       https://rk86.ru/index.html?file=RESCUE.GAM
     </a>
   </p>
   <p>
     Пример запуска эмулятора с полным сетевым именем файла:
-    <a href="https://rk86.ru/file=https://gist.githubusercontent.com/begoon/f4a4e82968d7f581668f218bc17f9ec6/raw/sokoban.bin"
+    <a href="index.html?file=https://gist.githubusercontent.com/begoon/f4a4e82968d7f581668f218bc17f9ec6/raw/sokoban.bin"
       target=_blank>
       https://rk86.ru/index.html?file=https://gist.githubusercontent.com/begoon/f4a4e82968d7f581668f218bc17f9ec6/raw/sokoban.bin
     </a>
@@ -101,7 +101,7 @@
     адресов. Стартовым адресом является начальный адрес.
   </p>
   <p>
-    Если загружаемый файл является <a href="#hexfile">текстовым</a>, то
+    Если загружаемый файл является <a href="#hex-files">текстовым</a>, то
     адрес загрузки и стартовый адрес могут быть заданы в тегах заголовка,
     "start" и "entry" соотвественно.
   </p>
@@ -160,7 +160,7 @@
   </p>
   <p>
     Тег "!name" задает имя загружаемого файла. Если тег не задан, что имя
-    файла берется из URL. Некоторые хостинги, например, pastbin.pl, не
+    файла берется из URL. Некоторые хостинги, например, pastebin.pl, не
     позволяют контролировать URL, поэтому имя (и расширение) файла
     в окончании URL может быть произвольным, но имя файла, а точнее его
     расширение, определяют типа файла: либо двоичный, если расширение ".bin" или
@@ -182,59 +182,42 @@
   <h4>
     Сокобан
   </h4>
-  <ul>
-    <li>
-      GitHub Gists:
-      <a href="https://rk86.ru/file=https://gist.githubusercontent.com/begoon/f4a4e82968d7f581668f218bc17f9ec6/raw/sokoban.bin"
-        target=_blank>
-        https://rk86.ru/index.html?file=https://gist.githubusercontent.com/begoon/f4a4e82968d7f581668f218bc17f9ec6/raw/sokoban.bin
-      </a>
-      (<a href="https://gist.github.com/begoon/f4a4e82968d7f581668f218bc17f9ec6">исходный текст</a>)
-    </li>
-    <li>
-      Pastbin:
-      <a href="https://rk86.ru/index.html?file=https://pastebin.pl/view/raw/73c64871" target=_blank>
-        https://rk86.ru/index.html?file=https://pastebin.pl/view/raw/73c64871
-      </a>
-      (<a href="https://pastebin.pl/view/73c64871">исходный текст</a>)
-    </li>
-  </ul>
+  <p>
+    <a href="index.html?file=https://gist.githubusercontent.com/begoon/f4a4e82968d7f581668f218bc17f9ec6/raw/sokoban.bin"
+      target=_blank>
+      https://rk86.ru/index.html?file=https://gist.githubusercontent.com/begoon/f4a4e82968d7f581668f218bc17f9ec6/raw/sokoban.bin
+    </a>
+  </p>
+  <p>
+    <a href="https://gist.github.com/begoon/f4a4e82968d7f581668f218bc17f9ec6">исходный текст</a>
+  </p>
   <p>
     Примечание: Файл sokoban.bin является двоичным, то есть не имеет
-    заголовка ленты РК. Имя файла "73c64871" на хостинге Pastebin не имеет
-    расширения, поэтому файл по умолчание распознается как двоичный и
-    использование тега "name" в данном случае не является необходимым.
+    заголовка ленты РК. Имя файла "sokoban.bin" сохранено в URL хостинга,
+    поэтому файл распознается как двоичный и использование тега "name"
+    в данном случае не является необходимым.
   </p>
   <h4>
     Volcano
   </h4>
-  <ul>
-    <li>
-      GitHub Gists:
-      <a href="https://rk86.ru/file=https://gist.githubusercontent.com/begoon/e76c4446a4fd4151f7557191bf4faee6/raw/volcano.rkr"
-        target=_blank>
-        https://rk86.ru/index.html?file=https://gist.githubusercontent.com/begoon/e76c4446a4fd4151f7557191bf4faee6/raw/volcano.rkr
-      </a>
-      (<a href="https://gist.github.com/begoon/e76c4446a4fd4151f7557191bf4faee6">исходный текст</a>)
-    </li>
-    <li>
-      Pastbin:
-      <a href="https://rk86.ru/index.html?file=https://pastebin.pl/view/raw/c4e3ba49" target=_blank>
-        https://rk86.ru/index.html?file=https://pastebin.pl/view/raw/73c64871
-      </a>
-      (<a href="https://pastebin.pl/view/c4e3ba49">исходный текст</a>)
-    </li>
-  </ul>
   <p>
-    Примечание: В данном случае файл "volcano.rkr" является файлом в формате
-    ленты РК, поэтому его расширение ".rkr" обязательно. Хостинг Pastebin
-    задал файл имя "c4e3ba49", поэтому для корректной загрузки файла
-    используется тег "!name=volcano.rkr". Хостинг GitHub с другой стороны
-    сохранил имя файла в URL, поэтому тег не обязателен, хотя и задан.
+    <a href="index.html?file=https://gist.githubusercontent.com/begoon/e76c4446a4fd4151f7557191bf4faee6/raw/volcano.rkr"
+      target=_blank>
+      https://rk86.ru/index.html?file=https://gist.githubusercontent.com/begoon/e76c4446a4fd4151f7557191bf4faee6/raw/volcano.rkr
+    </a>
   </p>
   <p>
-    Показательным использование тегов может быть загрузка Монитора
-    <a href="https://rk86.ru/index.html?loadonly=1&file=mon32x4.bin">mon32x4.bin</a>.
+    <a href="https://gist.github.com/begoon/e76c4446a4fd4151f7557191bf4faee6">исходный текст</a>
+  </p>
+  <p>
+    Примечание: В данном случае файл "volcano.rkr" является файлом в формате
+    ленты РК, поэтому его расширение ".rkr" обязательно. Хостинг сохранил
+    имя "volcano.rkr", поэтому для корректной загрузки файла использование тега
+    "!name=volcano.rkr" не является необходимым, хотя и задано для примера.
+  </p>
+  <p>
+    Показательным использованием тегов может быть загрузка Монитора
+    <a href="index.html?loadonly=1&file=mon32x4.bin">mon32x4.bin</a>.
   </p>
   <p>
     Это расширенный Монитор, которые занимает не два килобайта с F800 по FFFF,
@@ -248,12 +231,15 @@
   <pre>
     #!rk86 !name=mon32x4 !start=f000 !entry=f800
   </pre>
-  Например,
-  <a
-    href="https://rk86.ru/index.html?file=https://gist.githubusercontent.com/begoon/879cee0cbe6ecca7117a840bf45d8901/raw/mon32x4.bin">
-    https://rk86.ru/index.html?file=https://gist.githubusercontent.com/begoon/879cee0cbe6ecca7117a840bf45d8901/raw/mon32x4.bin
-  </a>
-  (<a href="https://gist.github.com/begoon/879cee0cbe6ecca7117a840bf45d8901">исходный текст</a>)
+  <p>
+    <a
+      href="index.html?file=https://gist.githubusercontent.com/begoon/879cee0cbe6ecca7117a840bf45d8901/raw/mon32x4.bin">
+      https://rk86.ru/index.html?file=https://gist.githubusercontent.com/begoon/879cee0cbe6ecca7117a840bf45d8901/raw/mon32x4.bin
+    </a>
+  </p>
+  <p>
+    <a href="https://gist.github.com/begoon/879cee0cbe6ecca7117a840bf45d8901">исходный текст</a>
+  </p>
   <h1 id="cors-proxy">Использование CORS прокси</h1>
   <p>
     Некоторые хостинги не позволяют скачивать выложенные файлы со страниц,
@@ -272,8 +258,9 @@
     то путь к файлу в адресе эмулятора будет такой:
   </p>
   <p>
-    <a href="https://rk86.ru/index.html?file=https://cors-filter.herokuapp.com/https://pastebin.pl/view/raw/73c64871">
-      https://rk86.ru/index.html?file=https://cors-filter.herokuapp.com/https://pastebin.pl/view/raw/73c64871
+    <a
+      href="index.html?file=https://cors-filter.herokuapp.com/https://gist.githubusercontent.com/begoon/e76c4446a4fd4151f7557191bf4faee6/raw/volcano.rkr">
+      https://rk86.ru/index.html?file=https://cors-filter.herokuapp.com/https://gist.githubusercontent.com/begoon/e76c4446a4fd4151f7557191bf4faee6/raw/volcano.rkr
     </a>
   </p>
   <h1 id="tape-output">Эмуляция записи на магнитную ленту</h1>
