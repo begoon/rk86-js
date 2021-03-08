@@ -1,6 +1,6 @@
 .PHONY: build files
 
-all: build files build-catalog release
+all: test build files build-catalog release
 
 ifeq ($(OS),Windows_NT)
 CC = c:/tcc/tcc
@@ -29,13 +29,20 @@ release:
 	mv rk86_keyboard_layout.version.html docs/rk86_keyboard_layout.html
 	rm docs/catalog/Makefile
 	rm docs/catalog/*.rb
+	rm docs/*.test.js
 	touch docs/.nojekyll
 
 dev-release: release
 	cp experiments/* docs
 
-serve:
+serve-python:
 	(cd docs && python3 -m http.server --bind 127.0.0.1 8000)
+
+serve:
+	(cd docs && npx http-server . -p 8000)
+
+test:
+	npx ava
 
 clean:
 	-rm files.lst rkdump$(EXE) rk86_tape_catalog.js

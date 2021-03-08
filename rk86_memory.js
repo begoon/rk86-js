@@ -229,7 +229,7 @@ function Memory(keyboard) {
 
   this.load_file = function (file) {
     for (var i = file.start; i <= file.end; ++i) {
-      this.write_raw(i, file.image.charCodeAt(i - file.start));
+      this.write_raw(i, file.image[i - file.start]);
     }
   };
 }
