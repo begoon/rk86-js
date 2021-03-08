@@ -8,3 +8,4 @@ docs/catalog/Makefile
 docs/catalog/*.rb
 .venv
 .vscode
+node_modules
