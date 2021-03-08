@@ -28,12 +28,19 @@ def same(L):
     return all(x == y for x, y in zip(L, L[1:]))
 
 
-for offset in range(sz):
-    line = [b[offset] for b in binaries]
-    if same(line):
-        continue
-    if not strictly_decreasing(line):
-        continue
-    print(
-        '%04X: %s' % (offset, ' '.join(list(map(lambda a: '%02X' % a, line))))
-    )
+def print_diff(title: str, cmp):
+    print(title)
+    for offset in range(sz):
+        line = [b[offset] for b in binaries]
+        if same(line):
+            continue
+        if not cmp(line):
+            continue
+        print(
+            '%04X: %s'
+            % (offset, ' '.join(list(map(lambda a: '%02X' % a, line))))
+        )
+
+
+print_diff('@ increments', strictly_increasing)
+print_diff('@ decrements', strictly_decreasing)
