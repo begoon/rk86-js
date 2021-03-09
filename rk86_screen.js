@@ -19,6 +19,7 @@
 function Screen(font_image, ui, memory) {
   this.ui = ui;
   this.memory = memory;
+  this.memory.screen = this;
 
   const update_rate = 25;
   const cursor_rate = 500;
@@ -48,6 +49,10 @@ function Screen(font_image, ui, memory) {
 
   this.font = new Image();
   this.font.src = "rk86_font.bmp";
+
+  this.light_pen_x = 0;
+  this.light_pen_y = 0;
+  this.light_pen_active = 0;
 
   this.init_cache = function (sz) {
     for (var i = 0; i < sz; ++i) this.cache[i] = true;
@@ -143,4 +148,19 @@ function Screen(font_image, ui, memory) {
   screen_self = this;
   window.setTimeout(function () { screen_self.flip_cursor(); }, cursor_rate);
   window.setTimeout(function () { screen_self.draw_screen(); }, this.update_rate);
+
+  this.ui.canvas.onmousemove = (event) => {
+    const x = Math.floor((event.x + 1 - this.ui.canvas.offsetLeft) / (char_width * this.scale_x));
+    const y = Math.floor((event.y + 1 - this.ui.canvas.offsetTop) / ((char_height + char_height_gap) * this.scale_y));
+    this.light_pen_x = x;
+    this.light_pen_y = y;
+  };
+
+  this.ui.canvas.onmouseup = (event) => {
+    this.light_pen_active = 0;
+  };
+
+  this.ui.canvas.onmousedown = (event) => {
+    this.light_pen_active = 1;
+  };
 }
