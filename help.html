@@ -55,6 +55,11 @@
   <ul>
     <li><a href="#file-load">Загрузка внешних файлов эмулятор</a></li>
     <li><a href="#hex-files">Текстовые файлы</a></li>
+    <li>
+      <a href="#development-example">
+        Как компилировать программы для РК локально и запускать на эмуляторе
+      </a>
+    </li>
     <li><a href="#cors-proxy">Использование CORS прокси</a></li>
     <li><a href="#tape-output">Эмуляция записи на магнитную ленту</a></li>
     <li><a href="#sound">Эмуляция звука</a></li>
@@ -120,8 +125,8 @@
   <h1 id="hex-files">Текстовые файлы</h1>
   <p>
     По умолчанию, загружаемые файлы рассматриваются как двоичные. Если же
-    файл начинается со строки "!#rk86" (байты [35, 33, 114, 107, 56, 54 ] или
-    [ 0x23, 0x21, 0x72, 0x6B, 0x38, 0x36 ]), то далее этот файл рассматривается
+    файл начинается со строки "!#rk86" (байты [35, 33, 114, 107, 56, 54] или
+    [0x23, 0x21, 0x72, 0x6B, 0x38, 0x36]), то далее этот файл рассматривается
     как шестнадцатеричный дамп.
   </p>
   <p>
@@ -365,6 +370,108 @@
     Для сравнения файлов можно, например, воспользоваться программой
     <a href="https://github.com/begoon/rk86-js/blob/master/cmp.py">cmp.py</a>
   </p>
+  <h1 id="development-example">
+    Как компилировать программы для РК локально и запускать на эмуляторе
+  </h1>
+  <p>
+    Пример простого цикла разработки.
+  </p>
+  <p>
+    Допустим, есть ваша программа
+    <a href="https://github.com/begoon/rk86-example/blob/main/rk86_example.asm">
+      rk86_example.asm:
+    </a>
+  </p>
+  <pre>
+    org 0
+    
+    lxi h, msg
+    call 0f818h
+    jmp 0f86ch
+    
+    msg db 'EXAMPLE', 0dh, 0ah, 0
+  </pre>
+  <p>
+    Создаете репозиторий
+    <a href="https://github.com/begoon/rk86-example">rk86-example</a>.
+  </p>
+  <p>
+    Кладете туда исходник и создаете
+    <a href="https://github.com/begoon/rk86-example/blob/main/Makefile">
+      Makefile:
+    </a>
+  </p>
+  <pre>
+    TARGET=rk86_example
+    RUN=https://rk86.ru/index.html?file=
+    
+    all: build hex
+    
+    build:
+    zasm --asm8080 -l0 $(TARGET).asm
+    
+    hex:
+    python rk86_hex.py -i $(TARGET).rom -o $(TARGET).bin
+    
+    run:
+    open $(RUN)https://raw.githubusercontent.com/begoon/rk86-example/main/$(TARGET).bin
+    
+    clean:
+    -rm $(TARGET).rom
+  </pre>
+  <p>
+    Далее цикл разработки выглядит так:
+  </p>
+  <ul>
+    <li>
+      файл "rk86_example.asm" редактируется локально
+    </li>
+    <li>
+      "make" или "make build" компилиет файл "rk86_example.rom" и создаст
+      выходной текстовый файл "rk86_example.bin"
+    </li>
+    <li>
+      "rk86_example.bin" теперь надо закоммитить и сделать "push", чтобы файл
+      ушел на github и стал
+      <a href="https://raw.githubusercontent.com/begoon/rk86-example/main/rk86_example.bin">
+        доступен для скачивания в формате raw
+      </a>
+    </li>
+    <li>
+      "make run" запускает файл в эмуляторе
+    </li>
+  </ul>
+  <p>
+    Для данного "Makefile" требуется ассемблер
+    <a href="https://k1.spdns.de/Develop/Projects/zasm/Documentation/">
+      zasm
+    </a>
+    и программа
+    <a href="https://github.com/begoon/rk86-example/blob/main/rk86_hex.py">
+      rk86_hex.py
+    </a>
+  </p>
+  <h4>
+    Как собрать zasm
+  </h4>
+  <p>
+    Проверялось на Mac.
+  </p>
+  <pre>
+    cd your/development/folder
+    git clone git@github.com:Megatokio/zasm.git
+    git clone git@github.com:Megatokio/Libraries.git
+    cd zasm
+    make
+    ./zasm
+  </pre>
+  <p>
+    Должно вывести что-то вроде:
+  </p>
+  <pre>
+    zasm - 8080/z80/z180 assembler (c) 1994 - 2021 Günter Woigk.
+    version 4.4.8, 2021-03-09, for Unix-MacOSX.
+  </pre>
   <hr />
   <p>
     Конец документа
