@@ -38,10 +38,13 @@ function Memory(keyboard) {
   this.screen_size_y_buf = 0;
 
   this.ik57_e008_80_cmd = 0;
+
   this.vg75_c001_80_cmd = 0;
 
   this.cursor_x_buf = 0;
   this.cursor_y_buf = 0;
+
+  this.vg75_c001_60_cmd = 0;
 
   this.tape_8002_as_output = 0;
 
@@ -93,7 +96,21 @@ function Memory(keyboard) {
       return ch;
     }
 
-    if (addr == 0xc001) return 0xff;
+    if (addr == 0xc001) {
+      return 0xff | ~(this.screen.light_pen_active ? 0x10 : 0x00);
+    };
+
+    if (addr == 0xc000) {
+      if (this.vg75_c001_60_cmd == 1) {
+        this.vg75_c001_60_cmd = 2;
+        return this.screen.light_pen_x;
+      }
+      if (this.vg75_c001_60_cmd == 2) {
+        this.vg75_c001_60_cmd = 0;
+        return this.screen.light_pen_y;
+      }
+      return 0xff;
+    }
 
     return this.buf[addr];
   };
@@ -146,6 +163,18 @@ function Memory(keyboard) {
       return;
     }
 
+    // The light pen position sequence.
+    if (peripheral_reg == 0xc001 && byte == 0x60) {
+      this.vg75_c001_60_cmd = 1;
+      return;
+    }
+
+    if (peripheral_reg == 0xc000 && this.vg75_c001_80_cmd == 1) {
+      this.vg75_c001_80_cmd += 1;
+      this.cursor_x_buf = byte + 1;
+      return;
+    }
+
     // The screen format command sequence.
     if (peripheral_reg == 0xc001 && byte == 0) {
       this.vg75_c001_00_cmd = 1;
@@ -165,7 +194,6 @@ function Memory(keyboard) {
     }
 
     // The screen area parameters command sequence.
-
     if (peripheral_reg == 0xe008 && byte == 0x80) {
       this.ik57_e008_80_cmd = 1;
       this.tape_8002_as_output = 1;
