@@ -49,54 +49,55 @@ function Screen(font_image, ui, memory) {
   this.font = new Image();
   this.font.src = "rk86_font.bmp";
 
-  this.init_cache = function(sz) {
+  this.init_cache = function (sz) {
     for (var i = 0; i < sz; ++i) this.cache[i] = true;
   }
 
-  this.draw_char = function(x, y, ch) {
-    this.ctx.drawImage(this.font, 
+  this.draw_char = function (x, y, ch) {
+    this.ctx.drawImage(this.font,
       2, char_height * ch, char_width, char_height,
-      x * char_width * this.scale_x, y * (char_height + char_height_gap) * this.scale_y, 
+      x * char_width * this.scale_x, y * (char_height + char_height_gap) * this.scale_y,
       char_width * this.scale_x, char_height * this.scale_y
     );
   }
 
-  this.draw_cursor = function(x, y, visible) {
+  this.draw_cursor = function (x, y, visible) {
     this.ctx.drawImage(this.font,
       2, cursor_offset_white + (visible ? 0 : 1), char_width, 1,
-      x * char_width * this.scale_x, 
-      (y * (char_height + char_height_gap) + char_height) * this.scale_y, 
+      x * char_width * this.scale_x,
+      (y * (char_height + char_height_gap) + char_height) * this.scale_y,
       char_width * this.scale_x, 1 * this.scale_y
     )
   }
 
-  this.flip_cursor = function() {
+  this.flip_cursor = function () {
     this.draw_cursor(this.cursor_x, this.cursor_y, this.cursor_state);
     this.cursor_state = !this.cursor_state;
     flip_cursor_self = this;
-    window.setTimeout(function() { flip_cursor_self.flip_cursor(); }, 500);
+    window.setTimeout(function () { flip_cursor_self.flip_cursor(); }, 500);
   }
 
-  this.init = function() {
+  this.init = function () {
     this.ctx = this.ui.canvas.getContext("2d");
   }
 
-  this.disable_smoothing = function() {
+  this.disable_smoothing = function () {
     this.ctx.fillStyle = "rgb(0, 0, 0)";
     this.ctx.mozImageSmoothingEnabled = false;
     this.ctx.webkitImageSmoothingEnabled = false;
     this.ctx.imageSmoothingEnabled = false;
   }
 
-  this.set_geometry = function(width, height, base) {
+  this.set_geometry = function (width, height, base) {
     this.width = width;
     this.height = height;
     this.video_memory_base = base;
     this.video_memory_size = width * height;
 
     console.log("Screen geometry is changed:", width, height,
-                this.video_memory_base.toString(16),
-                this.video_memory_size.toString(16));
+      this.video_memory_base.toString(16),
+      this.video_memory_size.toString(16)
+    );
 
     var canvas_width = this.width * char_width * this.scale_x;
     var canvas_height = this.height * (char_height + char_height_gap) * this.scale_y;
@@ -108,19 +109,19 @@ function Screen(font_image, ui, memory) {
     this.init_cache(this.video_memory_size);
   }
 
-  this.set_view = function(width, height, scale_x, scale_y) {
+  this.set_view = function (width, height, scale_x, scale_y) {
     this.scale_x = scale_x;
     this.scale_y = scale_y;
     this.set_geometry(width, height, this.video_memory_base);
   }
 
-  this.set_cursor = function(x, y) {
+  this.set_cursor = function (x, y) {
     this.draw_cursor(this.cursor_x, this.cursor_y, false);
     this.cursor_x = x;
     this.cursor_y = y;
   }
 
-  this.draw_screen = function() {
+  this.draw_screen = function () {
     var i = this.video_memory_base;
     for (var y = 0; y < this.height; ++y) {
       for (var x = 0; x < this.width; ++x) {
@@ -134,12 +135,12 @@ function Screen(font_image, ui, memory) {
       }
     }
     self = this;
-    window.setTimeout(function() { self.draw_screen(); }, this.update_rate);
+    window.setTimeout(function () { self.draw_screen(); }, this.update_rate);
   }
 
   this.init();
 
   screen_self = this;
-  window.setTimeout(function() { screen_self.flip_cursor(); }, cursor_rate);
-  window.setTimeout(function() { screen_self.draw_screen(); }, this.update_rate);
+  window.setTimeout(function () { screen_self.flip_cursor(); }, cursor_rate);
+  window.setTimeout(function () { screen_self.draw_screen(); }, this.update_rate);
 }
