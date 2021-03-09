@@ -167,9 +167,9 @@
   </p>
   <p>
   <pre>
-      #!rk86 !name=file.rk !start=1000 !entry=1005
-      0000 E6 10 00 20 00 AA BB CC 11 22 33 44 55 66 77 88
-      0010 11 22 33 44 55 66 77 88
+    #!rk86 !name=file.rk !start=1000 !entry=1005
+    0000 E6 10 00 20 00 AA BB CC 11 22 33 44 55 66 77 88
+    0010 11 22 33 44 55 66 77 88
   </pre>
   </p>
   <p>
@@ -408,16 +408,16 @@
     all: build hex
     
     build:
-    zasm --asm8080 -l0 $(TARGET).asm
+        zasm --asm8080 -l0 $(TARGET).asm
     
     hex:
-    python rk86_hex.py -i $(TARGET).rom -o $(TARGET).bin
+        python rk86_hex.py -i $(TARGET).rom -o $(TARGET).bin
     
     run:
-    open $(RUN)https://raw.githubusercontent.com/begoon/rk86-example/main/$(TARGET).bin
+        open $(RUN)https://raw.githubusercontent.com/begoon/rk86-example/main/$(TARGET).bin
     
     clean:
-    -rm $(TARGET).rom
+        -rm $(TARGET).rom
   </pre>
   <p>
     Далее цикл разработки выглядит так:
