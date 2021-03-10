@@ -469,6 +469,18 @@ function Console() {
     self.resume_cmd(self);
   }
 
+  this.check_sum_cmd = function (self) {
+    if (self.term.argc < 3) { self.term.write("?"); return; }
+    var from = parseInt(self.term.argv[1]);
+    if (isNaN(from)) { self.term.write("?"); return; };
+    var to = parseInt(self.term.argv[2]);
+    if (isNaN(to)) { self.term.write("?"); return; };
+    const image = self.runner.cpu.memory.snapshot(from, to + 1 - from);
+    const checksum = rk86_check_sum(image);
+    self.term.write("%04X-%04X: %04X".format(from, to, checksum));
+    self.term.newLine();
+  }
+
   this.help_cmd = function (self) {
     for (var cmd in self.commands) {
       self.term.write("%s - %s".format(cmd, self.commands[cmd][1]));
@@ -510,6 +522,7 @@ function Console() {
       "create/edit breakpoints / be 1 type:exec address:0xf86c count:3"
     ],
     "bd": [this.delete_breakpoints_cmd, "delete breakpoints / bd 1"],
+    "cs": [this.check_sum_cmd, "calculate checksum / cs start_address, end_address"],
     "?": [this.help_cmd, "this help / ?"]
   };
 
