@@ -66,7 +66,9 @@ class RK86File
       j = j + 1
     end
     c = v.byteslice(j).ord
-    sum = (sum + c) & 0xffff
+    sum_h = sum & 0xff00
+    sum_l = sum & 0xff
+    sum = sum_h | ((sum_l + c) & 0xff)
     return sum
   end
 
