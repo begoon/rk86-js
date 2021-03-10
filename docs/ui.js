@@ -34,6 +34,8 @@ function UI(tape_catalog, runner, memory, autoexec) {
 
   this.file_parser = new FileParser();
 
+  this.preloaded = null;
+
   if (!this.canvas.getContext) {
     alert("Tag <canvas> is not support is the browser");
     return;
@@ -156,18 +158,46 @@ function UI(tape_catalog, runner, memory, autoexec) {
     this.fetch_binary_file(this.tape_file_name(name), success, failed);
   };
 
+  this.upload = function (event) {
+    const files = event.target.files;
+    if (files.length < 1) {
+      this.preloaded = null;
+      return;
+    }
+    const file = files[0];
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const image = [...new Uint8Array(event.target.result)];
+      this.preloaded = { name: file.name, image: image };
+    }
+    reader.readAsArrayBuffer(file);
+  }
+
+  this.clear_upload = function () {
+    document.getElementById('upload_selector').value = '';
+    this.preloaded = null;
+  }
+
   this.selected_file_name = function () {
     return this.file_selector.options[this.file_selector.selectedIndex].value;
   };
 
+  this.process_selected = function () {
+    if (this.preloaded) {
+      this.file_loaded(this.preloaded.name, this.preloaded.image);
+    } else {
+      this.load_tape_file(this.selected_file_name());
+    }
+  }
+
   this.run_selected = function () {
     this.load_mode = "run";
-    this.load_tape_file(this.selected_file_name());
+    this.process_selected();
   };
 
   this.load_selected = function () {
     this.load_mode = "load";
-    this.load_tape_file(this.selected_file_name());
+    this.process_selected();
   };
 
   this.disassembler_available = function () {
