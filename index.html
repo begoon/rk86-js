@@ -67,6 +67,10 @@
     <button id="assembler_button" onclick="ui.switch_panel('assembler')">Assembler</button>
     <button id="disassembler_button" onclick="ui.toggle_panel('disassembler')">Disassembler</button>
     <button id="keyboard_button" onclick="ui.switch_panel('keyboard')">About / Keyboard</button>
+    <button onclick="location.href='catalog/index.html'; return true">Catalog</button>
+    <button onclick="ui.console()">Console</button>
+    <button onclick="ui.visualizer()">Visualizer</button>
+    <button onclick="ui.fullscreen()">Full screen</button>
     <button onclick="window.open('help.html','_blank')">Help</button>
     IPS:
     <span id="ips">0</span>
@@ -91,15 +95,13 @@
         <button onclick="ui.restart()">Restart</button>
         <button id="pause_button" onclick="ui.pause()">Pause</button>
 
-        Files: <select id="file_selector"></select>
+        Built-in: <select id="file_selector"></select>
+        Local: <input id="upload_selector" type="file" onchange="ui.upload(event)" />
+        <button onclick="ui.clear_upload()">X</button>
         <button onclick="ui.run_selected()">Run</button>
         <button onclick="ui.load_selected()">Load</button>
-        <button onclick="location.href='catalog/index.html'; return true">Catalog</button>
-        <button onclick="ui.save_screen()">Save screen</button>
-        <button onclick="ui.save_memory()">Save memory</button>
-        <button onclick="ui.console()">Console</button>
-        <button onclick="ui.visualizer()">V</button>
-        <button onclick="ui.fullscreen()">Full screen</button>
+        <button onclick="ui.save_screen()">Screen</button>
+        <button onclick="ui.save_memory()">Memory</button>
       </div>
       <div style="float: left">
         <div id="disassembler_panel" style="display: none; background: #000; padding: 1px;  border: 1px solid #ccc">
