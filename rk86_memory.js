@@ -109,7 +109,7 @@ function Memory(keyboard) {
         this.vg75_c001_60_cmd = 0;
         return this.screen.light_pen_y;
       }
-      return 0xff;
+      return 0x00;
     }
 
     return this.buf[addr];
@@ -165,7 +165,7 @@ function Memory(keyboard) {
 
     // The light pen position sequence.
     if (peripheral_reg == 0xc001 && byte == 0x60) {
-      this.vg75_c001_60_cmd = 1;
+      if (this.screen.light_pen_active) this.vg75_c001_60_cmd = 1;
       return;
     }
 
