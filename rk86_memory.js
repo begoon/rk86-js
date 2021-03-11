@@ -137,7 +137,6 @@ function Memory(keyboard) {
     // RUS/LAT indicator
     if (peripheral_reg == 0x8003) {
       if (byte == this.last_written_byte) return;
-      // The indicator status can is "byte & 0x01".
       this.last_written_byte = byte;
       return;
     }
