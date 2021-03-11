@@ -229,9 +229,9 @@ function UI(tape_catalog, runner, memory, autoexec) {
       window.frames.disassembler_frame.i8080disasm.refresh(this.memory);
 
     if (/^mon.+\.bin$/.exec(file.name) && this.load_mode == "run") {
-      this.runner.execute();
-      console.log("Monitor started");
+      console.log("Monitor ready");
       this.restart();
+      this.runner.execute();
       return;
     }
 
