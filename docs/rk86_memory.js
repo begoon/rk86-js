@@ -97,7 +97,7 @@ function Memory(keyboard) {
     }
 
     if (addr == 0xc001) {
-      return 0xff & ~(this.screen.light_pen_active ? 0x10 : 0x00);
+      return 0x20 | (this.screen.light_pen_active ? 0x10 : 0x00);
     }
 
     if (addr == 0xc000) {
