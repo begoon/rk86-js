@@ -24,7 +24,7 @@ files:
 release:
 	-rm -rf docs
 	mkdir docs
-	cp -R catalog files js termlib *.html *.js *.bmp CNAME i docs/
+	cp -R catalog files js termlib *.html *.js *.bmp *.ico CNAME i docs/
 	python version.py rk86_keyboard_layout.html >rk86_keyboard_layout.version.html
 	mv rk86_keyboard_layout.version.html docs/rk86_keyboard_layout.html
 	rm docs/catalog/Makefile
