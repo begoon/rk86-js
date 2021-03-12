@@ -116,6 +116,7 @@ function Memory(keyboard) {
   };
 
   this.last_written_byte = -1;
+  this.last_written_byte_8003 = -1;
 
   this.write_raw = function (addr, byte) {
     this.buf[addr & 0xffff] = byte & 0xff;
@@ -136,8 +137,8 @@ function Memory(keyboard) {
 
     // RUS/LAT indicator
     if (peripheral_reg == 0x8003) {
-      if (byte == this.last_written_byte) return;
-      this.last_written_byte = byte;
+      if (byte == this.last_written_byte_8003) return;
+      this.last_written_byte_8003 = byte;
       return;
     }
 
