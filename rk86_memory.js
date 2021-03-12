@@ -33,10 +33,8 @@ function Memory(keyboard) {
   };
 
   // 800x ports in Radio-86RK schematics
-  // 8000:
-  // A0-A7 - output, keyboard scanlines
-  // 8001:
-  // B0-B7 - input, keyboard input
+  // 8000: A0-A7 - output, keyboard scanlines
+  // 8001: B0-B7 - input, keyboard input
   // 8002:
   // С0 - tape, out
   // С1 - not used
