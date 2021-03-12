@@ -262,6 +262,12 @@ function Memory(keyboard) {
       //   this.screen_size_y_buf
       // ));
       if (this.screen_size_x_buf && this.screen_size_y_buf) {
+        // Save ("apply") the screen dimentions.
+        this.video_screen_size_x = this.screen_size_x_buf;
+        this.video_screen_size_y = this.screen_size_y_buf;
+        // Re-configure video.
+        screen.set_geometry(this.video_screen_size_x, this.video_screen_size_y);
+      }
       return;
     }
 
@@ -302,27 +308,16 @@ function Memory(keyboard) {
       console.log('IK57: video memory configuration loaded, %04X-%04X'.format(
         this.video_memory_base_buf, this.video_memory_size_buf
       ));
+      // Save ("apply") the video area parameters.
+      this.video_memory_base = this.video_memory_base_buf;
+      this.video_memory_size = this.video_memory_size_buf;
+      screen.set_video_memory(this.video_memory_base, this.video_memory_size);
       return;
     }
 
     // Settings for video memory boundaries and the screen format
     // only take an effect after the DMA command 0xA4 (start the channel).
     if (peripheral_reg == 0xe008 && byte == 0xa4) {
-      if (this.screen_size_x_buf && this.screen_size_y_buf) {
-        // Save ("apply") the screen dimentions.
-        this.video_screen_size_x = this.screen_size_x_buf;
-        this.video_screen_size_y = this.screen_size_y_buf;
-        // Save ("apply") the video area parameters.
-        this.video_memory_base = this.video_memory_base_buf;
-        this.video_memory_size = this.video_memory_size_buf;
-        // Re-configure video.
-        screen.set_geometry(
-          this.video_screen_size_x,
-          this.video_screen_size_y,
-          this.video_memory_base
-        );
-      }
-
       console.log('IK57: write(E008, A4) enable DMA %08b'.format(byte));
       this.tape_8002_as_output = 0;
       return;

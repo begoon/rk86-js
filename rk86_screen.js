@@ -93,10 +93,9 @@ function Screen(font_image, ui, memory) {
     this.ctx.imageSmoothingEnabled = false;
   }
 
-  this.set_geometry = function (width, height, base) {
+  this.set_geometry = function (width, height) {
     this.width = width;
     this.height = height;
-    this.video_memory_base = base;
     this.video_memory_size = width * height;
 
     console.log("set screen geometry: %d %d".format(width, height));
@@ -107,7 +106,10 @@ function Screen(font_image, ui, memory) {
 
     this.disable_smoothing();
     this.ctx.fillRect(0, 0, canvas_width, canvas_height);
+  }
 
+  this.set_video_memory = function (base) {
+    this.video_memory_base = base;
     this.init_cache(this.video_memory_size);
     console.log("set video memory: %04X".format(
       this.video_memory_base, this.video_memory_size
