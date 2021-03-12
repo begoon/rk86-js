@@ -98,7 +98,7 @@ function Screen(font_image, ui, memory) {
     this.height = height;
     this.video_memory_size = width * height;
 
-    console.log("set screen geometry: %d %d".format(width, height));
+    console.log("Set screen geometry: %d %d".format(width, height));
 
     var canvas_width = this.width * char_width * this.scale_x;
     var canvas_height = this.height * (char_height + char_height_gap) * this.scale_y;
@@ -111,7 +111,7 @@ function Screen(font_image, ui, memory) {
   this.set_video_memory = function (base) {
     this.video_memory_base = base;
     this.init_cache(this.video_memory_size);
-    console.log("set video memory: %04X".format(
+    console.log("Set video memory: %04X".format(
       this.video_memory_base, this.video_memory_size
     ));
   }
