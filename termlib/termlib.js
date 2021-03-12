@@ -165,6 +165,16 @@
 
 */
 
+const storeHistory = (value) => {
+	localStorage.setItem('console.history', JSON.stringify(value));
+}
+
+const loadHistory = () => {
+	const savedValue = localStorage.getItem('console.history');
+	if (!savedValue) return new Array();
+	return JSON.parse(savedValue);
+}
+
 var Terminal = function(conf) {
 	if (typeof conf != 'object') conf=new Object();
 	for (var i in this.Defaults) {
@@ -259,7 +269,7 @@ setInitValues: function() {
 	this.inputChar=0;
 	this.lastLine='';
 	this.guiCounter=0;
-	this.history=new Array();
+	this.history=loadHistory();
 	this.histPtr=0;
 	this.env=new Object();
 	this.buckupBuffer=null;
@@ -2439,6 +2449,7 @@ globals: {
 						term.lineBuffer!=term.history[term.history.length-1])
 					   ) {
 						term.history[term.history.length]=term.lineBuffer;
+						storeHistory(term.history);
 					}
 					term.histPtr=term.history.length;
 				}
