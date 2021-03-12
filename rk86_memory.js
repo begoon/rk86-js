@@ -57,7 +57,7 @@ function Memory(keyboard) {
   // D2      - 0: B0-B7, mode 0 (latched)
   // D3      - 1: C4-C7, input
   // D4      - 0: A0-A7, output
-  // D5-D6   - 00: A0-A7, ++ mode 00, (values: 00, 01, 1x)
+  // D5-D6   - 00: A0-A7, mode 00, (values: 00, 01, 1x)
   // D7      - 1, set mode
 
   // 06      - 0000 0110, when Monitor sets RUS/LAT (C3) to 0
