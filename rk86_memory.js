@@ -179,22 +179,40 @@ function Memory(keyboard) {
     if (peripheral_reg == 0x8003) {
       if (byte == this.last_written_byte_8003) return;
       this.last_written_byte_8003 = byte;
+        // console.log('VV55: write(8003, %02X) mode set %08b'.format(
+        //   byte, mode
+        // ));
+      } else {
+        // console.log('VV55: write(8003, %02X): bit set/reset, bit=%d, value=%d'.format(
+        //   byte, bit, value
+        // ));
+        // RUS/LAT can be updated here if bit == 3.
+    if (peripheral_reg == 0xc001 && byte == 0x27) {
+      // console.log('VG75: write(C001, 27) start display [001SSSBB]=%08b'.format(byte));
+      return;
+    }
+
+    if (peripheral_reg == 0xc001 && byte == 0xE0) {
+      // console.log('VG75: write(C001, E0) preset counter');
       return;
     }
 
     // The cursor control sequence.
     if (peripheral_reg == 0xc001 && byte == 0x80) {
+      // console.log('VG75: write(C001, 80) set cursor');
       this.vg75_c001_80_cmd = 1;
       return;
     }
 
     if (peripheral_reg == 0xc000 && this.vg75_c001_80_cmd == 1) {
+      // console.log('VG75: write(C001, %02X) cursor x'.format(byte));
       this.vg75_c001_80_cmd += 1;
       this.cursor_x_buf = byte + 1;
       return;
     }
 
     if (peripheral_reg == 0xc000 && this.vg75_c001_80_cmd == 2) {
+      // console.log('VG75: write(C001, %02X) cursor y'.format(byte));
       this.cursor_y_buf = byte + 1;
       screen.set_cursor(this.cursor_x_buf - 1, this.cursor_y_buf - 1);
       this.video_screen_cursor_x = this.cursor_x_buf;
@@ -217,51 +235,73 @@ function Memory(keyboard) {
 
     // The screen format command sequence.
     if (peripheral_reg == 0xc001 && byte == 0) {
+      // console.log('VG75: write(C001, 00) reset'.format(byte));
       this.vg75_c001_00_cmd = 1;
       return;
     }
 
     if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 1) {
+      // console.log('VG75: write(C001, %02X) [SHHHHHHH]=%08b'.format(byte, byte));
       this.screen_size_x_buf = (byte & 0x7f) + 1;
       this.vg75_c001_00_cmd += 1;
       return;
     }
 
     if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 2) {
+      // console.log('VG75: write(C001, %02X) [VVRRRRRR]=%08b'.format(byte, byte));
       this.screen_size_y_buf = (byte & 0x3f) + 1;
+    if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 3) {
+      // console.log('VG75: write(C001, %02X) [UUUULLLL]=%08b'.format(byte, byte));
+      this.vg75_c001_00_cmd += 1;
+      return;
+    }
+      // console.log('VG75: write(C001, %02X) [MZCCZZZZ]=%08b'.format(byte, byte));
       this.vg75_c001_00_cmd = 0;
+      // console.log('VG75: screen size loaded: x=%d, y=%d'.format(
+      //   this.screen_size_x_buf,
+      //   this.screen_size_y_buf
+      // ));
+      if (this.screen_size_x_buf && this.screen_size_y_buf) {
       return;
     }
 
     // The screen area parameters command sequence.
     if (peripheral_reg == 0xe008 && byte == 0x80) {
+      // console.log('IK57: write(E008, 80) disable/reset DMA %08b'.format(byte));
       this.ik57_e008_80_cmd = 1;
       this.tape_8002_as_output = 1;
       return;
     }
 
     if (peripheral_reg == 0xe004 && this.ik57_e008_80_cmd == 1) {
+      // console.log('IK57: write(E004, %02X) video memory start low'.format(byte));
       this.video_memory_base_buf = byte;
       this.ik57_e008_80_cmd += 1;
       return;
     }
 
     if (peripheral_reg == 0xe004 && this.ik57_e008_80_cmd == 2) {
+      // console.log('IK57: write(E004, %02X) video memory start high'.format(byte));
       this.video_memory_base_buf |= byte << 8;
       this.ik57_e008_80_cmd += 1;
       return;
     }
 
     if (peripheral_reg == 0xe005 && this.ik57_e008_80_cmd == 3) {
+      // console.log('IK57: write(E004, %02X) video memory size low'.format(byte));
       this.video_memory_size_buf = byte;
       this.ik57_e008_80_cmd += 1;
       return;
     }
 
     if (peripheral_reg == 0xe005 && this.ik57_e008_80_cmd == 4) {
+      // console.log('IK57: write(E004, %02X) video memory size high'.format(byte));
       this.video_memory_size_buf =
         ((this.video_memory_size_buf | (byte << 8)) & 0x3fff) + 1;
       this.ik57_e008_80_cmd = 0;
+      console.log('IK57: video memory configuration loaded, %04X-%04X'.format(
+        this.video_memory_base_buf, this.video_memory_size_buf
+      ));
       return;
     }
 
@@ -283,6 +323,7 @@ function Memory(keyboard) {
         );
       }
 
+      console.log('IK57: write(E008, A4) enable DMA %08b'.format(byte));
       this.tape_8002_as_output = 0;
       return;
     }
