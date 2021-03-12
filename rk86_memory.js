@@ -250,11 +250,17 @@ function Memory(keyboard) {
     if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 2) {
       // console.log('VG75: write(C001, %02X) [VVRRRRRR]=%08b'.format(byte, byte));
       this.screen_size_y_buf = (byte & 0x3f) + 1;
+      this.vg75_c001_00_cmd += 1;
+      return;
+    }
+
     if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 3) {
       // console.log('VG75: write(C001, %02X) [UUUULLLL]=%08b'.format(byte, byte));
       this.vg75_c001_00_cmd += 1;
       return;
     }
+
+    if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 4) {
       // console.log('VG75: write(C001, %02X) [MZCCZZZZ]=%08b'.format(byte, byte));
       this.vg75_c001_00_cmd = 0;
       // console.log('VG75: screen size loaded: x=%d, y=%d'.format(
