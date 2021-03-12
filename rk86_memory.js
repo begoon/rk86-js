@@ -32,6 +32,46 @@ function Memory(keyboard) {
     return this.buf.slice(from, from + sz);
   };
 
+  // 800x ports in Radio-86RK schematics
+  // 8000:
+  // A0-A7 - output, keyboard scanlines
+  // 8001:
+  // B0-B7 - input, keyboard input
+  // 8002:
+  // С0 - tape, out
+  // С1 - not used
+  // С2 - not used
+  // С3 - RUS / LAT, out
+  // С4 - tape, in
+  // С5 - keyboard, in
+  // С6 - keyboard, in
+  // С7 - keyboard, in
+  // 8003:
+  // D7-D0 - control register, out
+
+  // Typical values which RK Monitor sends to 8003.
+
+  // 8A      - 1000 1010, when Monitor intializes
+  // D0      - 0: C0-C3, output
+  // D1      - 1: B0-B7, input
+  // D2      - 0: B0-B7, mode 0 (latched)
+  // D3      - 1: C4-C7, input
+  // D4      - 0: A0-A7, output
+  // D5-D6   - 00: A0-A7, ++ mode 00, (values: 00, 01, 1x)
+  // D7      - 1, set mode
+
+  // 06      - 0000 0110, when Monitor sets RUS/LAT (C3) to 0
+  // D0      - 0: bit value
+  // D1-3    - 011: bit index (values 0-7), here is 3 (C3)
+  // D4-6    - not used
+  // D7      - 0, bit set in port C
+
+  // 07      - 0000 0111, when Monitor sets RUS/LAT (C3) to 1
+  // D0      - 1: bit value
+  // D1-3    - 011: bit index (values 0-7), here is 3 (C3)
+  // D4-6    - not used
+  // D7      - 0, bit set in port C
+
   this.vg75_c001_00_cmd = 0;
 
   this.screen_size_x_buf = 0;
