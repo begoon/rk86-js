@@ -32,6 +32,44 @@ function Memory(keyboard) {
     return this.buf.slice(from, from + sz);
   };
 
+  // 800x ports in Radio-86RK schematics
+  // 8000: A0-A7 - output, keyboard scanlines
+  // 8001: B0-B7 - input, keyboard input
+  // 8002:
+  // С0 - tape, out
+  // С1 - not used
+  // С2 - not used
+  // С3 - RUS / LAT, out
+  // С4 - tape, in
+  // С5 - keyboard, in
+  // С6 - keyboard, in
+  // С7 - keyboard, in
+  // 8003:
+  // D7-D0 - control register, out
+
+  // Typical values which RK Monitor sends to 8003.
+
+  // 8A      - 1000 1010, when Monitor intializes
+  // D0      - 0: C0-C3, output
+  // D1      - 1: B0-B7, input
+  // D2      - 0: B0-B7, mode 0 (latched)
+  // D3      - 1: C4-C7, input
+  // D4      - 0: A0-A7, output
+  // D5-D6   - 00: A0-A7, mode 00, (values: 00, 01, 1x)
+  // D7      - 1, set mode
+
+  // 06      - 0000 0110, when Monitor sets RUS/LAT (C3) to 0
+  // D0      - 0: bit value
+  // D1-3    - 011: bit index (values 0-7), here is 3 (C3)
+  // D4-6    - not used
+  // D7      - 0, bit set in port C
+
+  // 07      - 0000 0111, when Monitor sets RUS/LAT (C3) to 1
+  // D0      - 1: bit value
+  // D1-3    - 011: bit index (values 0-7), here is 3 (C3)
+  // D4-6    - not used
+  // D7      - 0, bit set in port C
+
   this.vg75_c001_00_cmd = 0;
 
   this.screen_size_x_buf = 0;
@@ -115,8 +153,6 @@ function Memory(keyboard) {
     return this.buf[addr];
   };
 
-  this.last_written_byte = -1;
-
   this.write_raw = function (addr, byte) {
     this.buf[addr & 0xffff] = byte & 0xff;
   };
@@ -134,27 +170,51 @@ function Memory(keyboard) {
 
     var peripheral_reg = addr & 0xefff;
 
-    // RUS/LAT indicator
     if (peripheral_reg == 0x8003) {
-      if (byte == this.last_written_byte) return;
-      // The indicator status can is "byte & 0x01".
-      this.last_written_byte = byte;
+      if (byte & 0x80) {
+        const mode = byte & 0x7f;
+        // console.log('VV55: write(8003, %02X) mode set %08b'.format(
+        //   byte, mode
+        // ));
+      } else {
+        const bit = (byte >> 1) & 0x03;
+        const value = byte & 0x01;
+        // console.log('VV55: write(8003, %02X): bit set/reset, bit=%d, value=%d'.format(
+        //   byte, bit, value
+        // ));
+        // RUS/LAT can be updated here if bit == 3.
+        // const rus_last = bit == 3 ? value : <no change>
+        if (bit === 3) this.set_ruslat(value);
+      }
+      return;
+    }
+
+    if (peripheral_reg == 0xc001 && byte == 0x27) {
+      // console.log('VG75: write(C001, 27) start display [001SSSBB]=%08b'.format(byte));
+      return;
+    }
+
+    if (peripheral_reg == 0xc001 && byte == 0xE0) {
+      // console.log('VG75: write(C001, E0) preset counter');
       return;
     }
 
     // The cursor control sequence.
     if (peripheral_reg == 0xc001 && byte == 0x80) {
+      // console.log('VG75: write(C001, 80) set cursor');
       this.vg75_c001_80_cmd = 1;
       return;
     }
 
     if (peripheral_reg == 0xc000 && this.vg75_c001_80_cmd == 1) {
+      // console.log('VG75: write(C001, %02X) cursor x'.format(byte));
       this.vg75_c001_80_cmd += 1;
       this.cursor_x_buf = byte + 1;
       return;
     }
 
     if (peripheral_reg == 0xc000 && this.vg75_c001_80_cmd == 2) {
+      // console.log('VG75: write(C001, %02X) cursor y'.format(byte));
       this.cursor_y_buf = byte + 1;
       screen.set_cursor(this.cursor_x_buf - 1, this.cursor_y_buf - 1);
       this.video_screen_cursor_x = this.cursor_x_buf;
@@ -177,72 +237,96 @@ function Memory(keyboard) {
 
     // The screen format command sequence.
     if (peripheral_reg == 0xc001 && byte == 0) {
+      // console.log('VG75: write(C001, 00) reset'.format(byte));
       this.vg75_c001_00_cmd = 1;
       return;
     }
 
     if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 1) {
+      // console.log('VG75: write(C001, %02X) [SHHHHHHH]=%08b'.format(byte, byte));
       this.screen_size_x_buf = (byte & 0x7f) + 1;
       this.vg75_c001_00_cmd += 1;
       return;
     }
 
     if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 2) {
+      // console.log('VG75: write(C001, %02X) [VVRRRRRR]=%08b'.format(byte, byte));
       this.screen_size_y_buf = (byte & 0x3f) + 1;
+      this.vg75_c001_00_cmd += 1;
+      return;
+    }
+
+    if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 3) {
+      // console.log('VG75: write(C001, %02X) [UUUULLLL]=%08b'.format(byte, byte));
+      this.vg75_c001_00_cmd += 1;
+      return;
+    }
+
+    if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 4) {
+      // console.log('VG75: write(C001, %02X) [MZCCZZZZ]=%08b'.format(byte, byte));
       this.vg75_c001_00_cmd = 0;
+      // console.log('VG75: screen size loaded: x=%d, y=%d'.format(
+      //   this.screen_size_x_buf,
+      //   this.screen_size_y_buf
+      // ));
+      if (this.screen_size_x_buf && this.screen_size_y_buf) {
+        // Save ("apply") the screen dimentions.
+        this.video_screen_size_x = this.screen_size_x_buf;
+        this.video_screen_size_y = this.screen_size_y_buf;
+        // Re-configure video.
+        screen.set_geometry(this.video_screen_size_x, this.video_screen_size_y);
+      }
       return;
     }
 
     // The screen area parameters command sequence.
     if (peripheral_reg == 0xe008 && byte == 0x80) {
+      // console.log('IK57: write(E008, 80) disable/reset DMA %08b'.format(byte));
       this.ik57_e008_80_cmd = 1;
       this.tape_8002_as_output = 1;
       return;
     }
 
     if (peripheral_reg == 0xe004 && this.ik57_e008_80_cmd == 1) {
+      // console.log('IK57: write(E004, %02X) video memory start low'.format(byte));
       this.video_memory_base_buf = byte;
       this.ik57_e008_80_cmd += 1;
       return;
     }
 
     if (peripheral_reg == 0xe004 && this.ik57_e008_80_cmd == 2) {
+      // console.log('IK57: write(E004, %02X) video memory start high'.format(byte));
       this.video_memory_base_buf |= byte << 8;
       this.ik57_e008_80_cmd += 1;
       return;
     }
 
     if (peripheral_reg == 0xe005 && this.ik57_e008_80_cmd == 3) {
+      // console.log('IK57: write(E004, %02X) video memory size low'.format(byte));
       this.video_memory_size_buf = byte;
       this.ik57_e008_80_cmd += 1;
       return;
     }
 
     if (peripheral_reg == 0xe005 && this.ik57_e008_80_cmd == 4) {
+      // console.log('IK57: write(E004, %02X) video memory size high'.format(byte));
       this.video_memory_size_buf =
         ((this.video_memory_size_buf | (byte << 8)) & 0x3fff) + 1;
       this.ik57_e008_80_cmd = 0;
+      // console.log('IK57: video memory configuration loaded, %04X-%04X'.format(
+      //   this.video_memory_base_buf, this.video_memory_size_buf
+      // ));
+      // Save ("apply") the video area parameters.
+      this.video_memory_base = this.video_memory_base_buf;
+      this.video_memory_size = this.video_memory_size_buf;
+      screen.set_video_memory(this.video_memory_base, this.video_memory_size);
       return;
     }
 
     // Settings for video memory boundaries and the screen format
     // only take an effect after the DMA command 0xA4 (start the channel).
     if (peripheral_reg == 0xe008 && byte == 0xa4) {
-      if (this.screen_size_x_buf && this.screen_size_y_buf) {
-        // Save ("apply") the screen dimentions.
-        this.video_screen_size_x = this.screen_size_x_buf;
-        this.video_screen_size_y = this.screen_size_y_buf;
-        // Save ("apply") the video area parameters.
-        this.video_memory_base = this.video_memory_base_buf;
-        this.video_memory_size = this.video_memory_size_buf;
-        // Re-configure video.
-        screen.set_geometry(
-          this.video_screen_size_x,
-          this.video_screen_size_y,
-          this.video_memory_base
-        );
-      }
-
+      // console.log('IK57: write(E008, A4) enable DMA %08b'.format(byte));
       this.tape_8002_as_output = 0;
       return;
     }
@@ -251,9 +335,22 @@ function Memory(keyboard) {
       if (this.tape_8002_as_output) {
         this.tape_write_bit && this.tape_write_bit(byte & 0x01);
       }
+      // Technically, any write to 8002 affects RUS/LAT indicator because
+      // the LED is connected to C3 configured to output. Usually, Monitor 
+      // writes 00 to 8002 very frequently (see FE7D offset in the Monitor
+      // code) followed by setting C3 indirectly via accessing 8003 from the
+      // actual RUS/LAT flag. It works okay on the real RK but in the emulator
+      // it looks like constant switching between RUS and LAST. Hemce, In the 
+      // emulator RUS / LAT is only controlled via 8003 indirectly.
+      //
+      // this.set_ruslat((byte & 0x04) ? 1 : 0);
       return;
     }
   };
+
+  this.set_ruslat = (value) => {
+    if (this.update_ruslat) this.update_ruslat(value);
+  }
 
   this.load_file = function (file) {
     for (var i = file.start; i <= file.end; ++i) {

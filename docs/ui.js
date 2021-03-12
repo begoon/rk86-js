@@ -26,6 +26,9 @@ function UI(tape_catalog, runner, memory, autoexec) {
   this.panel = document.getElementById("back");
   this.fullscreen_panel = document.getElementById("fullscreen_panel");
 
+  this.ruslat = document.getElementById("ruslat");
+  this.ruslat_state = false;
+
   this.screenshot_name = "rk86-screen";
   this.screenshot_count = 1;
 
@@ -319,6 +322,12 @@ function UI(tape_catalog, runner, memory, autoexec) {
       "resizable=yes, width=700, height=600"
     );
   };
+
+  this.update_ruslat = (value) => {
+    if (value == this.ruslat_state) return;
+    this.ruslat_state = value;
+    this.ruslat.innerHTML = value ? 'РУС' : 'ЛАТ';
+  }
 
   this.visualizer = function () {
     this.visualizer_window = window.open(
