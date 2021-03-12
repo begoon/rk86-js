@@ -153,9 +153,6 @@ function Memory(keyboard) {
     return this.buf[addr];
   };
 
-  this.last_written_byte = -1;
-  this.last_written_byte_8003 = -1;
-
   this.write_raw = function (addr, byte) {
     this.buf[addr & 0xffff] = byte & 0xff;
   };
@@ -173,18 +170,25 @@ function Memory(keyboard) {
 
     var peripheral_reg = addr & 0xefff;
 
-    // RUS/LAT indicator
     if (peripheral_reg == 0x8003) {
-      if (byte == this.last_written_byte_8003) return;
-      this.last_written_byte_8003 = byte;
+      if (byte & 0x80) {
+        const mode = byte & 0x7f;
         // console.log('VV55: write(8003, %02X) mode set %08b'.format(
         //   byte, mode
         // ));
       } else {
+        const bit = (byte >> 1) & 0x03;
+        const value = byte & 0x01;
         // console.log('VV55: write(8003, %02X): bit set/reset, bit=%d, value=%d'.format(
         //   byte, bit, value
         // ));
         // RUS/LAT can be updated here if bit == 3.
+        // const rus_last = bit == 3 ? value : <no change>
+        if (bit === 3) this.set_ruslat(value);
+      }
+      return;
+    }
+
     if (peripheral_reg == 0xc001 && byte == 0x27) {
       // console.log('VG75: write(C001, 27) start display [001SSSBB]=%08b'.format(byte));
       return;
@@ -331,9 +335,22 @@ function Memory(keyboard) {
       if (this.tape_8002_as_output) {
         this.tape_write_bit && this.tape_write_bit(byte & 0x01);
       }
+      // Technically, any write to 8002 affects RUS/LAT indicator because
+      // the LED is connected to C3 configured to output. Usually, Monitor 
+      // writes 00 to 8002 very frequently (see FE7D offset in the Monitor
+      // code) followed by setting C3 indirectly via accessing 8003 from the
+      // actual RUS/LAT flag. It works okay on the real RK but in the emulator
+      // it looks like constant switching between RUS and LAST. Hemce, In the 
+      // emulator RUS / LAT is only controlled via 8003 indirectly.
+      //
+      // this.set_ruslat((byte & 0x04) ? 1 : 0);
       return;
     }
   };
+
+  this.set_ruslat = (value) => {
+    if (this.update_ruslat) this.update_ruslat(value);
+  }
 
   this.load_file = function (file) {
     for (var i = file.start; i <= file.end; ++i) {
