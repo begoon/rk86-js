@@ -311,9 +311,9 @@ function Memory(keyboard) {
       this.video_memory_size_buf =
         ((this.video_memory_size_buf | (byte << 8)) & 0x3fff) + 1;
       this.ik57_e008_80_cmd = 0;
-      console.log('IK57: video memory configuration loaded, %04X-%04X'.format(
-        this.video_memory_base_buf, this.video_memory_size_buf
-      ));
+      // console.log('IK57: video memory configuration loaded, %04X-%04X'.format(
+      //   this.video_memory_base_buf, this.video_memory_size_buf
+      // ));
       // Save ("apply") the video area parameters.
       this.video_memory_base = this.video_memory_base_buf;
       this.video_memory_size = this.video_memory_size_buf;
@@ -324,7 +324,7 @@ function Memory(keyboard) {
     // Settings for video memory boundaries and the screen format
     // only take an effect after the DMA command 0xA4 (start the channel).
     if (peripheral_reg == 0xe008 && byte == 0xa4) {
-      console.log('IK57: write(E008, A4) enable DMA %08b'.format(byte));
+      // console.log('IK57: write(E008, A4) enable DMA %08b'.format(byte));
       this.tape_8002_as_output = 0;
       return;
     }
