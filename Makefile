@@ -25,7 +25,7 @@ release:
 	-rm -rf docs
 	mkdir docs
 	cp -R catalog files js termlib *.html *.js *.bmp *.ico CNAME i docs/
-	rm docs/rkdump.js
+	rm docs/rkdump.js docs/rktool.js
 	python version.py rk86_keyboard_layout.html >rk86_keyboard_layout.version.html
 	mv rk86_keyboard_layout.version.html docs/rk86_keyboard_layout.html
 	rm docs/catalog/Makefile
@@ -37,7 +37,7 @@ release-beta:
 	-rm -rf docs/beta
 	mkdir docs/beta
 	cp -R catalog files js termlib *.html *.js *.bmp *.ico CNAME i docs/beta
-	rm docs/beta/rkdump.js
+	rm docs/beta/rkdump.js docs/beta/rktool.js
 	python version.py rk86_keyboard_layout.html >rk86_keyboard_layout.version.html
 	mv rk86_keyboard_layout.version.html docs/beta/rk86_keyboard_layout.html
 	rm docs/beta/catalog/Makefile
