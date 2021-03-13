@@ -25,12 +25,25 @@ release:
 	-rm -rf docs
 	mkdir docs
 	cp -R catalog files js termlib *.html *.js *.bmp *.ico CNAME i docs/
+	rm docs/rkdump.js
 	python version.py rk86_keyboard_layout.html >rk86_keyboard_layout.version.html
 	mv rk86_keyboard_layout.version.html docs/rk86_keyboard_layout.html
 	rm docs/catalog/Makefile
 	rm docs/catalog/*.rb
 	rm docs/*.test.js
 	touch docs/.nojekyll
+
+release-beta:
+	-rm -rf docs/beta
+	mkdir docs/beta
+	cp -R catalog files js termlib *.html *.js *.bmp *.ico CNAME i docs/beta
+	rm docs/beta/rkdump.js
+	python version.py rk86_keyboard_layout.html >rk86_keyboard_layout.version.html
+	mv rk86_keyboard_layout.version.html docs/beta/rk86_keyboard_layout.html
+	rm docs/beta/catalog/Makefile
+	rm docs/beta/catalog/*.rb
+	rm docs/beta/*.test.js
+	touch docs/beta
 
 dev-release: release
 	cp experiments/* docs
