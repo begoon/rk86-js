@@ -269,6 +269,9 @@ function UI(tape_catalog, runner, memory, autoexec) {
     document.getElementById("assembler_button").disabled = name == "assembler";
     document.getElementById("keyboard_button").disabled = name == "keyboard";
 
+    document.getElementById("main_panel").style.display = name == "assembler"
+      ? "block" : "inline-block";
+
     if (name == "assembler" || name == "keyboard") {
       var frame_name = name + "_frame";
       var panel_name = name + "_panel";

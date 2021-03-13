@@ -50,5 +50,5 @@ function main() {
   memory.update_ruslat = ui.update_ruslat;
 
   document.getElementById("loading").style.display = "none";
-  document.getElementById("main_panel").style.display = "block";
+  document.getElementById("main_panel").style.display = "inline-block";
 }
