@@ -117,19 +117,17 @@
     <button onclick="ui.visualizer()">Visualizer</button>
     <button onclick="ui.fullscreen()">Full screen</button>
     <button onclick="window.open('help.html','_blank')">Help</button>
-    IPS:
+    <span>IPS:</span>
     <span id="ips">0</span>
-    TPS:
+    <span>TPS:</span>
     <span id="tps">0</span>
-    <span id="ruslat" style="margin-left: 1em; color: black; background-color: white;">
-      ЛАТ
-    </span>
+    <span id="ruslat">ЛАТ</span>
     <div id="emulator_panel">
       <div style="float: left" style="display: block;">
         <div id="back">
           <canvas id="canvas" width="0" height="0"></canvas>
         </div>
-        <input type="checkbox" onclick="ui.sound_toggle(this)" />Sound
+        <input type="checkbox" onclick="ui.sound_toggle(this)" /><span>Sound</span>
         <div style="display: none">
           Screen: <input id="screen_width" value="78" style="width: 2em">
           x <input id="screen_height" value="30" style="width: 2em">
@@ -142,9 +140,8 @@
         <button onclick="ui.reset()">Reset</button>
         <button onclick="ui.restart()">Restart</button>
         <button id="pause_button" onclick="ui.pause()">Pause</button>
-
-        Built-in: <select id="file_selector"></select>
-        Local: <input id="upload_selector" type="file" onchange="ui.upload(event)" />
+        <span>Built-in:</span><select id="file_selector"></select>
+        <span>Local:</span><input id="upload_selector" type="file" onchange="ui.upload(event)" />
         <button onclick="ui.clear_upload()">X</button>
         <button onclick="ui.run_selected()">Run</button>
         <button onclick="ui.load_selected()">Load</button>
