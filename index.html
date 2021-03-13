@@ -57,9 +57,48 @@
   </script>
 
   <style>
+    [type="checkbox"] {
+      vertical-align: middle;
+    }
+
     button,
-    input {
+    input,
+    span {
       font-size: 12px;
+    }
+
+    input[type="file"] {
+      border: 1px solid white
+    }
+
+    #ruslat {
+      float: right;
+      margin-top: 4px;
+      color: black;
+      background-color: white;
+    }
+
+    #fullscreen_panel {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      background: black;
+      visibility: hidden;
+    }
+
+    #back {
+      background: #000;
+      padding: 1px;
+      border: 1px solid #ccc
+    }
+
+    #disassembler_panel {
+      display: none;
+      background: #000;
+      padding: 1px;
+      border: 1px solid #ccc
     }
 
   </style>
@@ -67,8 +106,7 @@
 
 <body onload="main()" bgcolor="#000000" text="#ffffff">
   <div id="loading">Loading...</div>
-  <div id="fullscreen_panel"
-    style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: black; visibility: hidden;"></div>
+  <div id="fullscreen_panel"></div>
   <div id="main_panel" style="display: none">
     <button id="emulator_button" onclick="ui.switch_panel('emulator')" disabled="disabled">Emulator</button>
     <button id="assembler_button" onclick="ui.switch_panel('assembler')">Assembler</button>
@@ -87,8 +125,8 @@
       ЛАТ
     </span>
     <div id="emulator_panel">
-      <div style="float: left">
-        <div id="back" style="background: #000; padding: 1px; border: 1px solid #ccc">
+      <div style="float: left" style="display: block;">
+        <div id="back">
           <canvas id="canvas" width="0" height="0"></canvas>
         </div>
         <input type="checkbox" onclick="ui.sound_toggle(this)" />Sound
@@ -114,7 +152,7 @@
         <button onclick="ui.save_memory()">Memory</button>
       </div>
       <div style="float: left">
-        <div id="disassembler_panel" style="display: none; background: #000; padding: 1px;  border: 1px solid #ccc">
+        <div id="disassembler_panel">
           <iframe name="disassembler_frame" src="i8080disasm.html" width="400" height="600" frameborder="0"></iframe>
         </div>
       </div>
