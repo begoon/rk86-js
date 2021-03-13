@@ -1,0 +1,176 @@
+<!--
+/*
+ * Radio-86RK in JavaScript based on I8080/JS
+ *
+ * Copyright (C) 2009, 2012 Alexander Demin <alexander@demin.ws>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+-->
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Радио-86РК</title>
+  <!-- ||| -->
+  <script src="js/FileSaver.js" type="application/javascript"></script>
+  <script src="js/StringUtils.js" type="application/javascript"></script>
+  <script src="/js/SoundPlayer.js" type="application/javascript"></script>
+  <!-- ||| -->
+  <script src="i8080.js" type="application/javascript"></script>
+  <script src="rk86_tape_catalog.js" type="application/javascript"></script>
+  <script src="rk86_font.js" type="application/javascript"></script>
+  <script src="rk86_screen.js" type="application/javascript"></script>
+  <script src="rk86_memory.js" type="application/javascript"></script>
+  <script src="rk86_keyboard.js" type="application/javascript"></script>
+  <script src="rk86_sound.js" type="application/javascript"></script>
+  <script src="rk86_tape.js" type="application/javascript"></script>
+  <script src="rk86_runner.js" type="application/javascript"></script>
+  <script src="rk86_file_parser.js" type="application/javascript"></script>
+  <script src="ui.js" type="application/javascript"></script>
+  <script src="main.js" type="application/javascript"></script>
+
+  <script type="text/javascript">
+
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-35795751-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function () {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+
+  </script>
+
+  <style>
+    [type="checkbox"] {
+      vertical-align: middle;
+    }
+
+    button,
+    input,
+    span {
+      font-size: 12px;
+    }
+
+    input[type="file"] {
+      border: 1px solid white
+    }
+
+    #ruslat {
+      float: right;
+      margin-top: 4px;
+      color: black;
+      background-color: white;
+    }
+
+    #fullscreen_panel {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      background: black;
+      visibility: hidden;
+    }
+
+    #back {
+      background: #000;
+      padding: 1px;
+      border: 1px solid #ccc
+    }
+
+    #disassembler_panel {
+      display: none;
+      background: #000;
+      padding: 1px;
+      border: 1px solid #ccc
+    }
+
+  </style>
+</head>
+
+<body onload="main()" bgcolor="#000000" text="#ffffff">
+  <div id="loading">Loading...</div>
+  <div id="fullscreen_panel"></div>
+  <div id="main_panel" style="display: none">
+    <button id="emulator_button" onclick="ui.switch_panel('emulator')" disabled="disabled">Emulator</button>
+    <button id="assembler_button" onclick="ui.switch_panel('assembler')">Assembler</button>
+    <button id="disassembler_button" onclick="ui.toggle_panel('disassembler')">Disassembler</button>
+    <button id="keyboard_button" onclick="ui.switch_panel('keyboard')">About / Keyboard</button>
+    <button onclick="location.href='catalog/index.html'; return true">Catalog</button>
+    <button onclick="ui.console()">Console</button>
+    <button onclick="ui.visualizer()">Visualizer</button>
+    <button onclick="ui.fullscreen()">Full screen</button>
+    <button onclick="window.open('help.html','_blank')">Help</button>
+    <span>IPS:</span>
+    <span id="ips">0</span>
+    <span>TPS:</span>
+    <span id="tps">0</span>
+    <span id="ruslat">ЛАТ</span>
+    <div id="emulator_panel">
+      <div style="float: left" style="display: block;">
+        <div id="back">
+          <canvas id="canvas" width="0" height="0"></canvas>
+        </div>
+        <input type="checkbox" onclick="ui.sound_toggle(this)" /><span>Sound</span>
+        <div style="display: none">
+          Screen: <input id="screen_width" value="78" style="width: 2em">
+          x <input id="screen_height" value="30" style="width: 2em">
+        </div>
+        <div style="display: none">
+          Scale: <input id="scale_x" value="2" style="width: 2em">
+          x <input id="scale_y" value="2" style="width: 2em">
+          <button onclick="ui.resize_screen()">Resize</button>
+        </div>
+        <button onclick="ui.reset()">Reset</button>
+        <button onclick="ui.restart()">Restart</button>
+        <button id="pause_button" onclick="ui.pause()">Pause</button>
+        <span>Built-in:</span><select id="file_selector"></select>
+        <span>Local:</span><input id="upload_selector" type="file" onchange="ui.upload(event)" />
+        <button onclick="ui.clear_upload()">X</button>
+        <button onclick="ui.run_selected()">Run</button>
+        <button onclick="ui.load_selected()">Load</button>
+        <button onclick="ui.save_screen()">Screen</button>
+        <button onclick="ui.save_memory()">Memory</button>
+      </div>
+      <div style="float: left">
+        <div id="disassembler_panel">
+          <iframe name="disassembler_frame" src="i8080disasm.html" width="400" height="600" frameborder="0"></iframe>
+        </div>
+      </div>
+    </div>
+    <table id="assembler_panel" style="display: none" width="100%" height="95%">
+      <tr>
+        <td>
+          <iframe id="assembler_frame" src="i8080asm.html" width="100%" height="100%" frameborder="0"></iframe>
+        </td>
+      </tr>
+    </table>
+    <table id="keyboard_panel" style="display: none" width="100%" height="95%">
+      <tr>
+        <td>
+          <iframe id="keyboard_frame" src="rk86_keyboard_layout.html" width="100%" height="100%"
+            frameborder="0"></iframe>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <img src="rk86_font.bmp" style="display: none" id="rk86_font" />
+</body>
+
+</html>
