@@ -134,7 +134,7 @@ function Keyboard() {
 
   document.onkeydown = function (evt) {
     const code = evt.keyCode;
-    if (code == 91 || code == 93) {
+    if (code == 91 || code == 93 || code == 224) {
       // left and right CMD (meta)
       keyboard_this.meta_keys_buffer = [];
     } else {
@@ -148,7 +148,7 @@ function Keyboard() {
 
   document.onkeyup = function (evt) {
     const code = evt.keyCode;
-    if (code == 91 || code == 93) {
+    if (code == 91 || code == 93 || code == 224) {
       for (const code of keyboard_this.meta_keys_buffer) {
         keyboard_this.keyup(code);
       }
