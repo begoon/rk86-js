@@ -23,8 +23,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
   this.autoexec = autoexec;
 
   this.canvas = document.getElementById("canvas");
-  this.panel = document.getElementById("back");
-  this.fullscreen_panel = document.getElementById("fullscreen_panel");
+  this.canvas_panel = document.getElementById("canvas_panel");
 
   this.ruslat = document.getElementById("ruslat");
   this.ruslat_state = false;
@@ -75,11 +74,10 @@ function UI(tape_catalog, runner, memory, autoexec) {
   };
 
   this.resize_canvas = function (width, height) {
+    this.canvas_panel.style.width = width + 'px';
+    this.canvas_panel.style.height = height + 'px';
     this.canvas.width = width;
     this.canvas.height = height;
-
-    this.panel.width = this.canvas.width + 4;
-    this.panel.height = this.canvas.height + 4;
   };
 
   this.reset = function () {
@@ -349,54 +347,16 @@ function UI(tape_catalog, runner, memory, autoexec) {
   };
 
   this.fullscreen = function () {
-    if (!this.canvas.fullscreen) {
-      this.canvas.normal_width = parseInt(this.canvas.clientWidth);
-      this.canvas.normal_height = parseInt(this.canvas.clientHeight);
+    const element = canvas;
+    if (element.webkitRequestFullScreen) {
+      element.webkitRequestFullScreen();
+    } else if (element.mozRequestFullScreen) {
+      element.mozRequestFullScreen();
+    } else if (element.requestFullScreen) {
+      element.requestFullScreen();
+    } else {
+      alert("Full screen not supported. Try Firefox or Chrome.");
     }
-    this.canvas.fullscreen = true;
-
-    var normal_width = this.canvas.normal_width;
-    var normal_height = this.canvas.normal_height;
-
-    fullscreen_panel.style.visibility = "visible";
-    var width = fullscreen_panel.clientWidth;
-    var height = fullscreen_panel.clientHeight;
-    var ratio = Math.min(width / normal_width, height / normal_height);
-    var ratio_width = ratio * normal_width;
-    var ratio_height = ratio * normal_height;
-
-    this.canvas.style.width = Math.floor(ratio_width) + "px";
-    this.canvas.style.height = Math.floor(ratio_height) + "px";
-    this.canvas.style.position = "absolute";
-    this.canvas.style.left = Math.ceil((width - ratio_width) / 2) + "px";
-    this.canvas.style.top = Math.ceil((height - ratio_height) / 2) + "px";
-
-    this.panel.style.visibility = "hidden";
-    fullscreen_panel.appendChild(this.canvas);
-    window.scrollTo(0, 0);
-
-    var fullscreen_this = this;
-    this.canvas.ondblclick = function () {
-      fullscreen_this.fullscreen_off();
-      fullscreen_this.clear_selection();
-      return false;
-    };
-    window.onresize = function () {
-      fullscreen_this.fullscreen();
-    };
-  };
-
-  this.fullscreen_off = function () {
-    this.canvas.fullscreen = false;
-    window.onresize = function () { };
-    this.canvas.style.width = this.canvas.normal_width + "px";
-    this.canvas.style.height = this.canvas.normal_height + "px";
-    this.canvas.style.position = "static";
-    this.canvas.style.left = "0px";
-    this.canvas.style.top = "0px";
-    this.fullscreen_panel.style.visibility = "hidden";
-    this.panel.appendChild(this.canvas);
-    this.panel.style.visibility = "visible";
   };
 
   this.load_mode = "run";
