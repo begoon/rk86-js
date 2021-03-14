@@ -174,6 +174,7 @@ function tape_catalog() {
     "rk86ex1.bin",
     "rk86test.bin",
     "rk_font.bin",
+    "screentest.bin",
     "sokoban.bin",
     "viewport.rkr",
   ];

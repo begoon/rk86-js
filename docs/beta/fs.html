@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas"></canvas>
+  <br>
+  <button id="fullscreen" onclick="fullscreen()">fullscreen</button>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext("2d");
+
+    const width = 936;
+    const height = 600;
+    const dx = 30;
+    const dy = 30;
+    canvas.width = width;
+    canvas.height = height;
+
+    // context.fillStyle = "green";
+    // context.fillRect(0, 0, dx, dy);
+    // context.fillRect(width - dx, 0, width, dy);
+    // context.fillRect(0, height - dy, dx, height);
+    // context.fillRect(width - dx, height - dy, width, height);
+
+    (function X(context) {
+      const char_width = 6;
+      const char_height = 8;
+      const char_height_gap = 2;
+
+      const random_rgba = () => {
+        var o = Math.round, r = Math.random, s = 255;
+        return 'rgba(' + o(r() * s) + ',' + o(r() * s) + ',' + o(r() * s) + ',' + r().toFixed(1) + ')';
+      }
+
+      const scale_x = 2;
+      const scale_y = 2;
+      for (let y = 0; y < 30; y += 1) {
+        for (let x = 0; x < 78; x += 1) {
+          const xx = x * char_width * scale_x;
+          const yy = y * (char_height + char_height_gap) * scale_y;
+          const sx = char_width * scale_x;
+          const sy = (char_height + char_height_gap) * scale_y;
+          context.fillStyle = random_rgba();
+          if (y == 0 || x == 0 || y == 29 || x == 77) {
+            context.fillStyle = 'cyan';
+          }
+          context.fillRect(xx, yy, xx + sx, yy + sy);
+        }
+      }
+    })(context);
+
+    function fullscreen() {
+      const element = canvas;
+      if (element.webkitRequestFullScreen) {
+        element.webkitRequestFullScreen();
+      } else if (element.mozRequestFullScreen) {
+        element.mozRequestFullScreen();
+      } else if (element.requestFullScreen) {
+        element.requestFullScreen();
+      } else {
+        alert("Full screen not supported. Try Firefox or Chrome.");
+      }
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+    }
+  </script>
+</body>
+
+</html>
