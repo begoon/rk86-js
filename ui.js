@@ -74,14 +74,6 @@ function UI(tape_catalog, runner, memory, autoexec) {
     this.runner.init_sound(checkbox.checked);
   };
 
-  this.resize_screen = function () {
-    var width = document.getElementById("screen_width").value;
-    var height = document.getElementById("screen_height").value;
-    var scale_x = document.getElementById("scale_x").value;
-    var scale_y = document.getElementById("scale_y").value;
-    screen.set_view(width, height, scale_x, scale_y);
-  };
-
   this.resize_canvas = function (width, height) {
     this.canvas.width = width;
     this.canvas.height = height;
