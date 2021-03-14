@@ -107,7 +107,7 @@ function Keyboard() {
     // CTRL
     if (code == 17) keyboard_this.modifiers &= ~US;
     // ESC
-    if (code == 27) keyboard_this.modifiers &= ~RL;
+    if (code == 121) keyboard_this.modifiers &= ~RL;
     var key = key_table[code];
     if (key) keyboard_this.state[key[0]] &= ~key[1];
   };
@@ -118,7 +118,7 @@ function Keyboard() {
     // CTRL
     if (code == 17) keyboard_this.modifiers |= US;
     // ESC
-    if (code == 27) keyboard_this.modifiers |= RL;
+    if (code == 121) keyboard_this.modifiers |= RL;
     var key = key_table[code];
     if (key) keyboard_this.state[key[0]] |= key[1];
   };
