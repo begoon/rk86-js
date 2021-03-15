@@ -346,7 +346,20 @@ function UI(tape_catalog, runner, memory, autoexec) {
     }
   };
 
-  this.fullscreen = function () {
+  this.fullscreen_change = () => {
+    const is_fullscreen = (document.fullscreenElement && document.fullscreenElement !== null) ||
+      (document.webkitFullscreenElement && document.webkitFullscreenElement !== null) ||
+      (document.mozFullScreenElement && document.mozFullScreenElement !== null) ||
+      (document.msFullscreenElement && document.msFullscreenElement !== null);
+    this.canvas.style.position = is_fullscreen ? 'absolute' : '';
+  }
+
+  document.addEventListener("fullscreenchange", this.fullscreen_change);
+  document.addEventListener("mozfullscreenchange", this.fullscreen_change);
+  document.addEventListener("webkitfullscreenchange", this.fullscreen_change);
+  document.addEventListener("msfullscreenchange", this.fullscreen_change);
+
+  this.fullscreen = () => {
     const element = canvas;
     if (element.webkitRequestFullScreen) {
       element.webkitRequestFullScreen();
@@ -355,7 +368,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
     } else if (element.requestFullScreen) {
       element.requestFullScreen();
     } else {
-      alert("Full screen not supported. Try Firefox or Chrome.");
+      return alert("Full screen not supported in this browser.");
     }
   };
 

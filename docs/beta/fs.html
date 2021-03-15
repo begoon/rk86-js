@@ -7,6 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
   <style>
+    /* canvas:-webkit-full-screen,
+    canvas:-moz-fullscreen,
+    canvas:-ms-webkitFullscreen,
+    canvas:fullscreen {
+      position: absolute;
+    } */
+
   </style>
 </head>
 
@@ -58,7 +65,32 @@
       }
     })(context);
 
+    this.fullscreen_change = () => {
+      const is_fullscreen = (document.fullscreenElement && document.fullscreenElement !== null) ||
+        (document.webkitFullscreenElement && document.webkitFullscreenElement !== null) ||
+        (document.mozFullScreenElement && document.mozFullScreenElement !== null) ||
+        (document.msFullscreenElement && document.msFullscreenElement !== null);
+      if (!is_fullscreen) {
+        this.canvas.style.position = ''; // this.saved_canvas_position;
+      }
+    }
+
+    document.addEventListener("fullscreenchange", fullscreen_change);
+    document.addEventListener("mozfullscreenchange", fullscreen_change);
+    document.addEventListener("webkitfullscreenchange", fullscreen_change);
+    document.addEventListener("msfullscreenchange", fullscreen_change);
+
+    // this.saved_canvas_position = null;
+
     function fullscreen() {
+      // this.saved_canvas_position = this.canvas.style.position;
+      this.canvas.style.position = 'absolute';
+
+      // this.canvas.style.width = 2560 + 'px';
+      // this.canvas.style.height = 2600 + 'px';
+      // this.canvas.style.top = 0;
+      // this.canvas.style.left = 0;
+
       const element = canvas;
       if (element.webkitRequestFullScreen) {
         element.webkitRequestFullScreen();
@@ -69,8 +101,8 @@
       } else {
         alert("Full screen not supported. Try Firefox or Chrome.");
       }
-      canvas.style.width = "100%";
-      canvas.style.height = "100%";
+      // canvas.style.width = "100%";
+      // canvas.style.height = "100%";
     }
   </script>
 </body>
