@@ -149,8 +149,10 @@ function Keyboard() {
   document.onkeyup = function (evt) {
     const code = evt.keyCode;
     if (code == 91 || code == 93 || code == 224) {
-      for (const code of keyboard_this.meta_keys_buffer) {
-        keyboard_this.keyup(code);
+      if (keyboard_this.meta_keys_buffer) {
+        for (const code of keyboard_this.meta_keys_buffer) {
+          keyboard_this.keyup(code);
+        }
       }
       this.meta_keys_buffer = null;
     } else {
