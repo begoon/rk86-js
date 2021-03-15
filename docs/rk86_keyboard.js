@@ -24,8 +24,8 @@ function Keyboard() {
 
   const key_table = {
     36: [0, 0x01], //   \\  -> HOME
-    35: [0, 0x02], //   CTP  -> END
-    116: [0, 0x04], //  AP2  -> F5
+    35: [0, 0x02], //   CTP -> END
+    116: [0, 0x04], //  AP2 -> F5
     112: [0, 0x08], //  Ф1 -> F1
     113: [0, 0x10], //  Ф2 -> F2
     114: [0, 0x20], //  Ф3 -> F3
@@ -107,7 +107,7 @@ function Keyboard() {
     // CTRL
     if (code == 17) keyboard_this.modifiers &= ~US;
     // ESC
-    if (code == 27) keyboard_this.modifiers &= ~RL;
+    if (code == 121) keyboard_this.modifiers &= ~RL;
     var key = key_table[code];
     if (key) keyboard_this.state[key[0]] &= ~key[1];
   };
@@ -118,7 +118,7 @@ function Keyboard() {
     // CTRL
     if (code == 17) keyboard_this.modifiers |= US;
     // ESC
-    if (code == 27) keyboard_this.modifiers |= RL;
+    if (code == 121) keyboard_this.modifiers |= RL;
     var key = key_table[code];
     if (key) keyboard_this.state[key[0]] |= key[1];
   };
@@ -149,8 +149,10 @@ function Keyboard() {
   document.onkeyup = function (evt) {
     const code = evt.keyCode;
     if (code == 91 || code == 93 || code == 224) {
-      for (const code of keyboard_this.meta_keys_buffer) {
-        keyboard_this.keyup(code);
+      if (keyboard_this.meta_keys_buffer) {
+        for (const code of keyboard_this.meta_keys_buffer) {
+          keyboard_this.keyup(code);
+        }
       }
       this.meta_keys_buffer = null;
     } else {

@@ -79,20 +79,9 @@
       background-color: white;
     }
 
-    #fullscreen_panel {
-      position: absolute;
-      left: 0;
-      top: 0;
-      right: 0;
-      bottom: 0;
+    #canvas_panel {
       background: black;
-      visibility: hidden;
-    }
-
-    #back {
-      background: #000;
-      padding: 1px;
-      border: 1px solid #ccc
+      border: 1px solid white;
     }
 
     #disassembler_panel {
@@ -107,7 +96,6 @@
 
 <body onload="main()" bgcolor="#000000" text="#ffffff">
   <div id="loading">Loading...</div>
-  <div id="fullscreen_panel"></div>
   <div id="main_panel" style="display: none">
     <button id="emulator_button" onclick="ui.switch_panel('emulator')" disabled="disabled">Emulator</button>
     <button id="assembler_button" onclick="ui.switch_panel('assembler')">Assembler</button>
@@ -125,19 +113,10 @@
     <span id="ruslat">ЛАТ</span>
     <div id="emulator_panel">
       <div style="float: left" style="display: block;">
-        <div id="back">
-          <canvas id="canvas" width="0" height="0"></canvas>
+        <div id="canvas_panel">
+          <canvas id="canvas"></canvas>
         </div>
         <input type="checkbox" onclick="ui.sound_toggle(this)" /><span>Sound</span>
-        <div style="display: none">
-          Screen: <input id="screen_width" value="78" style="width: 2em">
-          x <input id="screen_height" value="30" style="width: 2em">
-        </div>
-        <div style="display: none">
-          Scale: <input id="scale_x" value="2" style="width: 2em">
-          x <input id="scale_y" value="2" style="width: 2em">
-          <button onclick="ui.resize_screen()">Resize</button>
-        </div>
         <button onclick="ui.reset()">Reset</button>
         <button onclick="ui.restart()">Restart</button>
         <button id="pause_button" onclick="ui.pause()">Pause</button>
