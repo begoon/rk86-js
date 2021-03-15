@@ -87,7 +87,6 @@ function Screen(font_image, ui, memory) {
   }
 
   this.disable_smoothing = function () {
-    this.ctx.fillStyle = "rgb(0, 0, 0)";
     this.ctx.mozImageSmoothingEnabled = false;
     this.ctx.webkitImageSmoothingEnabled = false;
     this.ctx.imageSmoothingEnabled = false;
