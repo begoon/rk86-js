@@ -5,15 +5,6 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-  <style>
-    /* canvas:-webkit-full-screen,
-    canvas:-moz-fullscreen,
-    canvas:-ms-webkitFullscreen,
-    canvas:fullscreen {
-      position: absolute;
-    } */
-
   </style>
 </head>
 
@@ -25,20 +16,21 @@
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext("2d");
 
-    const width = 936;
-    const height = 600;
-    const dx = 30;
-    const dy = 30;
+    const [width, height] = [936, 600];
+
     canvas.width = width;
     canvas.height = height;
 
-    // context.fillStyle = "green";
-    // context.fillRect(0, 0, dx, dy);
-    // context.fillRect(width - dx, 0, width, dy);
-    // context.fillRect(0, height - dy, dx, height);
-    // context.fillRect(width - dx, height - dy, width, height);
+    function rectangles_in_corners(width, height) {
+      const [dx, dy] = [30, 30];
+      context.fillStyle = "green";
+      context.fillRect(0, 0, dx, dy);
+      context.fillRect(width - dx, 0, width, dy);
+      context.fillRect(0, height - dy, dx, height);
+      context.fillRect(width - dx, height - dy, width, height);
+    }
 
-    (function X(context) {
+    function rk86_screen_mockup(context) {
       const char_width = 6;
       const char_height = 8;
       const char_height_gap = 2;
@@ -63,34 +55,24 @@
           context.fillRect(xx, yy, xx + sx, yy + sy);
         }
       }
-    })(context);
+    }
+
+    rk86_screen_mockup(context);
 
     this.fullscreen_change = () => {
       const is_fullscreen = (document.fullscreenElement && document.fullscreenElement !== null) ||
         (document.webkitFullscreenElement && document.webkitFullscreenElement !== null) ||
         (document.mozFullScreenElement && document.mozFullScreenElement !== null) ||
         (document.msFullscreenElement && document.msFullscreenElement !== null);
-      if (!is_fullscreen) {
-        this.canvas.style.position = ''; // this.saved_canvas_position;
-      }
+      this.canvas.style.position = is_fullscreen ? 'absolute' : '';
     }
 
-    document.addEventListener("fullscreenchange", fullscreen_change);
-    document.addEventListener("mozfullscreenchange", fullscreen_change);
-    document.addEventListener("webkitfullscreenchange", fullscreen_change);
-    document.addEventListener("msfullscreenchange", fullscreen_change);
+    document.addEventListener("fullscreenchange", this.fullscreen_change);
+    document.addEventListener("mozfullscreenchange", this.fullscreen_change);
+    document.addEventListener("webkitfullscreenchange", this.fullscreen_change);
+    document.addEventListener("msfullscreenchange", this.fullscreen_change);
 
-    // this.saved_canvas_position = null;
-
-    function fullscreen() {
-      // this.saved_canvas_position = this.canvas.style.position;
-      this.canvas.style.position = 'absolute';
-
-      // this.canvas.style.width = 2560 + 'px';
-      // this.canvas.style.height = 2600 + 'px';
-      // this.canvas.style.top = 0;
-      // this.canvas.style.left = 0;
-
+    this.fullscreen = () => {
       const element = canvas;
       if (element.webkitRequestFullScreen) {
         element.webkitRequestFullScreen();
@@ -99,11 +81,9 @@
       } else if (element.requestFullScreen) {
         element.requestFullScreen();
       } else {
-        alert("Full screen not supported. Try Firefox or Chrome.");
+        return alert("Full screen not supported in this browser.");
       }
-      // canvas.style.width = "100%";
-      // canvas.style.height = "100%";
-    }
+    };
   </script>
 </body>
 
