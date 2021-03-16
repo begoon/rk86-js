@@ -372,6 +372,18 @@ function UI(tape_catalog, runner, memory, autoexec) {
     }
   };
 
+  const virtual_keyboard = document.getElementById('virtual_keyboard');
+  virtual_keyboard.value = "[68, 48, 188, 70, 70, 70, 13, 0, 0, [17, 17, 17, 17, 67]]";
+
+  virtual_keyboard.onkeydown = event => event.stopPropagation();
+  virtual_keyboard.onkeyup = event => event.stopPropagation();
+
+  document.getElementById('virtual_keyboard_send').onclick = () => {
+    const keys = JSON.parse(virtual_keyboard.value);
+    console.log(keys);
+    this.press_keys(keys);
+  }
+
   this.inject_keys = keys => {
     const keyboard = this.runner.cpu.memory.keyboard;
     keys.forEach(code => keyboard.onkeydown(code));
