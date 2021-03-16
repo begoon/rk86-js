@@ -317,7 +317,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
   };
 
   this.update_ruslat = (value) => {
-    if (value == this.ruslat_state) return;
+    if (value === this.ruslat_state) return;
     this.ruslat_state = value;
     this.ruslat.innerHTML = value ? 'РУС' : 'ЛАТ';
   }
