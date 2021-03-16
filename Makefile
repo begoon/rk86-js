@@ -1,6 +1,6 @@
 .PHONY: build files
 
-all: test build files build-catalog release
+all: build files build-catalog release
 
 ifeq ($(OS),Windows_NT)
 CC = c:/tcc/tcc
