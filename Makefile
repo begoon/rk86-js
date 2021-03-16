@@ -21,7 +21,9 @@ files:
 	(cd files && ls -1 >../files.lst)
 	./rkdump$(EXE) < files.lst > rk86_tape_catalog.js
 
-release:
+release: release-production release-beta
+
+release-production:
 	-rm -rf docs
 	mkdir docs
 	cp -R catalog files js termlib *.html *.js *.bmp *.ico CNAME i docs/
@@ -43,7 +45,6 @@ release-beta:
 	rm docs/beta/catalog/Makefile
 	rm docs/beta/catalog/*.rb
 	rm docs/beta/*.test.js
-	touch docs/beta
 
 dev-release: release
 	cp experiments/* docs
