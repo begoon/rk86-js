@@ -317,7 +317,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
   };
 
   this.update_ruslat = (value) => {
-    if (value == this.ruslat_state) return;
+    if (value === this.ruslat_state) return;
     this.ruslat_state = value;
     this.ruslat.innerHTML = value ? 'РУС' : 'ЛАТ';
   }
@@ -371,6 +371,24 @@ function UI(tape_catalog, runner, memory, autoexec) {
       return alert("Full screen not supported in this browser.");
     }
   };
+
+  this.inject_keys = keys => {
+    const keyboard = this.runner.cpu.memory.keyboard;
+    keys.forEach(code => keyboard.onkeydown(code));
+    window.setTimeout(() => {
+      keys.reverse().forEach(code => keyboard.onkeyup(code));
+    }, 100);
+  };
+
+  this.press_keys_loop = function (sequence, i) {
+    if (i >= sequence.length) return;
+    const current = sequence[i];
+    const keys = Array.isArray(current) ? current : [current];
+    this.inject_keys(keys);
+    setTimeout(() => this.press_keys_loop(sequence, i + 1), 150);
+  }
+
+  this.press_keys = codes => this.press_keys_loop(codes, 0);
 
   this.load_mode = "run";
   this.load_tape_file("mon32.bin");

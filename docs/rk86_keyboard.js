@@ -99,67 +99,66 @@ function Keyboard() {
   const US = 0x40;
   const RL = 0x80;
 
-  var keyboard_this = this;
-
-  this.keydown = function (code) {
+  this.keydown = code => {
+    // console.log('keydown: %s'.format(code))
     // SHIFT
-    if (code == 16) keyboard_this.modifiers &= ~SS;
+    if (code == 16) this.modifiers &= ~SS;
     // CTRL
-    if (code == 17) keyboard_this.modifiers &= ~US;
-    // ESC
-    if (code == 121) keyboard_this.modifiers &= ~RL;
-    var key = key_table[code];
-    if (key) keyboard_this.state[key[0]] &= ~key[1];
+    if (code == 17) this.modifiers &= ~US;
+    // F10
+    if (code == 121) this.modifiers &= ~RL;
+    const key = key_table[code];
+    if (key) this.state[key[0]] &= ~key[1];
   };
 
   this.keyup = function (code) {
+    // console.log('keyup: %s'.format(code))
     // SHIFT
-    if (code == 16) keyboard_this.modifiers |= SS;
+    if (code == 16) this.modifiers |= SS;
     // CTRL
-    if (code == 17) keyboard_this.modifiers |= US;
-    // ESC
-    if (code == 121) keyboard_this.modifiers |= RL;
-    var key = key_table[code];
-    if (key) keyboard_this.state[key[0]] |= key[1];
+    if (code == 17) this.modifiers |= US;
+    // F10
+    if (code == 121) this.modifiers |= RL;
+    const key = key_table[code];
+    if (key) this.state[key[0]] |= key[1];
   };
 
-  this.presskey = function (code) {
-    this.keydown(code);
-    window.setTimeout(function () {
-      keyboard_this.keyup(code);
-    }, 100);
-  };
+  this.meta_keys_buffer = null;
 
-  meta_keys_buffer = null;
-
-  document.onkeydown = function (evt) {
-    const code = evt.keyCode;
+  this.onkeydown = code => {
     if (code == 91 || code == 93 || code == 224) {
       // left and right CMD (meta)
-      keyboard_this.meta_keys_buffer = [];
+      this.meta_keys_buffer = [];
     } else {
-      if (Array.isArray(keyboard_this.meta_keys_buffer)) {
-        keyboard_this.meta_keys_buffer.push(code);
+      if (Array.isArray(this.meta_keys_buffer)) {
+        this.meta_keys_buffer.push(code);
       }
     }
-    keyboard_this.keydown(code);
-    return false;
+    this.keydown(code);
   };
 
-  document.onkeyup = function (evt) {
-    const code = evt.keyCode;
+  this.onkeyup = code => {
     if (code == 91 || code == 93 || code == 224) {
-      if (keyboard_this.meta_keys_buffer) {
-        for (const code of keyboard_this.meta_keys_buffer) {
-          keyboard_this.keyup(code);
+      if (this.meta_keys_buffer) {
+        for (const code of this.meta_keys_buffer) {
+          this.keyup(code);
         }
       }
       this.meta_keys_buffer = null;
     } else {
-      keyboard_this.keyup(code);
+      this.keyup(code);
     }
-    return false;
   };
+
+  document.onkeydown = event => {
+    this.onkeydown(event.keyCode);
+    return false;
+  }
+
+  document.onkeyup = event => {
+    this.onkeyup(event.keyCode);
+    return false;
+  }
 
   this.reset();
 }
