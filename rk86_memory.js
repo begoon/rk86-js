@@ -32,6 +32,31 @@ function Memory(keyboard) {
     return this.buf.slice(from, from + sz);
   };
 
+  this.export = () => {
+    return {
+      vg75_c001_00_cmd: this.vg75_c001_00_cmd,
+      screen_size_x_buf: this.screen_size_x_buf,
+      screen_size_y_buf: this.screen_size_y_buf,
+      ik57_e008_80_cmd: this.ik57_e008_80_cmd,
+      vg75_c001_80_cmd: this.vg75_c001_80_cmd,
+      cursor_x_buf: this.cursor_x_buf,
+      cursor_y_buf: this.cursor_y_buf,
+      vg75_c001_60_cmd: this.vg75_c001_60_cmd,
+      tape_8002_as_output: this.tape_8002_as_output,
+      video_memory_base_buf: this.video_memory_base_buf,
+      video_memory_size_buf: this.video_memory_size_buf,
+      video_memory_base: this.video_memory_base,
+      video_memory_size: this.video_memory_size,
+      video_screen_size_x: this.video_screen_size_x,
+      video_screen_size_y: this.video_screen_size_y,
+      video_screen_cursor_x: this.video_screen_cursor_x,
+      video_screen_cursor_y: this.video_screen_cursor_y,
+      last_access_address: this.last_access_address,
+      last_access_operation: this.last_access_operation,
+      memory: hexMapArray(this.buf),
+    }
+  }
+
   // 800x ports in Radio-86RK schematics
   // 8000: A0-A7 - output, keyboard scanlines
   // 8001: B0-B7 - input, keyboard input

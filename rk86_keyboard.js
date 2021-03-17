@@ -22,6 +22,13 @@ function Keyboard() {
     this.modifiers = 0xff;
   };
 
+  this.export = () => {
+    return {
+      state: this.state,
+      modifiers: this.modifiers,
+    }
+  }
+
   const key_table = {
     36: [0, 0x01], //   \\  -> HOME
     35: [0, 0x02], //   CTP -> END

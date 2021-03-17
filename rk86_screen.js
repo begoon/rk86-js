@@ -54,6 +54,22 @@ function Screen(font_image, ui, memory) {
   this.light_pen_y = 0;
   this.light_pen_active = 0;
 
+  this.export = () => {
+    return {
+      scale_x: this.scale_x,
+      scale_y: this.scale_y,
+      width: this.width,
+      height: this.height,
+      cursor_state: this.cursor_state,
+      cursor_x: this.cursor_x,
+      cursor_y: this.cursor_y,
+      video_memory_base: this.video_memory_base,
+      video_memory_size: this.video_memory_size,
+      light_pen_x: this.light_pen_x,
+      light_pen_y: this.light_pen_y,
+      light_pen_active: this.light_pen_active,
+    }
+  }
   this.init_cache = function (sz) {
     for (var i = 0; i < sz; ++i) this.cache[i] = true;
   }

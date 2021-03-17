@@ -34,6 +34,9 @@ function UI(tape_catalog, runner, memory, autoexec) {
   this.memory_snapshot_name = "rk86-memory";
   this.memory_snapshot_count = 1;
 
+  this.computer_snapshot_name = "rk86-snapshot";
+  this.computer_snapshot_count = 1;
+
   this.file_parser = new FileParser();
 
   this.preloaded = null;
@@ -305,6 +308,17 @@ function UI(tape_catalog, runner, memory, autoexec) {
     );
     saveAs(snapshot_blob, filename);
     this.memory_snapshot_count += 1;
+  };
+
+  this.snapshot = () => {
+    const filename = "%s-%d.json".format(
+      this.computer_snapshot_name,
+      this.computer_snapshot_count
+    );
+    const json = rk86_snapshot();
+    const blob = new Blob([json], { type: "application/json" });
+    saveAs(blob, filename);
+    this.computer_snapshot_count += 1;
   };
 
   this.console = function () {

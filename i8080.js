@@ -49,6 +49,18 @@ function I8080(memory, io) {
   this.memory = memory;
   this.io = io;
 
+  this.export = () => {
+    return {
+      'af': (this.a() << 8) | this.store_flags(),
+      'bc': this.bc(),
+      'de': this.de(),
+      'hl': this.hl(),
+      'sp': this.sp,
+      'pc': this.pc,
+      'iff': this.iff,
+    }
+  }
+
   this.memory_read_byte = function (addr) {
     return this.memory.read(addr & 0xffff) & 0xff;
   }
