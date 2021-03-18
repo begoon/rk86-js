@@ -21,8 +21,8 @@ const hex8_keys = [
   'iff',
   // memory
   'vg75_c001_00_cmd',
-  'screen_size_x_buf',
-  'screen_size_y_buf',
+  'video_screen_size_x_buf',
+  'video_screen_size_y_buf',
   'ik57_e008_80_cmd',
   'vg75_c001_80_cmd',
   'cursor_x_buf',
