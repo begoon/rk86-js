@@ -53,7 +53,7 @@ function Memory(keyboard) {
       video_screen_cursor_y: this.video_screen_cursor_y,
       last_access_address: this.last_access_address,
       last_access_operation: this.last_access_operation,
-      memory: hexMapArray(this.buf),
+      memory: arrayToHexMap(this.buf),
     }
   }
 
