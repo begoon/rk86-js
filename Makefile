@@ -30,8 +30,6 @@ release-production:
 	mkdir docs/lib
 	cp lib/*.js docs/lib
 	rm docs/rkdump.js docs/rktool.js
-	python version.py rk86_keyboard_layout.html >rk86_keyboard_layout.version.html
-	mv rk86_keyboard_layout.version.html docs/rk86_keyboard_layout.html
 	rm docs/catalog/Makefile
 	rm docs/catalog/*.rb
 	rm docs/*.test.js
@@ -44,8 +42,6 @@ release-beta:
 	mkdir docs/beta/lib
 	cp lib/*.js docs/beta/lib
 	rm docs/beta/rkdump.js docs/beta/rktool.js
-	python version.py rk86_keyboard_layout.html >rk86_keyboard_layout.version.html
-	mv rk86_keyboard_layout.version.html docs/beta/rk86_keyboard_layout.html
 	rm docs/beta/catalog/Makefile
 	rm docs/beta/catalog/*.rb
 	rm docs/beta/*.test.js
