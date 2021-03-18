@@ -91,6 +91,9 @@ function rk86_snapshot() {
   const snapshot = {
     id: 'rk86',
     created: new Date().toISOString(),
+    format: '1',
+    emulator: 'rk86.ru',
+    version: version,
     start: 0x0000,
     end: 0xFFFF,
     entry: cpu.pc,
