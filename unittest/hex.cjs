@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-eval(fs.readFileSync(path.resolve(__dirname, 'hex.js'), 'utf-8'));
+eval(fs.readFileSync(path.resolve(__dirname, '../lib/hex.js'), 'utf-8'));
 
 module.exports = {
   toHex8,
