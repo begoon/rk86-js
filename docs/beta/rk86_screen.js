@@ -54,6 +54,45 @@ function Screen(font_image, ui, memory) {
   this.light_pen_y = 0;
   this.light_pen_active = 0;
 
+  this.export = () => {
+    const h16 = n => '0x' + toHex16(n);
+    return {
+      scale_x: this.scale_x,
+      scale_y: this.scale_y,
+      width: this.width,
+      height: this.height,
+      cursor_state: this.cursor_state ? 1 : 0,
+      cursor_x: this.cursor_x,
+      cursor_y: this.cursor_y,
+      video_memory_base: h16(this.video_memory_base),
+      video_memory_size: h16(this.video_memory_size),
+      light_pen_x: this.light_pen_x,
+      light_pen_y: this.light_pen_y,
+      light_pen_active: this.light_pen_active,
+    }
+  }
+
+  this.import = snapshot => {
+    const h = fromHex;
+    this.scale_x = h(snapshot.scale_x);
+    this.scale_y = h(snapshot.scale_y);
+    this.width = h(snapshot.width);
+    this.height = h(snapshot.height);
+    this.cursor_state = h(snapshot.cursor_state);
+    this.cursor_x = h(snapshot.cursor_x);
+    this.cursor_y = h(snapshot.cursor_y);
+    this.video_memory_base = h(snapshot.video_memory_base);
+    this.video_memory_size = h(snapshot.video_memory_size);
+    this.light_pen_x = h(snapshot.light_pen_x);
+    this.light_pen_y = h(snapshot.light_pen_y);
+    this.light_pen_active = h(snapshot.light_pen_active);
+  }
+
+  this.apply_import = () => {
+    this.set_geometry(this.width, this.height);
+    this.set_video_memory(this.video_memory_base);
+  }
+
   this.init_cache = function (sz) {
     for (var i = 0; i < sz; ++i) this.cache[i] = true;
   }
@@ -97,7 +136,7 @@ function Screen(font_image, ui, memory) {
     this.height = height;
     this.video_memory_size = width * height;
 
-    console.log("Set screen geometry: %d %d".format(width, height));
+    console.log("Set screen geometry: %d x %d".format(width, height));
 
     var canvas_width = this.width * char_width * this.scale_x;
     var canvas_height = this.height * (char_height + char_height_gap) * this.scale_y;
@@ -113,12 +152,6 @@ function Screen(font_image, ui, memory) {
     console.log("Set video memory: %04X".format(
       this.video_memory_base, this.video_memory_size
     ));
-  }
-
-  this.set_view = function (width, height, scale_x, scale_y) {
-    this.scale_x = scale_x;
-    this.scale_y = scale_y;
-    this.set_geometry(width, height, this.video_memory_base);
   }
 
   this.set_cursor = function (x, y) {

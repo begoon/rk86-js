@@ -7,6 +7,15 @@ function FileParser() {
 
   this.is_hex_file = (image) => this.to_text(image.slice(0, 6)) === "#!rk86";
 
+  this.is_json = binary => {
+    try {
+      const text = this.to_text(binary);
+      return JSON.parse(text);
+    } catch {
+      return false;
+    }
+  }
+
   this.extact_metadata = function (text) {
     return [...text.matchAll("!([^ =\t\n\r]+?)=([^ \t\r\n]+)")]
       .map(group => group.slice(1))

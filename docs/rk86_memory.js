@@ -32,6 +32,56 @@ function Memory(keyboard) {
     return this.buf.slice(from, from + sz);
   };
 
+  this.export = () => {
+    const h16 = (n) => '0x' + toHex16(n);
+    return {
+      vg75_c001_00_cmd: this.vg75_c001_00_cmd,
+      video_screen_size_x_buf: this.video_screen_size_x_buf,
+      video_screen_size_y_buf: this.video_screen_size_y_buf,
+      vg75_c001_80_cmd: this.vg75_c001_80_cmd,
+      cursor_x_buf: this.cursor_x_buf,
+      cursor_y_buf: this.cursor_y_buf,
+      vg75_c001_60_cmd: this.vg75_c001_60_cmd,
+      ik57_e008_80_cmd: this.ik57_e008_80_cmd,
+      tape_8002_as_output: this.tape_8002_as_output,
+      video_memory_base_buf: h16(this.video_memory_base_buf),
+      video_memory_size_buf: h16(this.video_memory_size_buf),
+      video_memory_base: h16(this.video_memory_base),
+      video_memory_size: h16(this.video_memory_size),
+      video_screen_size_x: this.video_screen_size_x,
+      video_screen_size_y: this.video_screen_size_y,
+      video_screen_cursor_x: this.video_screen_cursor_x,
+      video_screen_cursor_y: this.video_screen_cursor_y,
+      last_access_address: h16(this.last_access_address),
+      last_access_operation: this.last_access_operation,
+      memory: arrayToHexMap(this.buf),
+    }
+  }
+
+  this.import = snapshot => {
+    const h = fromHex;
+    this.vg75_c001_00_cmd = h(snapshot.vg75_c001_00_cmd);
+    this.video_screen_size_x_buf = h(snapshot.video_screen_size_x_buf);
+    this.video_screen_size_y_buf = h(snapshot.video_screen_size_y_buf);
+    this.vg75_c001_80_cmd = h(snapshot.vg75_c001_80_cmd);
+    this.cursor_x_buf = h(snapshot.cursor_x_buf);
+    this.cursor_y_buf = h(snapshot.cursor_y_buf);
+    this.vg75_c001_60_cmd = h(snapshot.vg75_c001_60_cmd);
+    this.ik57_e008_80_cmd = h(snapshot.ik57_e008_80_cmd);
+    this.tape_8002_as_output = h(snapshot.tape_8002_as_output);
+    this.video_memory_base_buf = h(snapshot.video_memory_base_buf);
+    this.video_memory_size_buf = h(snapshot.video_memory_size_buf);
+    this.video_memory_base = h(snapshot.video_memory_base);
+    this.video_memory_size = h(snapshot.video_memory_size);
+    this.video_screen_size_x = h(snapshot.video_screen_size_x);
+    this.video_screen_size_y = h(snapshot.video_screen_size_y);
+    this.video_screen_cursor_x = h(snapshot.video_screen_cursor_x);
+    this.video_screen_cursor_y = h(snapshot.video_screen_cursor_y);
+    this.last_access_address = h(snapshot.last_access_address);
+    this.last_access_operation = snapshot.last_access_operation;
+    this.buf = hexMapToArray(snapshot.memory);
+  }
+
   // 800x ports in Radio-86RK schematics
   // 8000: A0-A7 - output, keyboard scanlines
   // 8001: B0-B7 - input, keyboard input
@@ -72,8 +122,8 @@ function Memory(keyboard) {
 
   this.vg75_c001_00_cmd = 0;
 
-  this.screen_size_x_buf = 0;
-  this.screen_size_y_buf = 0;
+  this.video_screen_size_x_buf = 0;
+  this.video_screen_size_y_buf = 0;
 
   this.ik57_e008_80_cmd = 0;
 
@@ -244,14 +294,14 @@ function Memory(keyboard) {
 
     if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 1) {
       // console.log('VG75: write(C001, %02X) [SHHHHHHH]=%08b'.format(byte, byte));
-      this.screen_size_x_buf = (byte & 0x7f) + 1;
+      this.video_screen_size_x_buf = (byte & 0x7f) + 1;
       this.vg75_c001_00_cmd += 1;
       return;
     }
 
     if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 2) {
       // console.log('VG75: write(C001, %02X) [VVRRRRRR]=%08b'.format(byte, byte));
-      this.screen_size_y_buf = (byte & 0x3f) + 1;
+      this.video_screen_size_y_buf = (byte & 0x3f) + 1;
       this.vg75_c001_00_cmd += 1;
       return;
     }
@@ -266,13 +316,13 @@ function Memory(keyboard) {
       // console.log('VG75: write(C001, %02X) [MZCCZZZZ]=%08b'.format(byte, byte));
       this.vg75_c001_00_cmd = 0;
       // console.log('VG75: screen size loaded: x=%d, y=%d'.format(
-      //   this.screen_size_x_buf,
-      //   this.screen_size_y_buf
+      //   this.video_screen_size_x_buf,
+      //   this.video_screen_size_y_buf
       // ));
-      if (this.screen_size_x_buf && this.screen_size_y_buf) {
+      if (this.video_screen_size_x_buf && this.video_screen_size_y_buf) {
         // Save ("apply") the screen dimentions.
-        this.video_screen_size_x = this.screen_size_x_buf;
-        this.video_screen_size_y = this.screen_size_y_buf;
+        this.video_screen_size_x = this.video_screen_size_x_buf;
+        this.video_screen_size_y = this.video_screen_size_y_buf;
         // Re-configure video.
         screen.set_geometry(this.video_screen_size_x, this.video_screen_size_y);
       }
