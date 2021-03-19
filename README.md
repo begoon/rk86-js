@@ -1,3 +1,5 @@
+![](https://github.com/begoon/rk86-js/actions/workflows/test.yaml/badge.svg)
+
 Радио-86РК на JavaScript
 ========================
 
