@@ -23,10 +23,16 @@ function Keyboard() {
   };
 
   this.export = () => {
+    const h8 = (n) => '0x' + toHex8(n);
     return {
-      state: this.state,
-      modifiers: this.modifiers,
+      state: this.state.map(h8),
+      modifiers: h8(this.modifiers),
     }
+  }
+
+  this.import = snapshot => {
+    this.state = snapshot.state.map(fromHex);
+    this.modifiers = fromHex(snapshot.modifiers);
   }
 
   const key_table = {

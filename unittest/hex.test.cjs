@@ -1,13 +1,9 @@
 const test = require('ava');
 
-const {
-  toHex8,
-  toHex16,
-  arrayToHexLine,
-  arrayToHexMap,
-  hexMapToArray,
-  fromHex,
-} = require('./hex.cjs');
+const fs = require('fs');
+const path = require('path');
+
+eval(fs.readFileSync(path.resolve(__dirname, '../lib/hex.js'), 'utf-8'));
 
 test('toHex8', t => {
   t.is('00', toHex8(0));
@@ -46,6 +42,7 @@ test('arrayToHexMap content', t => {
   const original = [];
   for (let i = 0; i < 0x10000; ++i) original[i] = (i * 3) & 0xff;
   const hex = arrayToHexMap(original);
+  t.is(Object.keys(hex).length, 4096);
 
   const restored = [];
   let i = 0;
@@ -89,10 +86,14 @@ test('hexMapToArray', t => {
 })
 
 test('fromHex', t => {
-  t.is(0x00, fromHex('00'));
-  t.is(0xFF, fromHex('FF'));
-  t.is(0xE6, fromHex('E6'));
-  t.is(0x0000, fromHex('0000'));
-  t.is(0xFFFF, fromHex('FFFF'));
-  t.is(0xC0DE, fromHex('C0DE'));
+  t.is(0, fromHex(0));
+  t.is(100, fromHex(100));
+  t.is(0, fromHex('0'));
+  t.is(10, fromHex('10'));
+  t.is(0x00, fromHex('0x00'));
+  t.is(0xFF, fromHex('0xFF'));
+  t.is(0xE6, fromHex('0xE6'));
+  t.is(0x0000, fromHex('0x0000'));
+  t.is(0xFFFF, fromHex('0xFFFF'));
+  t.is(0xC0DE, fromHex('0xC0DE'));
 })

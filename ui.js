@@ -212,6 +212,12 @@ function UI(tape_catalog, runner, memory, autoexec) {
       alert("Error loading a file '" + name + "'");
       return;
     }
+    const json = this.file_parser.is_json(binary);
+    if (json) {
+      const snapshot = rk86_snapshot_restore(json, ui, screen, this.simulate_keyboard);
+      console.log(`Snapshot '${name}' loaded`);
+      return;
+    }
     let file;
     try {
       file = this.file_parser.parse_rk86_binary(name, binary);
@@ -315,7 +321,7 @@ function UI(tape_catalog, runner, memory, autoexec) {
       this.computer_snapshot_name,
       this.computer_snapshot_count
     );
-    const json = rk86_snapshot();
+    const json = rk86_snapshot(ui, screen);
     const blob = new Blob([json], { type: "application/json" });
     saveAs(blob, filename);
     this.computer_snapshot_count += 1;
@@ -386,23 +392,21 @@ function UI(tape_catalog, runner, memory, autoexec) {
     }
   };
 
-  this.inject_keys = keys => {
+  this.execute_commands_loop = function (sequence, i) {
     const keyboard = this.runner.cpu.memory.keyboard;
-    keys.forEach(code => keyboard.onkeydown(code));
-    window.setTimeout(() => {
-      keys.reverse().forEach(code => keyboard.onkeyup(code));
-    }, 100);
-  };
-
-  this.press_keys_loop = function (sequence, i) {
     if (i >= sequence.length) return;
-    const current = sequence[i];
-    const keys = Array.isArray(current) ? current : [current];
-    this.inject_keys(keys);
-    setTimeout(() => this.press_keys_loop(sequence, i + 1), 150);
+    const { keys, duration, action } = sequence[i];
+    const call = action === 'down' ? keyboard.onkeydown : keyboard.onkeyup;
+    if (action != 'pause') keys.forEach(key => call(key));
+    setTimeout(() => this.execute_commands_loop(sequence, i + 1), +duration);
   }
 
-  this.press_keys = codes => this.press_keys_loop(codes, 0);
+  this.execute_commands = commands => this.execute_commands_loop(commands, 0);
+
+  this.simulate_keyboard = commands => {
+    const queue = convert_keyboard_sequence(commands);
+    this.execute_commands(queue);
+  }
 
   this.load_mode = "run";
   this.load_tape_file("mon32.bin");

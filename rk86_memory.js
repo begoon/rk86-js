@@ -33,6 +33,7 @@ function Memory(keyboard) {
   };
 
   this.export = () => {
+    const h16 = (n) => '0x' + toHex16(n);
     return {
       vg75_c001_00_cmd: this.vg75_c001_00_cmd,
       video_screen_size_x_buf: this.video_screen_size_x_buf,
@@ -43,18 +44,42 @@ function Memory(keyboard) {
       vg75_c001_60_cmd: this.vg75_c001_60_cmd,
       ik57_e008_80_cmd: this.ik57_e008_80_cmd,
       tape_8002_as_output: this.tape_8002_as_output,
-      video_memory_base_buf: this.video_memory_base_buf,
-      video_memory_size_buf: this.video_memory_size_buf,
-      video_memory_base: this.video_memory_base,
-      video_memory_size: this.video_memory_size,
+      video_memory_base_buf: h16(this.video_memory_base_buf),
+      video_memory_size_buf: h16(this.video_memory_size_buf),
+      video_memory_base: h16(this.video_memory_base),
+      video_memory_size: h16(this.video_memory_size),
       video_screen_size_x: this.video_screen_size_x,
       video_screen_size_y: this.video_screen_size_y,
       video_screen_cursor_x: this.video_screen_cursor_x,
       video_screen_cursor_y: this.video_screen_cursor_y,
-      last_access_address: this.last_access_address,
+      last_access_address: h16(this.last_access_address),
       last_access_operation: this.last_access_operation,
       memory: arrayToHexMap(this.buf),
     }
+  }
+
+  this.import = snapshot => {
+    const h = fromHex;
+    this.vg75_c001_00_cmd = h(snapshot.vg75_c001_00_cmd);
+    this.video_screen_size_x_buf = h(snapshot.video_screen_size_x_buf);
+    this.video_screen_size_y_buf = h(snapshot.video_screen_size_y_buf);
+    this.vg75_c001_80_cmd = h(snapshot.vg75_c001_80_cmd);
+    this.cursor_x_buf = h(snapshot.cursor_x_buf);
+    this.cursor_y_buf = h(snapshot.cursor_y_buf);
+    this.vg75_c001_60_cmd = h(snapshot.vg75_c001_60_cmd);
+    this.ik57_e008_80_cmd = h(snapshot.ik57_e008_80_cmd);
+    this.tape_8002_as_output = h(snapshot.tape_8002_as_output);
+    this.video_memory_base_buf = h(snapshot.video_memory_base_buf);
+    this.video_memory_size_buf = h(snapshot.video_memory_size_buf);
+    this.video_memory_base = h(snapshot.video_memory_base);
+    this.video_memory_size = h(snapshot.video_memory_size);
+    this.video_screen_size_x = h(snapshot.video_screen_size_x);
+    this.video_screen_size_y = h(snapshot.video_screen_size_y);
+    this.video_screen_cursor_x = h(snapshot.video_screen_cursor_x);
+    this.video_screen_cursor_y = h(snapshot.video_screen_cursor_y);
+    this.last_access_address = h(snapshot.last_access_address);
+    this.last_access_operation = snapshot.last_access_operation;
+    this.buf = hexMapToArray(snapshot.memory);
   }
 
   // 800x ports in Radio-86RK schematics

@@ -50,16 +50,39 @@ function I8080(memory, io) {
   this.io = io;
 
   this.export = () => {
+    const h8 = (n) => '0x' + toHex8(n);
+    const h16 = (n) => '0x' + toHex16(n);
     return {
-      'af': (this.a() << 8) | this.store_flags(),
-      'bc': this.bc(),
-      'de': this.de(),
-      'hl': this.hl(),
-      'sp': this.sp,
-      'pc': this.pc,
-      'iff': this.iff,
+      a: h8(this.a()),
+      sf: this.sf ? 1 : 0,
+      zf: this.zf ? 1 : 0,
+      hf: this.hf ? 1 : 0,
+      pf: this.pf ? 1 : 0,
+      cf: this.cf ? 1 : 0,
+      bc: h16(this.bc()),
+      de: h16(this.de()),
+      hl: h16(this.hl()),
+      sp: h16(this.sp),
+      pc: h16(this.pc),
+      iff: this.iff ? 1 : 0,
     }
   }
+
+  this.import = snapshot => {
+    const h = fromHex;
+    this.set_a(h(snapshot.a));
+    this.sf = snapshot.sf;
+    this.zf = snapshot.zf;
+    this.hf = snapshot.hf;
+    this.pf = snapshot.pf;
+    this.cf = snapshot.cf;
+    this.set_rp(0, h(snapshot.bc));
+    this.set_rp(2, h(snapshot.de));
+    this.set_rp(4, h(snapshot.hl));
+    this.set_rp(6, h(snapshot.sp));
+    this.pc = h(snapshot.pc);
+    this.iff = h(snapshot.iff);
+  };
 
   this.memory_read_byte = function (addr) {
     return this.memory.read(addr & 0xffff) & 0xff;

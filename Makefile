@@ -32,7 +32,6 @@ release-production:
 	rm docs/rkdump.js docs/rktool.js
 	rm docs/catalog/Makefile
 	rm docs/catalog/*.rb
-	rm docs/*.test.js
 	touch docs/.nojekyll
 
 release-beta:
@@ -44,7 +43,6 @@ release-beta:
 	rm docs/beta/rkdump.js docs/beta/rktool.js
 	rm docs/beta/catalog/Makefile
 	rm docs/beta/catalog/*.rb
-	rm docs/beta/*.test.js
 
 dev-release: release
 	cp experiments/* docs
