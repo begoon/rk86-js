@@ -56,6 +56,10 @@ serve:
 test:
 	npx ava
 
+ci:
+	npm install
+	npm run test
+
 clean:
 	-rm files.lst rkdump$(EXE) rk86_tape_catalog.js
 	$(MAKE) -C catalog clean
