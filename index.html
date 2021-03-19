@@ -27,9 +27,11 @@
   <!-- ||| -->
   <script src="js/FileSaver.js" type="application/javascript"></script>
   <script src="js/StringUtils.js" type="application/javascript"></script>
-  <script src="/js/SoundPlayer.js" type="application/javascript"></script>
+  <script src="js/SoundPlayer.js" type="application/javascript"></script>
+  <script src="lib/hex.js" type="application/javascript"></script>
   <!-- ||| -->
   <script src="i8080.js" type="application/javascript"></script>
+  <script src="rk86_version.js" type="application/javascript"></script>
   <script src="rk86_tape_catalog.js" type="application/javascript"></script>
   <script src="rk86_font.js" type="application/javascript"></script>
   <script src="rk86_screen.js" type="application/javascript"></script>
@@ -39,6 +41,8 @@
   <script src="rk86_tape.js" type="application/javascript"></script>
   <script src="rk86_runner.js" type="application/javascript"></script>
   <script src="rk86_file_parser.js" type="application/javascript"></script>
+  <script src="rk86_snapshot.js" type="application/javascript"></script>
+  <script src="rk86_keyboard_injector.js" type="application/javascript"></script>
   <script src="ui.js" type="application/javascript"></script>
   <script src="main.js" type="application/javascript"></script>
 
@@ -127,6 +131,7 @@
         <button onclick="ui.load_selected()">Load</button>
         <button onclick="ui.save_screen()">Screen</button>
         <button onclick="ui.save_memory()">Memory</button>
+        <button onclick="ui.snapshot()">Snapshot</button>
       </div>
       <div style="float: left">
         <div id="disassembler_panel">

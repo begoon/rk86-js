@@ -1,6 +1,8 @@
 const test = require('ava');
 
-const FileParser = require('./rk86_file_parser.cjs');
+const fs = require('fs');
+
+eval(fs.readFileSync('./rk86_file_parser.js', 'utf-8'));
 
 test.beforeEach(t => {
   t.context = new FileParser();
@@ -18,6 +20,14 @@ function is_hex_file(t, input, expected) {
 
 test('recognize the signature', is_hex_file, '#!rk86');
 test('recognize the signature followed by newline', is_hex_file, '#!rk86\n');
+
+test('is_json file', t => {
+  t.false(t.context.is_json(null));
+  t.false(t.context.is_json(undefined));
+  t.false(t.context.is_json([1]));
+  t.deepEqual(t.context.is_json(toArray('{}')), {});
+  t.deepEqual(t.context.is_json(toArray('{"id": "rk86"}')), { id: 'rk86' });
+})
 
 function convert_hex_to_binary(t, input, expected) {
   t.deepEqual(expected, t.context.convert_hex_to_binary(input));

@@ -22,6 +22,19 @@ function Keyboard() {
     this.modifiers = 0xff;
   };
 
+  this.export = () => {
+    const h8 = (n) => '0x' + toHex8(n);
+    return {
+      state: this.state.map(h8),
+      modifiers: h8(this.modifiers),
+    }
+  }
+
+  this.import = snapshot => {
+    this.state = snapshot.state.map(fromHex);
+    this.modifiers = fromHex(snapshot.modifiers);
+  }
+
   const key_table = {
     36: [0, 0x01], //   \\  -> HOME
     35: [0, 0x02], //   CTP -> END
