@@ -8,6 +8,8 @@ const Image = function () { }
 
 const version = "0.0.0";
 
+const snapshot_standard = path.join(__dirname, './snapshot.json');
+
 eval(fs.readFileSync(path.resolve(__dirname, '../js/StringUtils.js'), 'utf-8'));
 eval(fs.readFileSync(path.resolve(__dirname, '../js/hex.js'), 'utf-8'));
 eval(fs.readFileSync(path.resolve(__dirname, '../rk86_memory.js'), 'utf-8'));
@@ -113,7 +115,7 @@ test('snapshot export', t => {
   const { ui, screen } = t.context;
   Date.prototype.toISOString = () => 'created';
   const snapshot = rk86_snapshot(ui, screen);
-  const expected = fs.readFileSync('./unittest/snapshot.json').toString();
+  const expected = fs.readFileSync(snapshot_standard).toString();
   const snapshot_lines = snapshot.split('\n');
   const expected_lines = expected.split('\n');
   for (let i = 0; i < expected_lines.length; i += 1) {
@@ -129,11 +131,11 @@ test('snapshot export', t => {
 });
 
 test('snapshot restore from string', snapshot_restore,
-  fs.readFileSync('./unittest/snapshot.json').toString()
+  fs.readFileSync(snapshot_standard).toString()
 );
 
 test('snapshot restore from object/json', snapshot_restore,
-  JSON.parse(fs.readFileSync('./unittest/snapshot.json').toString())
+  JSON.parse(fs.readFileSync(snapshot_standard).toString())
 );
 
 function snapshot_restore(t, snapshot) {
