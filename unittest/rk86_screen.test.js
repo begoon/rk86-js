@@ -7,7 +7,7 @@ const window = { setTimeout() { } };
 const ui = { canvas: { getContext() { } } };
 const Image = function () { }
 
-eval(fs.readFileSync(path.resolve(__dirname, '../lib/hex.js'), 'utf-8'));
+eval(fs.readFileSync(path.resolve(__dirname, '../js/hex.js'), 'utf-8'));
 eval(fs.readFileSync(path.resolve(__dirname, '../rk86_memory.js'), 'utf-8'));
 eval(fs.readFileSync(path.resolve(__dirname, '../rk86_screen.js'), 'utf-8'));
 

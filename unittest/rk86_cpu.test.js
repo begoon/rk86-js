@@ -3,7 +3,7 @@ const test = require('ava');
 const fs = require('fs');
 const path = require('path');
 
-eval(fs.readFileSync(path.resolve(__dirname, '../lib/hex.js'), 'utf-8'));
+eval(fs.readFileSync(path.resolve(__dirname, '../js/hex.js'), 'utf-8'));
 eval(fs.readFileSync(path.resolve(__dirname, '../i8080.js'), 'utf-8'));
 eval(fs.readFileSync(path.resolve(__dirname, '../rk86_memory.js'), 'utf-8'));
 

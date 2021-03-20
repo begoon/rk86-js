@@ -9,7 +9,7 @@ const Image = function () { }
 const version = "0.0.0";
 
 eval(fs.readFileSync(path.resolve(__dirname, '../js/StringUtils.js'), 'utf-8'));
-eval(fs.readFileSync(path.resolve(__dirname, '../lib/hex.js'), 'utf-8'));
+eval(fs.readFileSync(path.resolve(__dirname, '../js/hex.js'), 'utf-8'));
 eval(fs.readFileSync(path.resolve(__dirname, '../rk86_memory.js'), 'utf-8'));
 eval(fs.readFileSync(path.resolve(__dirname, '../rk86_keyboard.js'), 'utf-8'));
 eval(fs.readFileSync(path.resolve(__dirname, '../rk86_screen.js'), 'utf-8'));
