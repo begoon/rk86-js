@@ -18,16 +18,16 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-import fs from 'fs';
-import path from 'path';
-import assert from 'assert';
+const fs = require('fs')
+const path = require('path')
+const assert = require('assert')
 
 function hex(n, width) {
   return n.toString(16).toUpperCase().padStart(width, '0');
 }
 
 function dump_file(name) {
-  var start = 0, end = 0, entry = 0;
+  let start = 0, end = 0, entry = 0;
 
   assert.ok(name.includes('.'), `Name '${name}'`);
 
@@ -95,7 +95,7 @@ function dump_file(name) {
   console.log(line);
 }
 
-function main() {
+function preloaded_files() {
   console.log("function preloaded_files() {");
   console.log("files = [];\n");
 
@@ -106,6 +106,26 @@ function main() {
 
   console.log("return files;");
   console.log("}\n");
+}
+
+function tape_catalog() {
+  console.log('function tape_catalog() {');
+  console.log('  return [');
+  for (let file of fs.readdirSync('files')) {
+    if (!file) continue;
+    console.log(`    "${file}",`);
+  }
+  console.log('  ];');
+  console.log('}');
+}
+
+function main() {
+  if (process.argv[2] === 'preloaded') return preloaded_files();
+
+  const filename = process.argv[3];
+  if (process.argv[2] === 'dump' && filename) return dump_file(filename);
+
+  if (process.argv[2] === 'tape') return tape_catalog();
 }
 
 main();
