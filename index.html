@@ -125,7 +125,9 @@
         <button onclick="ui.restart()">Restart</button>
         <button id="pause_button" onclick="ui.pause()">Pause</button>
         <span>Built-in:</span><select id="file_selector"></select>
-        <span>Local:</span><input id="upload_selector" type="file" onchange="ui.upload(event)" />
+        <span>Local:</span><input id="upload_selector" style="display: none" type="file"
+          onchange="ui.upload(event)" /><button onclick="ui.select_file()">...</button>
+        <span id="preloaded"></span>
         <button onclick="ui.clear_upload()">X</button>
         <button onclick="ui.run_selected()">Run</button>
         <button onclick="ui.load_selected()">Load</button>
