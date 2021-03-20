@@ -156,22 +156,25 @@ function UI(tape_catalog, runner, memory, autoexec) {
 
   this.upload = function (event) {
     const files = event.target.files;
-    if (files.length < 1) {
-      this.preloaded = null;
-      return;
-    }
+    if (files.length < 1) return this.clear_upload();
     const file = files[0];
     const reader = new FileReader();
     reader.onload = (event) => {
       const image = [...new Uint8Array(event.target.result)];
       this.preloaded = { name: file.name, image: image };
+      this.set_preloaded_filename(file.name);
     }
     reader.readAsArrayBuffer(file);
   }
 
   this.clear_upload = function () {
     document.getElementById('upload_selector').value = '';
+    this.set_preloaded_filename('');
     this.preloaded = null;
+  }
+
+  this.set_preloaded_filename = function (name) {
+    document.querySelector('#preloaded').textContent = name;
   }
 
   this.selected_file_name = function () {
@@ -406,6 +409,10 @@ function UI(tape_catalog, runner, memory, autoexec) {
   this.simulate_keyboard = commands => {
     const queue = convert_keyboard_sequence(commands);
     this.execute_commands(queue);
+  }
+
+  this.select_file = () => {
+    document.querySelector('#upload_selector').click();
   }
 
   this.load_mode = "run";

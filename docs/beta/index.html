@@ -69,18 +69,22 @@
     input,
     span {
       font-size: 12px;
-      padding: 0px 2px;
+      padding-right: 4px;
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     }
 
-    input[type="file"] {
-      border: 1px solid white
+    button {
+      background-color: white;
+      padding: 4px 4px;
+      border: none;
     }
 
     #ruslat {
       float: right;
-      margin-top: 4px;
+      padding: 4px;
       color: black;
       background-color: white;
+      font-size: 16px;
     }
 
     #canvas_panel {
@@ -125,7 +129,9 @@
         <button onclick="ui.restart()">Restart</button>
         <button id="pause_button" onclick="ui.pause()">Pause</button>
         <span>Built-in:</span><select id="file_selector"></select>
-        <span>Local:</span><input id="upload_selector" type="file" onchange="ui.upload(event)" />
+        <span>Local:</span><input id="upload_selector" style="display: none" type="file"
+          onchange="ui.upload(event)" /><button onclick="ui.select_file()">...</button>
+        <span id="preloaded"></span>
         <button onclick="ui.clear_upload()">X</button>
         <button onclick="ui.run_selected()">Run</button>
         <button onclick="ui.load_selected()">Load</button>
