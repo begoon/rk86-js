@@ -50,7 +50,7 @@
   </style>
 
   <h1>Каталог программ для Радио-86РК</h1>
-  <input type="text" id="search" />
+  <input type="text" id="search" placeholder="поиск"/>
   <small>
     Готовые фильтры:
     <a class="filter">игра</a>,

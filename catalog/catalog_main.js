@@ -50,14 +50,6 @@ function main() {
   }
 
   var search = document.getElementById("search");
-  search.onclick = function () {
-    if (search.getAttribute("first_click") == "yes") {
-      search.setAttribute("first_click", null);
-      search.setAttribute("value", "");
-    }
-  }
-  search.setAttribute("value", "поиск");
-  search.setAttribute("first_click", "yes");
 
   search.onkeyup = function () {
     var needle = search.value.toUpperCase();
@@ -75,4 +67,6 @@ function main() {
       }
     }
   }
+
+  search.onkeyup();
 }
