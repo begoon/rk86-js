@@ -20,6 +20,7 @@
     "http-server": "^0.12.3"
   },
   "dependencies": {
-    "yargs": "^16.2.0"
+    "printj": "^1.2.2",
+    "swig": "^1.4.2"
   }
 }

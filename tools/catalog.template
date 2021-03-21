@@ -1,0 +1,153 @@
+<html>
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <script src="catalog_main.js"></script>
+  <script src="js/jquery-1.7.2.min.js"></script>
+  <script src="js/lightbox.js"></script>
+  <link href="css/lightbox.css" rel="stylesheet" />
+
+  <script type="text/javascript">
+
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-35795751-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function () {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+
+  </script>
+
+</head>
+
+<body onload="main()">
+
+  <style>
+    img.screen {
+      width: auto;
+      height: 150;
+      vertical-align: text-top;
+      margin: 4px;
+    }
+
+    td.cart {
+      border-radius: 15px;
+      -moz-border-radius: 15px;
+      padding: 1em;
+      background: #eee
+    }
+
+    td.cart:hover {
+      border-radius: 15px;
+      -moz-border-radius: 15px;
+      padding: 1em;
+      background: #ccc
+    }
+
+  </style>
+
+  <h1>Каталог программ для Радио-86РК</h1>
+  <input type="text" id="search" />
+  <small>
+    Готовые фильтры:
+    <a class="filter">игра</a>,
+    <a class="filter">бейсик</a>,
+    <a class="filter">тетрис</a>,
+    <a class="filter">xonix</a>,
+    <a class="filter">ассемблер</a>
+    <a class="filter">микрон</a>
+    <a class="filter">тест</a>
+  </small>
+  <br />
+  <small>
+    Поиск работает крайне примитивно: карточка программы
+    игры отображается, если введенное слово длиной три или более символов
+    встречается в имени файла, названии или описании игры. Например, для
+    отображения игр введите <i><b>игра</b></i>, или, например,
+    <i><b>шахматы</b></i>.
+  </small>
+  <p />
+  <table>
+    {% for file in files %}
+    <tr name="{{ file.name }}" id="{{ file.name }}_section" class="cart">
+      <td valign="top" width="40%" class="cart">
+        <b id="{{ file.name }}_title">
+          {{- file.title|raw -}}
+        </b>.
+        <span id="{{ file.name }}_descr">
+          {{ file.description|raw }}
+        </span>
+        <br />
+        <hr style="height: 1px solid black" />
+        <table>
+          <tr>
+            <td>Файл:</td>
+            <td>{{ file.name }}</td>
+          </tr>
+          <tr>
+            <td>Адреса и длина:</td>
+            <td>{{ file.start|hex }}-{{ file.end|hex }}, {{ file.size|hex }}</td>
+          </tr>
+          <tr>
+            <td>Стартовый адрес:</td>
+            <td>{{ file.entry|hex }}</td>
+          </tr>
+          <tr>
+            <td>Контрольная сумма:</td>
+            <td>
+              {{ file.check_sum|hex -}}
+              {% if file.check_sum != file.real_check_sum %}
+              / <b>Реальная сумма: {{ file.real_check_sum|hex }}</b>
+              {%- endif %}
+            </td>
+          </tr>
+        </table>
+        <table style="width: 100%">
+          <tr>
+            <td><button class="run" name="{{ file.name }}">Запустить</button></td>
+            <td align="right">
+              <small>
+                <a href="#" onclick="window.scrollTo(0, 0); return false;">В начало</a>
+              </small>
+            </td>
+          </tr>
+        </table>
+      </td>
+      <td valign="top" class="cart">
+        {%- if file.screenshots -%}
+        {%- for screenshot in file.screenshots %}
+        <a rel="lightbox[{{ file.name }}]" href="{{ file.name }}/{{ screenshot }}">
+          <img src="{{ file.name }}/{{ screenshot }}" class="screen" />
+        </a>
+        {%- endfor -%}
+        {%- else -%}
+        Нет скриншотов.
+        {%- endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <h1>Комментарии</h1>
+
+  <div id="disqus_thread"></div>
+
+  <script type="text/javascript">
+    var disqus_shortname = 'demin-ws';
+    var disqus_developer = 0;
+    var disqus_identifier = '/rk/catalog/';
+    var disqus_url = 'https://rk86.ru/catalog/';
+    var disqus_script = 'embed.js';
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'https://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+  </script>
+
+  </body>
+
+</html>

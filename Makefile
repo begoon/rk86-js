@@ -1,7 +1,7 @@
 all: test tape build-catalog release
 
 build-catalog:
-	$(MAKE) -C catalog
+	node tools/build-catalog.js > catalog/index.html
 
 tape:
 	node tools/build.js tape > rk86_tape_catalog.js
@@ -12,15 +12,11 @@ release-production:
 	-rm -rf docs
 	mkdir docs
 	cp -R catalog files js termlib *.html *.js *.bmp *.ico CNAME i docs
-	rm docs/catalog/Makefile
-	rm docs/catalog/*.rb
 
 release-beta:
 	-rm -rf docs/beta
 	mkdir docs/beta
 	cp -R catalog files js termlib *.html *.js *.bmp *.ico CNAME i docs/beta
-	rm docs/beta/catalog/Makefile
-	rm docs/beta/catalog/*.rb
 
 dev-release: release
 	cp experiments/* docs
@@ -39,5 +35,4 @@ ci:
 	npm run test
 
 clean:
-	-rm rk86_tape_catalog.js
-	$(MAKE) -C catalog clean
+	-rm rk86_tape_catalog.js catalog/index.html
