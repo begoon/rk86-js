@@ -32,6 +32,9 @@ serve-python:
 serve:
 	(cd build && npx http-server . -p 8000)
 
+watch:
+	node tools/watch.js
+
 test:
 	npx ava
 
