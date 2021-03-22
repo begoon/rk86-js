@@ -35,7 +35,7 @@ rk86_check_sum = function (v) {
 function process_file(name) {
   const file = { name, screenshots: [] };
 
-  const readme = path.join('catalog', file.name, 'info.md');
+  const readme = path.join('src/catalog', file.name, 'info.md');
   const info = fs.readFileSync(readme).toString().split('\n');
 
   file.title = info[0].trim();
@@ -43,7 +43,7 @@ function process_file(name) {
 
   file.description = info.slice(1).filter(v => v).map(v => v.trim()).join(' ');
 
-  const image = fs.readFileSync(path.join('files', file.name));
+  const image = fs.readFileSync(path.join('src/files', file.name));
 
   if (name.endsWith('.bin')) {
     file.size = image.length;
@@ -86,7 +86,7 @@ function process_file(name) {
     if (file.name === 'RAMDOS.PKI') file.entry = 0x3600;
   }
 
-  for (const screenshot of fs.readdirSync(path.join('catalog', file.name))) {
+  for (const screenshot of fs.readdirSync(path.join('src/catalog', file.name))) {
     if (screenshot.endsWith('.png')) {
       file.screenshots.push(screenshot);
     }
@@ -99,7 +99,7 @@ function build_catalog() {
   const template = path.join(__dirname, 'catalog.template');
 
   const files = [];
-  for (const file of fs.readdirSync('files').sort()) {
+  for (const file of fs.readdirSync('src/files').sort()) {
     files.push(process_file(file));
   }
 

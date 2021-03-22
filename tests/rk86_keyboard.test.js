@@ -5,8 +5,8 @@ const path = require('path');
 
 const document = {};
 
-eval(fs.readFileSync(path.resolve(__dirname, '../js/hex.js'), 'utf-8'));
-eval(fs.readFileSync(path.resolve(__dirname, '../rk86_keyboard.js'), 'utf-8'));
+eval(fs.readFileSync('src/js/hex.js', 'utf-8'));
+eval(fs.readFileSync('src/rk86_keyboard.js', 'utf-8'));
 
 const testKeyboard = () => {
   const keyboard = new Keyboard();

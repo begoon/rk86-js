@@ -3,7 +3,7 @@ const test = require('ava');
 const fs = require('fs');
 const path = require('path');
 
-eval(fs.readFileSync(path.resolve(__dirname, '../js/hex.js'), 'utf-8'));
+eval(fs.readFileSync('src/js/hex.js', 'utf-8'));
 
 test('toHex8', t => {
   t.is('00', toHex8(0));

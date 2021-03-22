@@ -10,13 +10,13 @@ const version = "0.0.0";
 
 const snapshot_standard = path.join(__dirname, './snapshot.json');
 
-eval(fs.readFileSync(path.resolve(__dirname, '../js/StringUtils.js'), 'utf-8'));
-eval(fs.readFileSync(path.resolve(__dirname, '../js/hex.js'), 'utf-8'));
-eval(fs.readFileSync(path.resolve(__dirname, '../rk86_memory.js'), 'utf-8'));
-eval(fs.readFileSync(path.resolve(__dirname, '../rk86_keyboard.js'), 'utf-8'));
-eval(fs.readFileSync(path.resolve(__dirname, '../rk86_screen.js'), 'utf-8'));
-eval(fs.readFileSync(path.resolve(__dirname, '../i8080.js'), 'utf-8'));
-eval(fs.readFileSync(path.resolve(__dirname, '../rk86_snapshot.js'), 'utf-8'));
+eval(fs.readFileSync('src/js/StringUtils.js', 'utf-8'));
+eval(fs.readFileSync('src/js/hex.js', 'utf-8'));
+eval(fs.readFileSync('src/rk86_memory.js', 'utf-8'));
+eval(fs.readFileSync('src/rk86_keyboard.js', 'utf-8'));
+eval(fs.readFileSync('src/rk86_screen.js', 'utf-8'));
+eval(fs.readFileSync('src/i8080.js', 'utf-8'));
+eval(fs.readFileSync('src/rk86_snapshot.js', 'utf-8'));
 
 const testCpu = (memory, io) => {
   const cpu = new I8080(memory, io);
@@ -139,6 +139,8 @@ test('snapshot restore from object/json', snapshot_restore,
 );
 
 function snapshot_restore(t, snapshot) {
+  const console_log = console.log;
+  console.log = () => { };
   const { ui, screen } = t.context;
   let width_set = undefined;
   let height_set = undefined;
@@ -206,6 +208,8 @@ function snapshot_restore(t, snapshot) {
   t.is(screen.light_pen_x, 8);
   t.is(screen.light_pen_y, 9);
   t.is(screen.light_pen_active, 1);
+
+  console.log = console_log;
 };
 
 test('snapshot import failure', t => {

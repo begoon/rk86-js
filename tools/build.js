@@ -31,7 +31,7 @@ function dump_file(name) {
 
   assert.ok(name.includes('.'), `Name '${name}'`);
 
-  const contents = fs.readFileSync('files/' + name);
+  const contents = fs.readFileSync('src/files' + name);
   const sz = contents.length;
 
   const ext = path.extname(name);
@@ -111,7 +111,7 @@ function preloaded_files() {
 function tape_catalog() {
   console.log('function tape_catalog() {');
   console.log('  return [');
-  for (let file of fs.readdirSync('files')) {
+  for (let file of fs.readdirSync('src/files')) {
     if (!file) continue;
     console.log(`    "${file}",`);
   }

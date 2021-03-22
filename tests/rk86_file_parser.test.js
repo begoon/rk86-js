@@ -2,7 +2,7 @@ const test = require('ava');
 
 const fs = require('fs');
 
-eval(fs.readFileSync('./rk86_file_parser.js', 'utf-8'));
+eval(fs.readFileSync('src/rk86_file_parser.js', 'utf-8'));
 
 test.beforeEach(t => {
   t.context = new FileParser();

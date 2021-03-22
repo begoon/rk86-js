@@ -2,7 +2,7 @@ const { default: test } = require("ava");
 
 const fs = require('fs');
 
-eval(fs.readFileSync('./rk86_keyboard_injector.js', 'utf-8'));
+eval(fs.readFileSync('src/rk86_keyboard_injector.js', 'utf-8'));
 
 const seq = [
   { "keys": [68, 188, 70, 70, 70], "duration": 100, "action": "press" },

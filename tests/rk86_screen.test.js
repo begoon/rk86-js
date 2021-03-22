@@ -7,9 +7,9 @@ const window = { setTimeout() { } };
 const ui = { canvas: { getContext() { } } };
 const Image = function () { }
 
-eval(fs.readFileSync(path.resolve(__dirname, '../js/hex.js'), 'utf-8'));
-eval(fs.readFileSync(path.resolve(__dirname, '../rk86_memory.js'), 'utf-8'));
-eval(fs.readFileSync(path.resolve(__dirname, '../rk86_screen.js'), 'utf-8'));
+eval(fs.readFileSync('src/js/hex.js', 'utf-8'));
+eval(fs.readFileSync('src/rk86_memory.js', 'utf-8'));
+eval(fs.readFileSync('src/rk86_screen.js', 'utf-8'));
 
 const testScreen = () => {
   const screen = new Screen(undefined, ui, new Memory());

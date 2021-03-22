@@ -3,8 +3,8 @@ const test = require('ava');
 const fs = require('fs');
 const path = require('path');
 
-eval(fs.readFileSync(path.resolve(__dirname, '../js/hex.js'), 'utf-8'));
-eval(fs.readFileSync(path.resolve(__dirname, '../rk86_memory.js'), 'utf-8'));
+eval(fs.readFileSync('src/js/hex.js', 'utf-8'));
+eval(fs.readFileSync('src/rk86_memory.js', 'utf-8'));
 
 const testMemory = () => {
   const memory = new Memory(undefined);
