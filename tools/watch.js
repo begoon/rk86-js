@@ -4,6 +4,7 @@ const child_processs = require('child_process');
 
 const glob = require('glob-all');
 const ora = require('ora');
+const chalk = require('chalk');
 
 const targets = [
   'src/**',
@@ -38,6 +39,10 @@ function main() {
 }
 
 
-const spinner = ora({ text: targets.join(', '), spinner: 'arrow' }).start();
+const spinner = ora({
+  text: targets.join(', '),
+  spinner: 'arrow',
+  prefixText: chalk.bgGreen.black(new Date().toISOString()),
+}).start();
 
 main();
