@@ -28,7 +28,7 @@ function watch(files, last) {
   const current = checksum(files);
   if (current !== last) {
     last = current;
-    spinner.succeed('Rebuild');
+    spinner.succeed('Rebuild ' + chalk.bgGreen.black(new Date().toISOString()));
     child_processs.execSync('make', { stdio: 'inherit', stderr: 'inherit' });;
   }
   setTimeout(() => { watch(files, current); }, 5000);
@@ -42,7 +42,6 @@ function main() {
 const spinner = ora({
   text: targets.join(', '),
   spinner: 'arrow',
-  prefixText: chalk.bgGreen.black(new Date().toISOString()),
 }).start();
 
 main();

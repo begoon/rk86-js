@@ -20,6 +20,7 @@
     "http-server": "^0.12.3"
   },
   "dependencies": {
+    "chalk": "^4.1.0",
     "glob-all": "^3.2.1",
     "ora": "^5.4.0",
     "printj": "^1.2.2",
