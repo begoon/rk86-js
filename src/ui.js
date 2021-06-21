@@ -148,6 +148,16 @@ function UI(tape_catalog, runner, memory, autoexec) {
       console.log(`Loaded ${image.length} byte(s)`);
       load_tape_file_this.file_loaded(name, image);
     };
+    const deflate_prefix = 'raw:';
+    if (name.startsWith(deflate_prefix)) {
+      console.log(`Inflating compressed data (${name.length})`);
+      const raw = name.slice(deflate_prefix.length);
+      const image = Base64.btou(RawDeflate.inflate(Base64.fromBase64(raw)));
+      const to_array = s => s.split('').map(c => c.charCodeAt(0));
+      success(to_array(image));
+      return;
+    }
+    console.log(`Loading file ${name}`);
     const failed = function (error) {
       alert(`Error loading file "${name}"\n${error}`);
     }
