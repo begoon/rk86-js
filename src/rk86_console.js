@@ -16,17 +16,19 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+var loaded = false;
+
 function Console() {
 
   this.adjust_window = function () {
-    var callback = function () {
-      var term_div = document.getElementById("termDiv");
-      InnerWindowResizer(term_div.clientWidth + 16, term_div.clientHeight);
-    }
-    if (navigator.userAgent.toLowerCase().indexOf('chrome') > -1)
-      window.setTimeout(function () { callback(); }, 200);
-    else
-      callback();
+    // var callback = function () {
+    //   var term_div = document.getElementById("termDiv");
+    //   InnerWindowResizer(term_div.clientWidth + 0, term_div.clientHeight);
+    // }
+    // if (navigator.userAgent.toLowerCase().indexOf('chrome') > -1)
+    //   window.setTimeout(function () { callback(); }, 200);
+    // else
+    //   callback();
   }
 
   const from_rk86_table = [
@@ -63,7 +65,7 @@ function Console() {
     if (isNaN(sz)) sz = self.dump_cmd.last_length;
     self.dump_cmd.last_length = sz;
 
-    var mem = self.runner.cpu.memory;
+    var mem = self.runner().cpu.memory;
 
     const width = 16;
     while (sz > 0) {
@@ -109,7 +111,7 @@ function Console() {
       from, sz, self.download_cmd.filename_count,
     );
 
-    var content = self.runner.cpu.memory.snapshot(from, sz);
+    var content = self.runner().cpu.memory.snapshot(from, sz);
     var memory = new Uint8Array(content);
     var memory_blob = new Blob([memory], { type: "image/gif" });
     saveAs(memory_blob, filename);
@@ -118,7 +120,7 @@ function Console() {
   }
 
   this.disasm_print = function (self, addr, nb_instr, current_addr) {
-    var mem = self.runner.cpu.memory;
+    var mem = self.runner().cpu.memory;
     while (nb_instr-- > 0) {
       var binary = [];
       for (var i = 0; i < 3; ++i)
@@ -144,7 +146,7 @@ function Console() {
   }
 
   this.cpu_cmd = function (self) {
-    var cpu = self.runner.cpu;
+    var cpu = self.runner().cpu;
     var mem = cpu.memory;
     self.term.write("PC=%04X A=%02X F=%s%s%s%s%s HL=%04X DE=%04X BC=%04X SP=%04X"
       .format(
@@ -157,8 +159,8 @@ function Console() {
         cpu.hl(), cpu.de(), cpu.bc(), cpu.sp));
     self.term.newLine();
 
-    for (var i = 0; i < self.runner.last_instructions.length; ++i) {
-      var addr = self.runner.last_instructions[i];
+    for (var i = 0; i < self.runner().last_instructions.length; ++i) {
+      var addr = self.runner().last_instructions[i];
       self.disasm_print(self, addr, 1, cpu.pc);
     }
     self.disasm_print(self, cpu.pc, 5, cpu.pc);
@@ -189,7 +191,7 @@ function Console() {
     if (typeof self.disasm_cmd.last_length == 'undefined')
       self.disasm_cmd.last_length = 20;
 
-    var cpu = self.runner.cpu;
+    var cpu = self.runner().cpu;
     var mem = cpu.memory;
 
     var from = parseInt(self.term.argv[1]);
@@ -203,7 +205,7 @@ function Console() {
   }
 
   this.write_byte_cmd = function (self) {
-    var mem = self.runner.cpu.memory;
+    var mem = self.runner().cpu.memory;
 
     if (self.term.argc < 3) { self.term.write("?"); return; }
     var addr = parseInt(self.term.argv[1]);
@@ -220,7 +222,7 @@ function Console() {
   }
 
   this.write_word_cmd = function (self) {
-    var mem = self.runner.cpu.memory;
+    var mem = self.runner().cpu.memory;
 
     if (self.term.argc < 3) { self.term.write("?"); return; }
     var addr = parseInt(self.term.argv[1]);
@@ -246,7 +248,7 @@ function Console() {
   }
 
   this.write_char_cmd = function (self) {
-    var mem = self.runner.cpu.memory;
+    var mem = self.runner().cpu.memory;
 
     if (self.term.argc < 3) { self.term.write("?"); return; }
     var addr = parseInt(self.term.argv[1]);
@@ -346,18 +348,18 @@ function Console() {
 
   this.debug_cmd = function (self) {
     var state = self.term.argv[1];
-    var tracer = self.runner.tracer;
+    var tracer = self.runner().tracer;
 
     if (state == "on" || state == "off") {
       if (state == "on") {
         self.term.write("Tracing is on");
         self.term.newLine();
-        self.runner.tracer = function (when) {
-          var cpu = self.runner.cpu;
+        self.runner().tracer = function (when) {
+          var cpu = self.runner().cpu;
           return self.tracer_callback(self, cpu, when);
         }
       } else {
-        self.runner.tracer = null;
+        self.runner().tracer = null;
         self.term.write("Tracing is off");
       }
     } else {
@@ -366,7 +368,7 @@ function Console() {
   }
 
   this.check_tracer_active = function (self) {
-    if (self.runner.tracer == null) {
+    if (self.runner().tracer == null) {
       self.term.write("Tracing is not active. Use 't' command to activate.");
       self.term.newLine();
       return false;
@@ -417,33 +419,33 @@ function Console() {
   }
 
   this.pause_cmd = function (self) {
-    self.runner.pause();
+    self.runner().pause();
     self.pause();
-    self.ui.update_pause_button(self.runner.paused);
+    self.ui().update_pause_button(self.runner().paused);
   }
 
   this.resume_cmd = function (self) {
-    self.runner.resume();
+    self.runner().resume();
     self.resume();
-    self.ui.update_pause_button(self.runner.paused);
-    window.opener.focus();
+    self.ui().update_pause_button(self.runner().paused);
+    // window.opener.focus();
   }
 
   this.reset_cmd = function (self) {
-    self.ui.reset();
-    window.opener.focus();
+    self.ui().reset();
+    // window.opener.focus();
   }
 
   this.restart_cmd = function (self) {
-    self.ui.restart();
-    window.opener.focus();
+    self.ui().restart();
+    // window.opener.focus();
   }
 
   this.go_cmd = function (self) {
     if (self.term.argc < 2) { self.term.write("?"); return; }
     var addr = parseInt(self.term.argv[1]);
     if (isNaN(addr)) { self.term.write("?"); return; };
-    self.runner.cpu.jump(addr);
+    self.runner().cpu.jump(addr);
   }
 
   this.single_step_cmd = function (self) {
@@ -453,7 +455,7 @@ function Console() {
   }
 
   this.step_over_cmd = function (self) {
-    var cpu = self.runner.cpu;
+    var cpu = self.runner().cpu;
     var mem = cpu.memory;
     var binary = [];
     for (var i = 0; i < 3; ++i)
@@ -475,7 +477,7 @@ function Console() {
     if (isNaN(from)) { self.term.write("?"); return; };
     var to = parseInt(self.term.argv[2]);
     if (isNaN(to)) { self.term.write("?"); return; };
-    const image = self.runner.cpu.memory.snapshot(from, to + 1 - from);
+    const image = self.runner().cpu.memory.snapshot(from, to + 1 - from);
     const checksum = rk86_check_sum(image);
     self.term.write("%04X-%04X: %04X".format(from, to, checksum));
     self.term.newLine();
@@ -553,15 +555,18 @@ function Console() {
     term.prompt();
   }
 
+  this.ui = () => parent.ui;
+  this.runner = () => this.ui().runner;
+
   this.init = function () {
-    this.ui = window.opener.ui;
-    this.runner = this.ui.runner;
+    // this.ui = parent.ui;
+    // this.runner = this.ui.runner;
 
     var init_this = this;
     this.term = new Terminal({
       handler: function () { init_this.terminal_handler(this); },
       x: 0, y: 0,
-      cols: 80, rows: 30,
+      cols: 75, rows: 39,
       closeOnESC: false,
       ps: "]",
       greeting: "Консоль Радио-86РК",
@@ -576,8 +581,8 @@ function Console() {
     this.adjust_window();
   }
 
-  this.pause = function () {
-    this.term.write("Paused at %04X".format(this.runner.cpu.pc));
+  this.pause = () => {
+    this.term.write("Paused at %04X".format(this.runner()().cpu.pc));
     this.term.newLine();
     this.cpu_cmd(this);
   }
@@ -596,11 +601,16 @@ function Console() {
     this.term.prompt();
   }
 
+  this.refresh = () => {
+    console.log('Console refresh');
+  }
+
   this.init();
 }
 
-var console;
+var rk86_console;
 
 function main() {
-  console = new Console();
+  rk86_console = new Console();
+  loaded = true;
 }

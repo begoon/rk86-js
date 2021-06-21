@@ -143,7 +143,6 @@ function UI(tape_catalog, runner, memory, autoexec) {
 
   var load_tape_file_this = this;
   this.load_tape_file = function (name) {
-    console.log(`Loading file ${name}`);
     const success = function (image) {
       console.log(`Loaded ${image.length} byte(s)`);
       load_tape_file_this.file_loaded(name, image);
@@ -207,10 +206,6 @@ function UI(tape_catalog, runner, memory, autoexec) {
   this.load_selected = function () {
     this.load_mode = "load";
     this.process_selected();
-  };
-
-  this.disassembler_available = function () {
-    return window.frames.disassembler_frame.loaded;
   };
 
   this.autorun = function () {
@@ -301,6 +296,10 @@ function UI(tape_catalog, runner, memory, autoexec) {
       alert("Disassembler is not available.");
       return;
     }
+    if (name == "console" && !this.console_available()) {
+      alert("Console is not available.");
+      return;
+    }
     var name = name + "_panel";
     document.getElementById(name).style.display =
       document.getElementById(name).style.display == "block" ? "none" : "block";
@@ -308,6 +307,10 @@ function UI(tape_catalog, runner, memory, autoexec) {
 
   this.disassembler_available = function () {
     return window.frames.disassembler_frame.loaded;
+  };
+
+  this.console_available = function () {
+    return window.frames.console_frame.loaded;
   };
 
   this.save_screen = function () {
