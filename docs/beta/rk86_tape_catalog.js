@@ -163,6 +163,7 @@ function tape_catalog() {
     "adjust75.rkr",
     "chars.bin",
     "cputest.bin",
+    "mars3-lpe.rkr",
     "mon16.bin",
     "mon32.bin",
     "mon32x4.bin",
