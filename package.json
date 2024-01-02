@@ -1,28 +1,28 @@
 {
-  "name": "rk86",
-  "version": "1.0.0",
-  "main": "main.js",
-  "scripts": {
-    "test": "ava"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/begoon/rk86-js.git"
-  },
-  "author": "Alexander Demin",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/begoon/rk86-js/issues"
-  },
-  "homepage": "https://github.com/begoon/rk86-js#readme",
-  "devDependencies": {
-    "ava": "^5.2.0",
-    "http-server": "^0.12.3"
-  },
-  "dependencies": {
-    "glob-all": "^3.2.1",
-    "ora": "^5.4.0",
-    "printj": "^1.2.2",
-    "swig": "^1.4.2"
-  }
+    "name": "rk86",
+    "version": "1.0.0",
+    "main": "main.js",
+    "scripts": {
+        "test": "ava"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/begoon/rk86-js.git"
+    },
+    "author": "Alexander Demin",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/begoon/rk86-js/issues"
+    },
+    "homepage": "https://github.com/begoon/rk86-js#readme",
+    "devDependencies": {
+        "ava": "latest",
+        "http-server": "latest"
+    },
+    "dependencies": {
+        "glob-all": "latest",
+        "ora": "latest",
+        "printj": "latest",
+        "swig": "latest"
+    }
 }
