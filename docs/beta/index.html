@@ -46,18 +46,14 @@
   <script src="ui.js" type="application/javascript"></script>
   <script src="main.js" type="application/javascript"></script>
 
-  <script type="text/javascript">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-C3E1Q0BHGN"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
 
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-35795751-1']);
-    _gaq.push(['_trackPageview']);
-
-    (function () {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-
+    gtag('config', 'G-C3E1Q0BHGN');
   </script>
 
   <style>
@@ -138,6 +134,7 @@
         <button onclick="ui.save_screen()">Screen</button>
         <button onclick="ui.save_memory()">Memory</button>
         <button onclick="ui.snapshot()">Snapshot</button>
+        <a style="color: white; font-family: monospace;" href="https://donate.stripe.com/eVa9ATeZr18u2o8289" target="_blank">Поддержать проект</a>
       </div>
       <div style="float: left">
         <div id="disassembler_panel">
