@@ -81,6 +81,7 @@ function tape_catalog() {
     "NALET.RK",
     "O1.GAM",
     "OTELLO.RKR",
+    "OilsWell.rkr",
     "PACMAN.GAM",
     "PACMAN.RK",
     "PACMAN1.GAM",

@@ -72,7 +72,8 @@ function process_file(name) {
     while (image[i] != 0xe6) i += 1;
     file.check_sum = w(i + 1);
 
-    if (file.check_sum !== file.real_check_sum && file.name !== 'I8080TST.GAM') {
+    const skip_check_sum = ['I8080TST.GAM', 'OilsWell.rkr'];
+    if (file.check_sum !== file.real_check_sum && !skip_check_sum.includes(file.name)) {
       console.error(
         file.name,
         `real checksum`, format('%04X', file.real_check_sum),
