@@ -4,6 +4,7 @@ function tape_catalog() {
     "ASM-ED.RK",
     "ASM_ED.RKR",
     "ASSM_MIC.RKR",
+    "ATTACK.RK",
     "BARMEN.RK",
     "BASIC.RK",
     "BASIC80.RKR",
