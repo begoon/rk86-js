@@ -29,9 +29,6 @@ release-beta:
 serve-python:
 	(cd docs && python3 -m http.server --bind 127.0.0.1 8000)
 
-server-beta:
-	(cd docs && python3 -m http.server --bind 127.0.0.1 -d beta 8000)
-
 serve:
 	(cd build && npx http-server . -p 8000)
 
