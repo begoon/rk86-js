@@ -3,26 +3,24 @@
 
 <head>
   <title>Pretty i8080 Assembler</title>
-  <script src="js/StringUtils.js" type="application/javascript"></script>
-  <script src="js/FileSaver.js" type="application/javascript"></script>
   <script type="text/javascript">
     //
     // Pretty i8080 Assembler
-    // 
-    // Send comments to svofski at gmail dit com 
-    // 
+    //
+    // Send comments to svofski at gmail dit com
+    //
     // Copyright (c) 2009 Viacheslav Slavinsky
-    // 
+    //
     // Permission is hereby granted, free of charge, to any person obtaining a copy
     // of this software and associated documentation files (the "Software"), to deal
     // in the Software without restriction, including without limitation the rights
     // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
     // copies of the Software, and to permit persons to whom the Software is
     // furnished to do so, subject to the following conditions:
-    // 
+    //
     // The above copyright notice and this permission notice shall be included in
     // all copies or substantial portions of the Software.
-    // 
+    //
     // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
     // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
     // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,7 +34,7 @@
     // Leonid Kirillov, Alexander Timoshenko, Upi Tamminen,
     // Cristopher Green, Nard Awater, Ali Asadzadeh,
     // Guillermo S. Romero, Anna Merkulova, Stephan Henningsen
-    // 
+    //
     // Revison Log
     // Rev.A: Initial release
     // Rev.B: A lot of fixes to compile TINIDISK.ASM by Dr. Li-Chen Wang
@@ -53,8 +51,8 @@
     // TODO: evaluation should ignore precedence, it's all left-to-right
     //
     // Partially modified for Radio-86RK in JavaScript project.
-    // Copyright (c) 2009, 2012 Alexander Demin
-    // 
+    // Copyright (c) 2009, 2015 Alexander Demin
+    //
 
     // -- global DOM elements
 
@@ -523,7 +521,7 @@
           return 3;
         }
 
-        // immediate byte    
+        // immediate byte
         if ((opcs = opsIm8[mnemonic]) != undefined) {
           mem[addr] = new Number("0x" + opcs);
           immediate = useExpr(parts.slice(1), addr, linenumber);
@@ -704,7 +702,7 @@
         var i = sorted[j];
         var label = labels[i];
 
-        // hmm? 
+        // hmm?
         if (label == undefined) continue;
         if (i.length == 0) continue; // resolved expressions
         result += "<span class='" +
@@ -921,7 +919,7 @@
 
         result += '<pre id="' + id + '"'
         //    +
-        //    ' onmouseover="return mouseover('+i+');"' + 
+        //    ' onmouseover="return mouseover('+i+');"' +
         //    ' onmouseout="return mouseout('+i+');"';
 
         if (unresolved || errors[i] != undefined) {
@@ -1650,11 +1648,10 @@
     function upload_to_emulator(confirmation = false) {
       var loaded = 0;
       var start_address = undefined;
-      if (!parent.ui) return;
       for (var i = 0; i < mem.length; ++i) {
         if (mem[i] == undefined) continue;
         if (start_address == undefined) start_address = i;
-        parent.ui.memory.write_raw(i, mem[i].valueOf());
+        parent.machine.memory.write_raw(i, mem[i].valueOf());
         ++loaded;
       }
       if (confirmation) alert(loaded + " byte(s) uploaded");
@@ -1663,23 +1660,35 @@
 
     function upload() {
       upload_to_emulator(true);
+      parent.machine.ui.toggle_assembler();
     }
 
     function run() {
       var start_address = upload_to_emulator();
-      parent.ui.switch_panel('emulator');
-      parent.ui.runner.cpu.jump(start_address);
+      parent.machine.ui.toggle_assembler();
+      parent.machine.cpu.jump(start_address);
+    }
+
+    function saveAs(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
     }
 
     var download_source_count = 0;
-    var download_source_this = this;
     function download_source() {
       var source = save_source();
       var blob = new Blob([source], { type: "text/plain" });
-      var filename = "assembler-source-%d.asm".format(
-        download_source_this.download_source_count
-      );
-      download_source_this.download_source_count += 1;
+      var filename = `assembler-source-${download_source_count.toString(10)}.asm`
+      download_source_count += 1;
       saveAs(blob, filename);
     }
 
@@ -1695,17 +1704,17 @@
     }
 
     var download_binary_count = 0;
-    var download_binary_this = this;
     function download_binary() {
       var [start_address, binary] = download_binary_snapshot();
       var binary_array = new Uint8Array(binary);
-      var blob = new Blob([binary_array], { type: "image/gif" });
-      var filename = "assembler-binary-%04X-%04X-%d.bin".format(
-        start_address,
-        start_address + binary.length,
-        download_binary_this.download_binary_count
-      );
-      download_binary_this.download_binary_count += 1;
+      var blob = new Blob([binary_array], { type: "application/octet-stream" });
+      var filename = [
+        "assembler-binary",
+        hex16(start_address),
+        hex16(start_address + binary.length),
+        download_binary_count.toString(10),
+      ].join("-") + ".bin";
+      download_binary_count += 1;
       saveAs(blob, filename);
     }
 
@@ -1716,6 +1725,14 @@
       }
       if (event.which == 24) {  // CTRL-X
         run();
+        event.preventDefault();
+      }
+      return false;
+    }, false);
+
+    document.addEventListener("keyup", function (event) {
+      if (event.key === "Escape") {
+        parent.machine.ui.toggle_assembler();
         event.preventDefault();
       }
       return false;
@@ -2014,11 +2031,11 @@ msg:
   </div>
   <input type="text" id="hex" name="hex" style="display:none;">
   <input type="text" id="formbinname" name="formbinname" style="display:none;">
-  <button onclick="upload()" )>Upload (CTRL-S)</button>
-  <button onclick="run()" )>Run (CTRL-X)</button>
-  <button onclick="download_source()" )>Download source</button>
-  <button onclick="download_binary()" )>Download binary</button>
-  <button onclick="reset_source()" )>Reset source</button>
+  <button onclick="upload()">Upload (CTRL-S)</button>
+  <button onclick="run()">Run (CTRL-X)</button>
+  <button onclick="download_source()">Download source</button>
+  <button onclick="download_binary()">Download binary</button>
+  <button onclick="reset_source()">Reset source</button>
   <!--div id="debug">idebug</div-->
 </body>
 
