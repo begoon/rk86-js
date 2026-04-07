@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Эмулятор Радио-86РК — Демо</title>
+        <style>
+            body {
+                margin: 0;
+                background: #111;
+                color: #ccc;
+                font-family: sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 2em;
+                gap: 1em;
+            }
+            h1 {
+                margin: 0;
+                font-size: 1.4em;
+            }
+            p {
+                margin: 0;
+                font-size: 0.9em;
+                color: #888;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1em;
+            }
+            .cell {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+            }
+            .cell .label {
+                font-size: 0.85em;
+                color: #aaa;
+            }
+            radio86-emulator {
+                border: 1px solid #444;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Эмулятор Радио-86РК</h1>
+        <p>Четыре независимых эмулятора в виде <code>&lt;radio86-emulator&gt;</code> веб-компоненты</p>
+        <div class="grid">
+            <div class="cell">
+                <span class="label">Шахматы</span>
+                <radio86-emulator
+                    monitor="mon32.bin"
+                    file="CHESS.GAM"
+
+                    files-path="/files/"
+                ></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">Тетрис</span>
+                <radio86-emulator
+                    monitor="mon32.bin"
+                    file="TETRIS2.RK"
+
+                    files-path="/files/"
+                ></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">Пакман</span>
+                <radio86-emulator
+                    monitor="mon32.bin"
+                    file="PACMAN.GAM"
+
+                    files-path="/files/"
+                ></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">Rescue</span>
+                <radio86-emulator
+                    monitor="mon32.bin"
+                    file="RESCUE.GAM"
+
+                    files-path="/files/"
+                ></radio86-emulator>
+            </div>
+        </div>
+
+        <pre style="color: #fff; font-size: 0.8em">
+&lt;script type="module" src="radio86-emulator.js"&gt;&lt;/script&gt;
+&lt;radio86-emulator monitor="mon32.bin" file="CHESS.GAM" files-path="/files/"&gt;&lt;/radio86-emulator&gt;</pre
+        >
+
+        <script type="module">
+            import "./radio86-emulator.js";
+        </script>
+    </body>
+</html>
