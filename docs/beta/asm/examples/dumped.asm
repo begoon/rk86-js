@@ -1,281 +1,433 @@
-     ORG 3000H
-     LXI SP,75FFH
-     LXI  H,S00
-     CALL S01
-     CALL S02
-     LXI  H,S03
-     CALL S04
-     CALL S02
-     LXI  H,S05
-     CALL S01
-S0A: CALL S06
-     LXI  B,S07
-     CALL S08
-     CALL S06
-     CALL S09
-     JZ   S0A
-     MOV  H,L
-     CALL S09
-     JZ   S0A
-S20: PUSH H
-     MVI  L,00H
-     PUSH H
-     LXI  H,S0B
-     CALL S04
-     POP  H
-S10: CALL S0C
-     MVI  C,3AH
-     CALL S0D
-     CALL S0E
-     CALL S0F
-     MVI  A,10H
-     ADD  L
-     MOV  L,A
-     JNC  S10
-S12: CALL S11
-     INR  L
-     JNZ  S12
-     POP  H
-     CALL S13
-S1C: CALL S06
-     CALL S0C
-     CALL S11
-S15: MVI  A,00H
-     ORA  A
-     JZ   S14
-     XRA  A
-     STA  S15+1
-     MVI  C,18H
-     CALL S0D
-     JMP  S16
-S14: CALL S17
-     JNZ  S18
-     CPI 0
-     JZ S1D
-     CPI 1
-     JZ S1D
-     CPI 2
-     JZ S1D
-     CALL S19
-     CPI  18H
-     JZ   S16
-     CPI  08H
-     JZ   S1A
-S24: CPI  19H
-     JNZ  S1B
-     MVI  A,0F0H
-S1E: ADD  L
-     MOV  L,A
-     JMP  S1C
-S1B: CPI  1AH
-     JNZ  S1D
-     MVI  A,10H
-     JMP  S1E
-S1D: DCR  A
-     JZ   S0A
-     DCR  A
-     JZ   S1F
-     DCR  H
-     DCR  H
-S1F: INR  H
-     JMP  S20
-S18: RLC
-     RLC
-     RLC
-     RLC
-     MVI  B,0FH
-     CALL S21
-S16: CALL S17
-     JNZ  S22
-     CPI 0
-     JZ S1D
-     CPI 1
-     JZ S1D
-     CPI 2
-     JZ S1D
-     CALL S19
-     CPI  08H
-     JZ   S14
-     CPI  18H
-     JZ   S23
-     JMP  S24
-S22: MVI  B,0F0H
-     CALL S21
-S23: INR  L
-     JMP  S1C
-S1A: STA  S15+1
-     DCR  L
-     JMP  S1C
-S09: MVI  L,00H
-     CALL S17
-     RZ
-     RLC
-     RLC
-     RLC
-     RLC
-     ORA  L
-     MOV  L,A
-     CALL S17
-     RZ
-     ORA  L
-     MOV  L,A
-     INR  A
-     CMP  L
-     RET
-S21: MOV  C,A
-     MOV  A,M
-     ANA  B
-     ORA  C
-     MOV  M,A
-     CALL S13
-S0E: PUSH H
-     MOV  A,L
-     ANI  0F0H
-     MOV  L,A
-     ORI  0FH
-     MOV  E,A
-     MOV  D,H
-     CALL S25
-     CALL S26
-     PUSH H
-S29: MVI  L,3AH
-     CALL S04
-     MOV  H,B
-     MOV  L,C
-     CALL S0C
-     POP  H
-     JMP  S27
-S06: PUSH H
-     LXI  H,S28
-S27: CALL S04
-     POP  H
-     RET
-S13: PUSH H
-     MVI  L,00H
-     MOV  D,H
-     MVI  E,0FFH
-     CALL S25
-     CALL S26
-     PUSH H
-     MVI  H,15H
-     JMP  S29
-S0C: MOV  A,H
-     CALL S2A
-     MOV  A,L
-     JMP  S2A
-S0F: MVI  C,0AH
-     CALL S0D
-     MVI  C,0DH
-     JMP  S0D
-S11: MOV  A,L
-     ANI  0FH
-     MOV  C,A
-     ADD  A
-     ADD  C
-     ADI  07H
-     MOV  E,A
-     MOV  A,L
-     ANI  0F0H
-     RRC
-     RRC
-     RRC
-     RRC
-     ADI  04H
-     MOV  D,A
-     XCHG
-     CALL S04
-     XCHG
-     MOV  A,M
-     CALL S2A
-     CALL S2B
-S2B: MVI  C,08H
-     JMP  S0D
-S2F: LXI  B,S2C
-     CALL S08
-S17: CALL S2D
-     CPI  03H
-     JZ   S2E
-     ORA  A
-     RZ
-     CPI  01H
-     RZ
-     CPI  02H
-     RZ
-     CPI  08H
-     RZ
-     CPI  18H
-     RZ
-     CPI  1AH
-     RZ
-     CPI  19H
-     RZ
-     CPI  30H
-     JC   S2F
-     CPI  3AH
-     CC   S19
-     JC   S30
-     CPI  41H
-     JC   S2F
-     CPI  47H
-     JNC  S2F
-     CALL S19
-     ADI  09H
-S30: ANI  0FH
-     CPI  0FFH
-     RET
-S02: LXI  B,S31
-S08: CALL S0D
-     DCR  B
-     JNZ  S08
-     RET
-S00: DB   1FH
-     DB   0AH
-     DB   'adres:'
-     DB   '               '
-     DB   '>>> DUMP EDITOR <<<'
-     DB   '                 '
-     DB   'summa  '
-     DB   00H
-S05: DB   '       '
-     DB   ' F1-wwerh   F2-adres   F3-wniz   F4-monitor'
-     DB 0
-S01: EQU  0F818H
-S03: EQU  1700H
-S07: EQU  0420H
-S0B: EQU  0400H
-S0D: EQU  0F809H
-S28: EQU  0107H
-S2A: EQU  0F815H
-S2C: EQU  0807H
-S2D: EQU  0F803H
-S2E: EQU  0F800H
-S31: EQU  402DH
-S19: PUSH B
-     MOV C,A
-     CALL 0F809H
-     POP B
-     RET
-S04: PUSH H
-     PUSH D
-     PUSH B
-     LXI D,2020H
-     DAD D
-     MOV A,H
-     STA CRD+2
-     MOV A,L
-     STA CRD+3
-     LXI H,CRD
-     CALL 0F818H
-     POP B
-     POP D
-     POP H
-     RET
-CRD: DB 1BH,59H,20H,20H,0
-S26: PUSH D
-     CALL 0F81EH
-     LXI D,0FCF8H
-     DAD D
-     POP D
-     RET
-S25: EQU 0F82AH
-     end
+; Dump editor for the Radio-86RK (disassembled + relabelled).
+; ----------------------------------------------------------------------
+; Shows a 256-byte memory page as a 16x16 hex table, lets the user
+; overwrite any byte by typing new hex digits, and navigates between
+; pages with the cursor keys.
+;
+;   adres:  addr            >>> DUMP EDITOR <<<         summa  XXXX
+;   ----------------------------------------------------------------
+;   ADDR: b0 b1 b2 ... bf                                       XXXX
+;   ...
+;   ----------------------------------------------------------------
+;    F1-wwerh   F2-adres   F3-wniz   F4-monitor
+;
+; F1 = page up (prev address), F2 = address prompt, F3 = page down
+; (next address), F4 = exit to monitor. Arrows move inside the page;
+; Ctrl-C also returns to the monitor.
+;
+; Entry at 3000h, stack is set to the top of user RAM (75FFh).
+
+; -- monitor jump-table entries (see RK86.md) -------------------------
+monitor_getc     equ 0f803h           ; block for one keypress, -> A
+monitor_putc     equ 0f809h           ; C = char
+monitor_hexb     equ 0f815h           ; A -> two hex digits
+monitor_puts     equ 0f818h           ; HL = 0-terminated string
+monitor_getxy    equ 0f81eh           ; HL = (y << 8) | x
+monitor_chksum   equ 0f82ah           ; sum bytes in HL..DE -> BC
+monitor_reset    equ 0f800h           ; reset vector (cold start)
+
+; -- RK86 control codes (see RK86.md) ---------------------------------
+bel              equ 07h              ; beep
+cursor_left      equ 08h              ; getc key / putc "move left"
+lf               equ 0ah              ; line feed
+cr               equ 0dh              ; carriage return
+cursor_right     equ 18h
+cursor_up        equ 19h
+cursor_down      equ 1ah
+esc              equ 1bh              ; start of ESC-Y cursor sequence
+cls              equ 1fh              ; clear screen + home
+esc_y_bias       equ 2020h            ; ESC-Y y,x are each biased by +20h
+
+; -- F-key codes (RK86 keyboard) --------------------------------------
+key_f1           equ 00h
+key_f2           equ 01h
+key_f3           equ 02h
+key_ctrl_c       equ 03h              ; also F4 here, treated as "reset"
+
+  org 3000h
+
+  lxi sp, 75ffh
+  lxi h, hdr_msg
+  call monitor_puts
+  call print_hr                       ; dashes under the header
+  lxi h, 1700h                        ; row 23, col 0
+  call set_cursor
+  call print_hr                       ; dashes above the footer
+  lxi h, foot_msg
+  call monitor_puts
+
+; ---- ask the user for a page address --------------------------------
+prompt:
+  call cursor_to_addr
+  lxi b, (4 << 8) | ' '               ; 4 spaces
+  call put_rep                        ; blank the 4-digit address field
+  call cursor_to_addr
+  call read_hex_byte                  ; low byte -> L
+  jz prompt                           ; terminator -> re-prompt
+  mov h, l                            ; stash as high byte for a moment
+  call read_hex_byte                  ; next byte -> L, so HL = page addr
+  jz prompt
+
+; ---- redraw the whole page starting at H, L forced to 0 -------------
+page:
+  push h                              ; save page address for char pass
+  mvi l, 00h
+  push h                              ; save again for the edit loop
+  lxi h, 0400h                        ; row 4, col 0 (top of dump area)
+  call set_cursor
+  pop h
+
+hex_row:
+  call print_hex4                     ; "aaaa"
+  mvi c, ':'
+  call monitor_putc
+  call dump_hex_row                   ; 16 bytes + row checksum
+  call crlf
+  mvi a, 10h
+  add l
+  mov l, a
+  jnc hex_row                         ; 16 rows, then carry sets
+
+char_loop:
+  call redraw_byte                    ; paint each byte inside its cell
+  inr l
+  jnz char_loop
+  pop h                               ; restore page base
+  call print_page_sum
+
+; ---- per-keystroke edit loop ----------------------------------------
+redraw:
+  call cursor_to_addr
+  call print_hex4                     ; show the current HL at "adres:"
+  call redraw_byte                    ; put cursor on the current byte
+
+; cmd_state is self-modifying: the `00` operand below tracks whether we
+; are mid-byte. cmd_left stores A (=08h) here so the next iteration
+; knows to skip the hi-nibble wait and jump straight back into wait_lo.
+cmd_state:
+  mvi a, 00h
+  ora a
+  jz wait_hi                          ; no pending state
+  xra a
+  sta cmd_state+1                     ; clear it
+  mvi c, cursor_right                 ; step past the just-echoed digit
+  call monitor_putc
+  jmp wait_lo
+
+wait_hi:
+  call read_cmd
+  jnz got_hi_digit
+  cpi key_f1
+  jz fkey
+  cpi key_f2
+  jz fkey
+  cpi key_f3
+  jz fkey
+  call putc_a                         ; echo the navigation char
+  cpi cursor_right
+  jz wait_lo
+  cpi cursor_left
+  jz cmd_left
+check_up:
+  cpi cursor_up
+  jnz check_down
+  mvi a, 0f0h                         ; L -= 16
+add_to_l:
+  add l
+  mov l, a
+  jmp redraw
+check_down:
+  cpi cursor_down
+  jnz fkey
+  mvi a, 10h                          ; L += 16
+  jmp add_to_l
+
+; F-keys arrive as 00h/01h/02h. Three DCRs turn them into a dispatch:
+;   F1 (A=0) -> fall through       (H -= 2, then +1 -> previous page)
+;   F2 (A=1) -> jz prompt          (re-enter address)
+;   F3 (A=2) -> jz skip_dec_h      (H unchanged, +1 -> next page)
+;   F4 never reaches here: its code 03h is caught by read_cmd as
+;       "Ctrl-C" and routed to monitor_reset.
+fkey:
+  dcr a
+  jz prompt
+  dcr a
+  jz skip_dec_h
+  dcr h
+  dcr h
+skip_dec_h:
+  inr h
+  jmp page
+
+; -- user typed a hex digit while we were waiting for the hi nibble ---
+got_hi_digit:
+  rlc                                 ; move nibble to high half
+  rlc
+  rlc
+  rlc
+  mvi b, 0fh                          ; preserve low nibble of memory
+  call store_nibble
+
+wait_lo:
+  call read_cmd
+  jnz got_lo_digit
+  cpi key_f1
+  jz fkey
+  cpi key_f2
+  jz fkey
+  cpi key_f3
+  jz fkey
+  call putc_a
+  cpi cursor_left                     ; back to wait_hi (re-edit this byte)
+  jz wait_hi
+  cpi cursor_right                    ; advance to next byte
+  jz advance
+  jmp check_up                        ; share arrow handling with wait_hi
+
+got_lo_digit:
+  mvi b, 0f0h                         ; preserve high nibble of memory
+  call store_nibble
+advance:
+  inr l
+  jmp redraw
+
+cmd_left:
+  sta cmd_state+1                     ; remember the pending 08h
+  dcr l
+  jmp redraw
+
+; ---- read_hex_byte --------------------------------------------------
+; Read two hex digits into L. Returns Z set on a terminator (00/01/02)
+; and NZ with the assembled byte in L on success.
+read_hex_byte:
+  mvi l, 00h
+  call read_cmd
+  rz                                  ; terminator - bail with Z
+  rlc
+  rlc
+  rlc
+  rlc
+  ora l
+  mov l, a
+  call read_cmd
+  rz
+  ora l
+  mov l, a
+  inr a                               ; INR + CMP L = guaranteed NZ
+  cmp l
+  ret
+
+; ---- store_nibble ---------------------------------------------------
+; mem[HL] = (mem[HL] & B) | A. Refresh the page-wide checksum, then
+; fall through to dump_hex_row to repaint the row.
+store_nibble:
+  mov c, a
+  mov a, m
+  ana b
+  ora c
+  mov m, a
+  call print_page_sum
+
+; ---- dump_hex_row ---------------------------------------------------
+; Print the 16 bytes covering L (bytes (L & F0h)..(L | 0Fh)), then the
+; row checksum. Falls through into print_sum.
+dump_hex_row:
+  push h
+  mov a, l
+  ani 0f0h                            ; row start
+  mov l, a
+  ori 0fh                             ; row end
+  mov e, a
+  mov d, h
+  call monitor_chksum                 ; HL..DE -> BC
+  call getxy_rel                      ; current cursor - 0308h
+  push h
+print_sum:
+  mvi l, 3ah                          ; ':' column (x = 58)
+  call set_cursor
+  mov h, b                            ; BC -> HL for printing
+  mov l, c
+  call print_hex4
+  pop h
+  jmp restore_cursor
+
+; ---- cursor_to_addr -------------------------------------------------
+; Place the cursor at the "adres:" field (row 1, col 7) and fall
+; through into the shared "print ESC-Y then pop" tail.
+cursor_to_addr:
+  push h
+  lxi h, 0107h                        ; row 1, col 7
+restore_cursor:
+  call set_cursor
+  pop h
+  ret
+
+; ---- print_page_sum -------------------------------------------------
+; Sum the whole page and print it on row 21 ("summa" row).
+print_page_sum:
+  push h
+  mvi l, 00h
+  mov d, h
+  mvi e, 0ffh
+  call monitor_chksum
+  call getxy_rel
+  push h
+  mvi h, 15h                          ; row 21
+  jmp print_sum
+
+; ---- print_hex4: HL -> "HHLL" --------------------------------------
+print_hex4:
+  mov a, h
+  call monitor_hexb
+  mov a, l
+  jmp monitor_hexb
+
+; ---- crlf: LF then CR ----------------------------------------------
+crlf:
+  mvi c, lf
+  call monitor_putc
+  mvi c, cr
+  jmp monitor_putc
+
+; ---- redraw_byte ----------------------------------------------------
+; Position the cursor on the cell for the byte at [HL] and repaint its
+; two hex digits, then leave the cursor on the first digit (two 08h
+; backspaces: one via CALL, the second via fall-through into backspace).
+redraw_byte:
+  mov a, l
+  ani 0fh                             ; column index
+  mov c, a
+  add a
+  add c                               ; = col * 3
+  adi 07h                             ; + left margin
+  mov e, a                            ; x
+  mov a, l
+  ani 0f0h
+  rrc
+  rrc
+  rrc
+  rrc                                 ; = row index
+  adi 04h                             ; + top margin
+  mov d, a                            ; y
+  xchg                                ; HL = (y,x), DE = mem ptr
+  call set_cursor
+  xchg
+  mov a, m
+  call monitor_hexb
+  call backspace                      ; prints one cursor-left, returns
+backspace:
+  mvi c, cursor_left                  ; fall-through prints a second
+  jmp monitor_putc
+
+; ---- bell_retry -----------------------------------------------------
+; Unknown key: beep 8 times, then fall through into read_cmd to retry.
+bell_retry:
+  lxi b, (8 << 8) | bel               ; 8 beeps
+  call put_rep
+
+; ---- read_cmd -------------------------------------------------------
+; Block until the user types a recognized key. Returns:
+;   NZ + A in 0..0Fh     for hex digits (echoed as we go)
+;   Z  + A = raw code    for F1/F2/F3 and cursor_{left,right,up,down}
+; Ctrl-C / F4 (03h) resets to the monitor and never returns.
+read_cmd:
+  call monitor_getc
+  cpi key_ctrl_c
+  jz monitor_reset
+  ora a                               ; key_f1 == 0
+  rz
+  cpi key_f2
+  rz
+  cpi key_f3
+  rz
+  cpi cursor_left
+  rz
+  cpi cursor_right
+  rz
+  cpi cursor_down
+  rz
+  cpi cursor_up
+  rz
+  cpi '0'
+  jc bell_retry
+  cpi '9'+1
+  cc putc_a                           ; echo the digit on the way past
+  jc hex_digit_done                   ; '0'..'9' -> low nibble already
+  cpi 'A'
+  jc bell_retry
+  cpi 'F'+1
+  jnc bell_retry
+  call putc_a
+  adi 09h                             ; 'A'..'F' + 09h => 0Ah..0Fh (mod 10h)
+hex_digit_done:
+  ani 0fh
+  cpi 0ffh                            ; A is 0..0Fh, so this sets NZ
+  ret
+
+; ---- print_hr: 64 dashes --------------------------------------------
+print_hr:
+  lxi b, (64 << 8) | '-'              ; 64 '-' chars
+put_rep:
+  call monitor_putc
+  dcr b
+  jnz put_rep
+  ret
+
+; ---- strings --------------------------------------------------------
+hdr_msg:
+  db cls                              ; clear screen + home
+  db lf
+  db 'adres:'
+  db '               '                ; 15 spaces
+  db '>>> DUMP EDITOR <<<'
+  db '                 '              ; 17 spaces
+  db 'summa  '
+  db 00h
+foot_msg:
+  db '       '                        ; 7 spaces
+  db ' F1-wwerh   F2-adres   F3-wniz   F4-monitor'
+  db 00h
+
+; ---- putc_a: echo A as char, preserving B ---------------------------
+putc_a:
+  push b
+  mov c, a
+  call monitor_putc
+  pop b
+  ret
+
+; ---- set_cursor -----------------------------------------------------
+; Move the cursor to (H, L) using the RK86 "ESC Y y x" sequence.
+; The two coordinate bytes are biased by +20h because ESC-Y expects
+; them that way.
+set_cursor:
+  push h
+  push d
+  push b
+  lxi d, esc_y_bias
+  dad d
+  mov a, h
+  sta esc_y+2                         ; y byte in the sequence
+  mov a, l
+  sta esc_y+3                         ; x byte in the sequence
+  lxi h, esc_y
+  call monitor_puts
+  pop b
+  pop d
+  pop h
+  ret
+esc_y:
+  db esc, 'Y', ' ', ' ', 0            ; ESC Y <y> <x> <term>
+
+; ---- getxy_rel ------------------------------------------------------
+; Return HL = current_cursor - 0308h (i.e. subtract the dump-origin
+; offset) so callers can derive a row number relative to the dump.
+getxy_rel:
+  push d
+  call monitor_getxy
+  lxi d, 0fcf8h                       ; -0308h
+  dad d
+  pop d
+  ret
+
+  end
