@@ -1421,35 +1421,16 @@ function lineInfo(source) {
 var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
 if (false) {}
 
-// docs/examples.ts
-var fetchExample = (f) => fetch(`examples/${f}`).then((r) => r.text());
-function file(name, filename, src = "") {
-  return { name, filename, source: fetchExample(src || filename) };
-}
-var EXAMPLES = [
-  file("aloha", "hello.asm"),
-  file("ok", "ok.asm"),
-  file("sections", "sections.asm"),
-  file("expressions", "expressions.asm"),
-  file("current address $", "addr.asm"),
-  file("local labels @ and .", "locals.asm"),
-  file("if / else", "ifelse.asm"),
-  file("proc: .return -> RET (no saves)", "proc-ret.asm"),
-  file("proc: .return -> JMP exit (with saves)", "proc-jmp.asm"),
-  file("dump editor", "dumped.asm"),
-  file("chars", "chars.asm"),
-  file("noise", "noise.asm"),
-  file("banner", "banner.asm"),
-  file("pong", "pong.asm"),
-  file("sokoban", "sokoban.asm"),
-  file("volcano", "volcano.asm"),
-  file("lestnica", "lestnica.asm")
-];
-
 // docs/build-info.ts
 var BUILD_TIME = "2026-04-21 18:59:28";
 
 // docs/playground.ts
+var fetchExample = (f) => fetch(`examples/${f}`).then((r) => r.text());
+var EXAMPLES = (window.asm8Examples ?? []).map((e) => ({
+  name: e.name,
+  filename: e.filename,
+  source: fetchExample(e.filename)
+}));
 var STORAGE_KEY = "asm8-playground:source";
 var FILENAME_KEY = "asm8-playground:filename";
 var TABS_KEY = "asm8-playground:tabs";
@@ -1982,13 +1963,56 @@ downloadBtn.addEventListener("click", () => {
     return;
   downloadBlob(data, outputName(fmt), "application/octet-stream");
 });
+var EMULATOR_URL_DEFAULT = "https://rk86.ru/beta/index.html";
+var EMULATOR_URL = window.asm8EmulatorUrl ?? EMULATOR_URL_DEFAULT;
+var HANDOFF_PREFIX = "asm8-handoff:";
+var HANDOFF_TTL_MS = 60 * 60 * 1000;
+function sweepStaleHandoffs() {
+  try {
+    const now = Date.now();
+    for (let i = localStorage.length - 1;i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(HANDOFF_PREFIX))
+        continue;
+      const raw = localStorage.getItem(key);
+      if (!raw)
+        continue;
+      try {
+        const { ts } = JSON.parse(raw);
+        if (!ts || now - ts > HANDOFF_TTL_MS)
+          localStorage.removeItem(key);
+      } catch {
+        localStorage.removeItem(key);
+      }
+    }
+  } catch {}
+}
+function newHandoffId() {
+  const c = globalThis.crypto;
+  if (c && typeof c.randomUUID === "function")
+    return c.randomUUID();
+  return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
+}
 runBinBtn.addEventListener("click", () => {
   const rk = buildOutput("rk");
   if (!rk)
     return;
+  const target = new URL(EMULATOR_URL, location.href);
   const dataUrl = `data:;name=${outputName("rk")};base64,${toBase64(rk)}`;
-  const runUrl = `https://rk86.ru/beta/index.html?run=${encodeURIComponent(dataUrl)}`;
-  window.open(runUrl, "_blank", "noopener");
+  if (target.origin === location.origin) {
+    sweepStaleHandoffs();
+    const id = newHandoffId();
+    try {
+      localStorage.setItem(HANDOFF_PREFIX + id, JSON.stringify({ ts: Date.now(), url: dataUrl }));
+    } catch (e) {
+      alert(`localStorage unavailable, cannot hand off to emulator: ${e.message}`);
+      return;
+    }
+    target.searchParams.set("handoff", id);
+  } else {
+    target.searchParams.set("run", dataUrl);
+  }
+  window.open(target.toString(), "_blank", "noopener");
 });
 uploadBtn.addEventListener("click", () => fileInput.click());
 resetBtn.addEventListener("click", async () => {
