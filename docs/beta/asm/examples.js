@@ -22,4 +22,5 @@ window.asm8Examples = [
     { name: "volcano", filename: "volcano.asm" },
     { name: "lestnica", filename: "lestnica.asm" },
     { name: "diverse", filename: "diverse.asm" },
+    { name: "aliaz1", filename: "aliaz1.asm" },
 ];
