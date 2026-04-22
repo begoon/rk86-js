@@ -1422,15 +1422,26 @@ var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
 if (false) {}
 
 // docs/build-info.ts
-var BUILD_TIME = "2026-04-21 18:59:28";
+var BUILD_TIME = "2026-04-22 10:10:04";
 
 // docs/playground.ts
 var fetchExample = (f) => fetch(`examples/${f}`).then((r) => r.text());
-var EXAMPLES = (window.asm8Examples ?? []).map((e) => ({
-  name: e.name,
-  filename: e.filename,
-  source: fetchExample(e.filename)
-}));
+var EXAMPLES = (window.asm8Examples ?? []).map((e) => {
+  const ex = {
+    name: e.name,
+    filename: e.filename,
+    source: fetchExample(e.filename)
+  };
+  ex.source.then((s) => {
+    ex.resolvedSource = s;
+    renderTabs();
+  }, () => {});
+  return ex;
+});
+function tabMatchesExample(t) {
+  const ex = EXAMPLES.find((e) => e.filename === t.filename);
+  return !!ex && ex.resolvedSource === t.source;
+}
 var STORAGE_KEY = "asm8-playground:source";
 var FILENAME_KEY = "asm8-playground:filename";
 var TABS_KEY = "asm8-playground:tabs";
@@ -1438,14 +1449,7 @@ var ACTIVE_KEY = "asm8-playground:active";
 var THEME_KEY = "asm8-playground:theme";
 var FORMAT_KEY = "asm8-playground:format";
 var DEFAULT_FILENAME = "program.asm";
-var OUTPUT_FORMATS = [
-  "asm",
-  "bin",
-  "rk",
-  "rkr",
-  "pki",
-  "gam"
-];
+var OUTPUT_FORMATS = ["asm", "bin", "rk", "rkr", "pki", "gam"];
 var DEFAULT_FORMAT = "asm";
 var tabs = [];
 var active = 0;
@@ -1678,7 +1682,7 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     closeConfirm(true);
   }
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "r") {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "e") {
     if (runBinBtn.disabled)
       return;
     e.preventDefault();
@@ -1761,7 +1765,9 @@ function renderTabs() {
   tabsEl.innerHTML = "";
   tabs.forEach((t, i) => {
     const el = document.createElement("div");
-    el.className = "tab" + (i === active ? " active" : "");
+    const live = i === active ? source.value : t.source;
+    const matches = tabMatchesExample({ filename: t.filename, source: live });
+    el.className = "tab" + (i === active ? " active" : "") + (matches ? " example" : " modified");
     el.title = t.filename;
     const name = document.createElement("span");
     name.textContent = t.filename || "(untitled)";
@@ -1824,7 +1830,11 @@ function newTab() {
 }
 async function closeTab(i) {
   const current = i === active ? source.value : tabs[i].source;
-  if (current.trim().length > 0) {
+  const matchesExample = tabMatchesExample({
+    filename: tabs[i].filename,
+    source: current
+  });
+  if (current.trim().length > 0 && !matchesExample) {
     const ok = await askConfirm(`Close "${tabs[i].filename}"? Its content will be lost.`);
     if (!ok)
       return;
@@ -1885,6 +1895,7 @@ function onChange() {
   save();
   compile();
   syncScroll();
+  renderTabs();
 }
 source.addEventListener("input", onChange);
 source.addEventListener("scroll", syncScroll);

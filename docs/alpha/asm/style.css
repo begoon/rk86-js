@@ -239,11 +239,28 @@ main {
   color: var(--fg);
 }
 
+.tab.example,
+.tab.example:hover,
+.tab.active.example {
+  color: var(--muted);
+  opacity: 0.65;
+}
+
+.tab.modified,
+.tab.modified:hover,
+.tab.active.modified {
+  color: var(--ok);
+}
+
 .tab.active {
   background: var(--bg);
   color: var(--fg);
   border-top: 2px solid var(--primary-bg);
   padding-top: 4px;
+}
+
+.tab.active.modified {
+  border-top-color: var(--ok);
 }
 
 .tab .close {

@@ -1106,7 +1106,7 @@ loc_07F3:
         db   64h, 6Bh, 69h, 00h
 loc_0829:
         db   1Bh, 'Y', 20h, 31h       ; ESC Y row=0 col=17
-        db   '', 00h                                  ; "" -- (cursor only)
+        db   '', 00h                  ; "" -- (cursor only)
 loc_082E:
         lda  loc_002F
         ora  a
