@@ -68,7 +68,15 @@ build-exiter:
 
 update-playground:
     cp \
-    ../asm8/docs/playground.js \
-    ../asm8/docs/index.html \
-    ../asm8/docs/style.css \
+    ../../asm8/docs/playground.js \
+    ../../asm8/docs/index.html \
+    ../../asm8/docs/style.css \
     static/asm/
+
+update-c8080:
+    cp \
+    ../../c8080-js/docs/playground.js \
+    ../../c8080-js/docs/index.html \
+    ../../c8080-js/docs/style.css \
+    ../../c8080-js/docs/initial.c \
+    static/c8080/

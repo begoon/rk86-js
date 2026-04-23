@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>c8080 playground — C to Intel 8080 asm</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>c8080 <span class="sub">C → Intel 8080 asm, in your browser</span></h1>
+      <div class="toolbar">
+        <div class="status" id="status"></div>
+        <select id="download-format" title="download format">
+          <option value="c">.c</option>
+          <option value="asm">.asm</option>
+          <option value="bin">.bin</option>
+          <option value="rks">.rks</option>
+          <option value="rk" selected>.rk</option>
+          <option value="rkr">.rkr</option>
+          <option value="pki">.pki</option>
+          <option value="gam">.gam</option>
+        </select>
+        <button type="button" id="download">Download</button>
+        <button type="button" id="reset" class="danger" title="replace the source with the starter example">Reset</button>
+        <button type="button" id="theme" title="toggle light/dark theme">theme</button>
+        <button
+          type="button"
+          id="run"
+          class="primary"
+          title="assemble as .rk and boot on rk86.ru/beta"
+        >Run on RK86 ▸</button>
+      </div>
+    </header>
+    <main>
+      <section class="pane">
+        <div class="pane-title">source.c</div>
+        <textarea
+          id="source"
+          spellcheck="false"
+          autocomplete="off"
+          autocapitalize="off"
+          autocorrect="off"
+          wrap="off"
+        ></textarea>
+      </section>
+      <section class="pane">
+        <div class="pane-title">output.asm</div>
+        <pre id="asm"></pre>
+        <div id="error" class="error" hidden></div>
+        <div class="pane-title secondary">bytes</div>
+        <pre id="bytes" hidden></pre>
+      </section>
+    </main>
+    <footer>
+      c8080 ·
+      <a href="https://www.npmjs.com/package/c8080">npm</a> ·
+      <a href="https://github.com/alexey-f-morozov/c8080">upstream</a>
+    </footer>
+    <div id="confirm-modal" class="modal" hidden>
+      <div class="modal-panel" role="dialog" aria-modal="true">
+        <p id="confirm-message"></p>
+        <div class="modal-actions">
+          <button type="button" id="confirm-cancel">Cancel</button>
+          <button type="button" id="confirm-ok" class="primary">OK</button>
+        </div>
+      </div>
+    </div>
+    <script src="conf.js"></script>
+    <script type="module" src="playground.js"></script>
+  </body>
+</html>
