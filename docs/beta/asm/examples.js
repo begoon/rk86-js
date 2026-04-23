@@ -6,6 +6,7 @@
 window.asm8Examples = [
     { name: "aloha", filename: "hello.asm" },
     { name: "ok", filename: "ok.asm" },
+    { name: "claude", filename: "claude.asm" },
     { name: "sections", filename: "sections.asm" },
     { name: "expressions", filename: "expressions.asm" },
     { name: "current address $", filename: "addr.asm" },
