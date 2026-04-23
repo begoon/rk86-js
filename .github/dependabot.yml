@@ -1,0 +1,32 @@
+version: 2
+updates:
+  # Only scan the published npm CLI — that's the one artifact users
+  # actually execute. Everything else in this repo is build-tooling
+  # for a static site with no user data, where transitive CVEs are
+  # not a real threat model.
+  - package-ecosystem: npm
+    directory: /kit/packages/rk86
+    schedule:
+      interval: monthly
+    groups:
+      all:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - rk86-cli
+
+  # Keep GitHub Actions pinned via SHA/version up to date (quiet;
+  # quarterly is fine).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns:
+          - "*"
+    open-pull-requests-limit: 3
+    labels:
+      - ci
