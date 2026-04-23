@@ -1,4 +1,5 @@
-![](https://github.com/begoon/rk86-js/actions/workflows/test.yaml/badge.svg)
+![classic](https://github.com/begoon/rk86-js/actions/workflows/classic.yaml/badge.svg)
+![kit](https://github.com/begoon/rk86-js/actions/workflows/kit.yaml/badge.svg)
 
 # Эмулятор Радио-86РК
 
@@ -8,27 +9,63 @@
 
 Проект основан на [i8080-js](http://github.com/begoon/i8080-js/). [Пост с описанием](http://demin.ws/blog/russian/2012/10/04/rk86-js/). Немного [информации о семействе микросхем КР580](http://demin.ws/projects/radio86/info/kr580/).
 
+## Установка инструментов
+
+Нужны [`bun`](https://bun.sh/) (runtime + пакетный менеджер + тест-раннер) и [`just`](https://just.systems/) (таск-раннер).
+
+```bash
+# bun (macOS/Linux)
+curl -fsSL https://bun.sh/install | bash
+# либо через Homebrew
+brew install oven-sh/bun/bun
+
+# just
+brew install just        # macOS / Linux (через Homebrew)
+cargo install just       # через Rust toolchain
+# Windows: scoop install just   /  winget install Casey.Just
+```
+
+Полный список способов установки — [bun.sh](https://bun.sh/docs/installation) и [just.systems](https://just.systems/man/en/packages.html).
+
+## Быстрый старт
+
+Инструментарий — `just` + `bun`. Корневой [`Justfile`](Justfile) собирает и тестирует обе версии:
+
+```bash
+just               # install + build + test (обе версии)
+just install       # bun install в classic/ и kit/
+just build         # сборка обеих версий
+just test          # тесты обеих версий
+just serve [port]  # локальный вебсервер из docs/ (по умолчанию :8000)
+just clean         # git clean -fdx (сохраняет .claude-директории)
+```
+
+Проверка с нуля:
+
+```bash
+just clean && just
+```
+
 ## Две версии
 
 Репозиторий содержит две реализации эмулятора, живущие бок о бок.
 
-| Версия | Каталог | Стек | Команды |
-|--------|---------|------|---------|
-| **Классическая** | [`classic/`](classic/) | Vanilla JS + HTML, Bun | `just -f classic/Justfile build`, `just -f classic/Justfile test` |
-| **Новая** | [`kit/`](kit/) | SvelteKit + TypeScript + Bun | `cd kit && bun run build`, `cd kit && just test` |
+| Версия | Каталог | Стек |
+|--------|---------|------|
+| **Классическая** | [`classic/`](classic/) | Vanilla JS + HTML, Bun, Twig, just |
+| **Новая** | [`kit/`](kit/) | SvelteKit 2 + Svelte 5 + TypeScript + Tailwind 4 + Bun, just |
 
-Обе версии независимы и сохраняют свой инструментарий сборки и тесты.
+Обе версии независимы и сохраняют собственные команды.
 
 ### Классическая версия (`classic/`)
 
-Исходная реализация на чистом JavaScript. Тестировалась в Google Chrome и Safari под Mac и Windows. Инструментарий — `just` + `bun`.
+Исходная реализация на чистом JavaScript. Тестировалась в Google Chrome и Safari под Mac и Windows.
 
 ```bash
 cd classic
 just               # тесты + сборка
-just test          # только тесты (bun test)
+just test          # тесты (bun test)
 just release       # сборка + публикация в ../docs/
-just serve         # локальный вебсервер на порту 8000 (из ../docs)
 just watch         # пересборка при изменении файлов
 ```
 
@@ -43,6 +80,7 @@ bun run dev               # dev-сервер на http://localhost:5173
 bun run build             # статическая сборка в kit/build/
 just test                 # модульные тесты + тесты CPU
 just test-ci              # полный набор включая CPU Exerciser
+just release              # сборка + публикация в ../docs/{beta,alpha}
 ```
 
 ## Деплой
@@ -187,9 +225,9 @@ bunx rk86 --headless --turbo --exit-halt \
 ```
 classic/                — классическая версия (vanilla JS)
   src/                  — исходники
-  tests/                — ava-тесты
+  tests/                — bun-тесты
   tools/                — скрипты сборки каталога и магнитофона
-  Makefile              — сборка и публикация
+  Justfile              — сборка, тесты, публикация
 kit/                    — новая версия (SvelteKit)
   src/lib/core/         — ядро эмулятора (CPU, память, экран, клавиатура, звук, runner)
   src/lib/web/          — браузерный слой
