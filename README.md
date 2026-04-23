@@ -14,20 +14,22 @@
 
 | Версия | Каталог | Стек | Команды |
 |--------|---------|------|---------|
-| **Классическая** | [`classic/`](classic/) | Vanilla JS + HTML | `make -C classic build`, `make -C classic test` |
+| **Классическая** | [`classic/`](classic/) | Vanilla JS + HTML, Bun | `just -f classic/Justfile build`, `just -f classic/Justfile test` |
 | **Новая** | [`kit/`](kit/) | SvelteKit + TypeScript + Bun | `cd kit && bun run build`, `cd kit && just test` |
 
 Обе версии независимы и сохраняют свой инструментарий сборки и тесты.
 
 ### Классическая версия (`classic/`)
 
-Исходная реализация на чистом JavaScript. Тестировалась в Google Chrome и Safari под Mac и Windows.
+Исходная реализация на чистом JavaScript. Тестировалась в Google Chrome и Safari под Mac и Windows. Инструментарий — `just` + `bun`.
 
 ```bash
-make -C classic           # тесты + сборка + публикация в ../docs/
-make -C classic test      # только тесты (ava)
-make -C classic serve     # локальный вебсервер http-server на порту 8000
-make -C classic watch     # пересборка при изменении файлов
+cd classic
+just               # тесты + сборка
+just test          # только тесты (bun test)
+just release       # сборка + публикация в ../docs/
+just serve         # локальный вебсервер на порту 8000 (из ../docs)
+just watch         # пересборка при изменении файлов
 ```
 
 ### Новая версия (`kit/`)
@@ -49,7 +51,7 @@ GitHub Pages публикует [`docs/`](docs/) на <https://rk86.ru>.
 
 | Путь | Источник | Команда сборки |
 |------|----------|----------------|
-| `docs/` | `classic/src/` | `make -C classic release` |
+| `docs/` | `classic/src/` | `cd classic && just release` |
 | `docs/beta/` | `kit/` | `cd kit && just release-beta` |
 | `docs/alpha/` | `kit/` (зеркало beta) | `cd kit && just release-alpha` |
 | `docs/monitor/` | поддерживается вручную | коммитится напрямую |

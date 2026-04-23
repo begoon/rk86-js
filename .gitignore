@@ -12,6 +12,7 @@ classic/catalog/index.html
 kit/.svelte-kit/
 kit/build/
 kit/files.js
+kit/rk86.ts
 kit/src/lib/catalog_data.ts
 kit/src/lib/tape_catalog.ts
 kit/src/lib/rk86_version.ts
