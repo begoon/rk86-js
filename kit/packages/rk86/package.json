@@ -1,0 +1,23 @@
+{
+    "name": "rk86",
+    "version": "2.0.20",
+    "description": "Эмулятор Радио-86РК (Intel 8080) для терминала",
+    "bin": {
+        "rk86": "rk86.js"
+    },
+    "type": "module",
+    "keywords": [
+        "rk86",
+        "radio-86rk",
+        "emulator",
+        "intel-8080",
+        "i8080",
+        "retro"
+    ],
+    "author": "Alexander Demin",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/begoon/rk86-js-web"
+    }
+}

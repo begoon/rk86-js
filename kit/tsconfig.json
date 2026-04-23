@@ -1,0 +1,36 @@
+{
+	"extends": "./.svelte-kit/tsconfig.json",
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"moduleResolution": "bundler",
+		"allowArbitraryExtensions": true,
+		"allowImportingTsExtensions": true,
+		"types": [
+			"node",
+			"bun"
+		],
+	},
+	"include": [
+		".svelte-kit/ambient.d.ts",
+		".svelte-kit/non-ambient.d.ts",
+		".svelte-kit/types/**/$types.d.ts",
+		"vite.config.ts",
+		"src/**/*.js",
+		"src/**/*.ts",
+		"src/**/*.svelte",
+		"tests/**/*.ts",
+		"tools/**/*.ts",
+		"test/test_console_tracer.ts",
+		"test/test_executor.ts",
+		"test/test_load_file.ts",
+		"test/test_machine.ts",
+		"test/i8080_ex.ts",
+	]
+}
