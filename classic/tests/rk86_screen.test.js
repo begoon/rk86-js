@@ -1,15 +1,13 @@
-const test = require('ava');
+import { test, expect, beforeEach } from 'bun:test';
+import fs from 'node:fs';
 
-const fs = require('fs');
-const path = require('path');
-
-const window = { setTimeout() { } };
+globalThis.window = { setTimeout() { } };
 const ui = { canvas: { getContext() { } } };
-const Image = function () { }
+globalThis.Image = function () { };
 
-eval(fs.readFileSync('src/js/hex.js', 'utf-8'));
-eval(fs.readFileSync('src/rk86_memory.js', 'utf-8'));
-eval(fs.readFileSync('src/rk86_screen.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/js/hex.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/rk86_memory.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/rk86_screen.js', 'utf-8'));
 
 const testScreen = () => {
   const screen = new Screen(undefined, ui, new Memory());
@@ -26,48 +24,43 @@ const testScreen = () => {
   screen.light_pen_y = 9;
   screen.light_pen_active = 1;
   return screen;
-}
+};
 
-test.beforeEach(t => {
-  t.context = testScreen();
+let screen;
+beforeEach(() => {
+  screen = testScreen();
 });
 
-test('screen export', t => {
-  const screen = t.context;
+test('screen export', () => {
   const exported = screen.export();
-
-  t.is(exported.scale_x, 1);
-  t.is(exported.scale_y, 2);
-  t.is(exported.width, 3);
-  t.is(exported.height, 4);
-  t.is(exported.cursor_state, 1);
-  t.is(exported.cursor_x, 6);
-  t.is(exported.cursor_y, 7);
-  t.is(exported.video_memory_base, '0x1111');
-  t.is(exported.video_memory_size, '0x2222');
-  t.is(exported.light_pen_x, 8);
-  t.is(exported.light_pen_y, 9);
-  t.is(exported.light_pen_active, 1);
+  expect(exported.scale_x).toBe(1);
+  expect(exported.scale_y).toBe(2);
+  expect(exported.width).toBe(3);
+  expect(exported.height).toBe(4);
+  expect(exported.cursor_state).toBe(1);
+  expect(exported.cursor_x).toBe(6);
+  expect(exported.cursor_y).toBe(7);
+  expect(exported.video_memory_base).toBe('0x1111');
+  expect(exported.video_memory_size).toBe('0x2222');
+  expect(exported.light_pen_x).toBe(8);
+  expect(exported.light_pen_y).toBe(9);
+  expect(exported.light_pen_active).toBe(1);
 });
 
-test('screen import', t => {
-  const screen = t.context;
-
+test('screen import', () => {
   const imported = new Screen(undefined, ui, new Memory());
   imported.import(screen.export());
 
-  t.is(imported.scale_x, screen.scale_x);
-  t.is(imported.scale_y, screen.scale_y);
-  t.is(imported.width, screen.width);
-  t.is(imported.height, screen.height);
-  t.is(imported.cursor_state, screen.cursor_state);
-  t.is(imported.cursor_x, screen.cursor_x);
-  t.is(imported.cursor_y, screen.cursor_y);
-  t.is(imported.video_memory_base, screen.video_memory_base);
-  t.is(imported.video_memory_size, screen.video_memory_size);
-  t.is(imported.light_pen_x, screen.light_pen_x);
-  t.is(imported.light_pen_y, screen.light_pen_y);
-  t.is(imported.light_pen_active, screen.light_pen_active);
+  expect(imported.scale_x).toBe(screen.scale_x);
+  expect(imported.scale_y).toBe(screen.scale_y);
+  expect(imported.width).toBe(screen.width);
+  expect(imported.height).toBe(screen.height);
+  expect(imported.cursor_state).toBe(screen.cursor_state);
+  expect(imported.cursor_x).toBe(screen.cursor_x);
+  expect(imported.cursor_y).toBe(screen.cursor_y);
+  expect(imported.video_memory_base).toBe(screen.video_memory_base);
+  expect(imported.video_memory_size).toBe(screen.video_memory_size);
+  expect(imported.light_pen_x).toBe(screen.light_pen_x);
+  expect(imported.light_pen_y).toBe(screen.light_pen_y);
+  expect(imported.light_pen_active).toBe(screen.light_pen_active);
 });
-
-module.exports = testScreen;

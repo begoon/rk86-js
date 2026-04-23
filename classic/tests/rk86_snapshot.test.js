@@ -1,22 +1,20 @@
-const test = require('ava');
+import { test, expect, beforeEach } from 'bun:test';
+import fs from 'node:fs';
 
-const [fs, path] = [require('fs'), require('path')];
+globalThis.document = {};
+globalThis.window = { setTimeout() { } };
+globalThis.Image = function () { };
+globalThis.version = '0.0.0';
 
-const document = {};
-const window = { setTimeout() { } };
-const Image = function () { }
+const snapshot_standard = new URL('./snapshot.json', import.meta.url);
 
-const version = "0.0.0";
-
-const snapshot_standard = path.join(__dirname, './snapshot.json');
-
-eval(fs.readFileSync('src/js/StringUtils.js', 'utf-8'));
-eval(fs.readFileSync('src/js/hex.js', 'utf-8'));
-eval(fs.readFileSync('src/rk86_memory.js', 'utf-8'));
-eval(fs.readFileSync('src/rk86_keyboard.js', 'utf-8'));
-eval(fs.readFileSync('src/rk86_screen.js', 'utf-8'));
-eval(fs.readFileSync('src/i8080.js', 'utf-8'));
-eval(fs.readFileSync('src/rk86_snapshot.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/js/StringUtils.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/js/hex.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/rk86_memory.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/rk86_keyboard.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/rk86_screen.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/i8080.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/rk86_snapshot.js', 'utf-8'));
 
 const testCpu = (memory, io) => {
   const cpu = new I8080(memory, io);
@@ -36,14 +34,14 @@ const testCpu = (memory, io) => {
   cpu.pc = 0x9999;
   cpu.iff = 1;
   return cpu;
-}
+};
 
 const testKeyboard = () => {
   const keyboard = new Keyboard();
   keyboard.modifiers = 0xE6;
   keyboard.state = [0x0F, 0x1E, 0x2D, 0x3C, 0x4B, 0x5A, 0x69, 0x78];
   return keyboard;
-}
+};
 
 const testMemory = (keyboard) => {
   const memory = new Memory(keyboard);
@@ -69,7 +67,7 @@ const testMemory = (keyboard) => {
   memory.buf = [];
   for (let i = 0; i < 0x10000; ++i) memory.buf[i] = i & 0xff;
   return memory;
-}
+};
 
 const testScreen = (ui) => {
   const screen = new Screen(undefined, ui, new Memory());
@@ -86,136 +84,121 @@ const testScreen = (ui) => {
   screen.light_pen_y = 9;
   screen.light_pen_active = 1;
   return screen;
-}
+};
 
 function create_rk86() {
   const keyboard = testKeyboard();
-
   const memory = testMemory(keyboard);
   memory.keyboard = keyboard;
-
   const io = {};
   const cpu = testCpu(memory, io);
-
   const ui = {
     runner: { cpu },
-    canvas: { getContext() { } }
-  }
+    canvas: { getContext() { } },
+  };
   const screen = testScreen(ui);
   screen.ctx = { fillRect: () => { } };
-
   return { ui, screen };
 }
 
-test.beforeEach(t => {
-  t.context = create_rk86();
+let ctx;
+beforeEach(() => {
+  ctx = create_rk86();
 });
 
-test('snapshot export', t => {
-  const { ui, screen } = t.context;
+test('snapshot export', () => {
+  const { ui, screen } = ctx;
   Date.prototype.toISOString = () => 'created';
   const snapshot = rk86_snapshot(ui, screen);
   const expected = fs.readFileSync(snapshot_standard).toString();
   const snapshot_lines = snapshot.split('\n');
   const expected_lines = expected.split('\n');
   for (let i = 0; i < expected_lines.length; i += 1) {
-    const context =
-      'actual\n\n' +
-      snapshot_lines.slice(i - 1, i + 2).map(v => `> ${v}`).join('\n') + '\n' +
-      '\n' +
-      'expected\n\n' +
-      expected_lines.slice(i - 1, i + 2).join('\n') + '\n';
-
-    t.is(snapshot_lines[i], expected_lines[i], context);
+    expect(snapshot_lines[i]).toBe(expected_lines[i]);
   }
 });
 
-test('snapshot restore from string', snapshot_restore,
-  fs.readFileSync(snapshot_standard).toString()
-);
-
-test('snapshot restore from object/json', snapshot_restore,
-  JSON.parse(fs.readFileSync(snapshot_standard).toString())
-);
-
-function snapshot_restore(t, snapshot) {
+function snapshot_restore_check(snapshot) {
   const console_log = console.log;
   console.log = () => { };
-  const { ui, screen } = t.context;
-  let width_set = undefined;
-  let height_set = undefined;
+  const { ui, screen } = ctx;
+  let width_set;
+  let height_set;
   ui.resize_canvas = (width, height) => {
     width_set = width;
     height_set = height;
-  }
-  t.true(rk86_snapshot_restore(snapshot, ui, screen));
-  t.is(width_set, 18);
-  t.is(height_set, 80);
-  t.is(screen.video_memory_base, 0x1111);
+  };
+  expect(rk86_snapshot_restore(snapshot, ui, screen)).toBe(true);
+  expect(width_set).toBe(18);
+  expect(height_set).toBe(80);
+  expect(screen.video_memory_base).toBe(0x1111);
 
-  // cpu
   const cpu = ui.runner.cpu;
-  t.is(cpu.a(), 0xE6);
-  t.is(cpu.sf, 1);
-  t.is(cpu.zf, 0);
-  t.is(cpu.hf, 1);
-  t.is(cpu.pf, 0);
-  t.is(cpu.cf, 1);
-  t.is(cpu.bc(), 0x1122);
-  t.is(cpu.de(), 0x3344);
-  t.is(cpu.hl(), 0x5566);
-  t.is(cpu.sp, 0x7788);
-  t.is(cpu.pc, 0x9999);
-  t.is(cpu.iff, 1);
+  expect(cpu.a()).toBe(0xE6);
+  expect(cpu.sf).toBe(1);
+  expect(cpu.zf).toBe(0);
+  expect(cpu.hf).toBe(1);
+  expect(cpu.pf).toBe(0);
+  expect(cpu.cf).toBe(1);
+  expect(cpu.bc()).toBe(0x1122);
+  expect(cpu.de()).toBe(0x3344);
+  expect(cpu.hl()).toBe(0x5566);
+  expect(cpu.sp).toBe(0x7788);
+  expect(cpu.pc).toBe(0x9999);
+  expect(cpu.iff).toBe(1);
 
-  // memory
   const memory = cpu.memory;
-  t.is(memory.vg75_c001_00_cmd, 1);
-  t.is(memory.video_screen_size_x_buf, 2);
-  t.is(memory.video_screen_size_y_buf, 3);
-  t.is(memory.vg75_c001_80_cmd, 4);
-  t.is(memory.cursor_x_buf, 5);
-  t.is(memory.cursor_y_buf, 6);
-  t.is(memory.vg75_c001_60_cmd, 7);
-  t.is(memory.ik57_e008_80_cmd, 8);
-  t.is(memory.tape_8002_as_output, 1);
-  t.is(memory.video_memory_base_buf, 0x1111);
-  t.is(memory.video_memory_size_buf, 0x2222);
-  t.is(memory.video_memory_base, 0x3333);
-  t.is(memory.video_memory_size, 0x4444);
-  t.is(memory.video_screen_size_x, 9);
-  t.is(memory.video_screen_size_y, 10);
-  t.is(memory.video_screen_cursor_x, 11);
-  t.is(memory.video_screen_cursor_y, 12);
-  t.is(memory.last_access_address, 0x5555);
-  t.is(memory.last_access_operation, 'erase');
+  expect(memory.vg75_c001_00_cmd).toBe(1);
+  expect(memory.video_screen_size_x_buf).toBe(2);
+  expect(memory.video_screen_size_y_buf).toBe(3);
+  expect(memory.vg75_c001_80_cmd).toBe(4);
+  expect(memory.cursor_x_buf).toBe(5);
+  expect(memory.cursor_y_buf).toBe(6);
+  expect(memory.vg75_c001_60_cmd).toBe(7);
+  expect(memory.ik57_e008_80_cmd).toBe(8);
+  expect(memory.tape_8002_as_output).toBe(1);
+  expect(memory.video_memory_base_buf).toBe(0x1111);
+  expect(memory.video_memory_size_buf).toBe(0x2222);
+  expect(memory.video_memory_base).toBe(0x3333);
+  expect(memory.video_memory_size).toBe(0x4444);
+  expect(memory.video_screen_size_x).toBe(9);
+  expect(memory.video_screen_size_y).toBe(10);
+  expect(memory.video_screen_cursor_x).toBe(11);
+  expect(memory.video_screen_cursor_y).toBe(12);
+  expect(memory.last_access_address).toBe(0x5555);
+  expect(memory.last_access_operation).toBe('erase');
 
-  // keyboard
   const keyboard = memory.keyboard;
-  t.deepEqual(keyboard.state, [0x0F, 0x1E, 0x2D, 0x3C, 0x4B, 0x5A, 0x69, 0x78]);
-  t.is(keyboard.modifiers, 0xE6);
+  expect(keyboard.state).toEqual([0x0F, 0x1E, 0x2D, 0x3C, 0x4B, 0x5A, 0x69, 0x78]);
+  expect(keyboard.modifiers).toBe(0xE6);
 
-  // screen
-  t.is(screen.scale_x, 1);
-  t.is(screen.scale_y, 2);
-  t.is(screen.width, 3);
-  t.is(screen.height, 4);
-  t.is(screen.cursor_state, 1);
-  t.is(screen.cursor_x, 6);
-  t.is(screen.cursor_y, 7);
-  t.is(screen.video_memory_base, 0x1111);
-  t.is(screen.video_memory_size, 12); // 3x4
-  t.is(screen.light_pen_x, 8);
-  t.is(screen.light_pen_y, 9);
-  t.is(screen.light_pen_active, 1);
+  expect(screen.scale_x).toBe(1);
+  expect(screen.scale_y).toBe(2);
+  expect(screen.width).toBe(3);
+  expect(screen.height).toBe(4);
+  expect(screen.cursor_state).toBe(1);
+  expect(screen.cursor_x).toBe(6);
+  expect(screen.cursor_y).toBe(7);
+  expect(screen.video_memory_base).toBe(0x1111);
+  expect(screen.video_memory_size).toBe(12);
+  expect(screen.light_pen_x).toBe(8);
+  expect(screen.light_pen_y).toBe(9);
+  expect(screen.light_pen_active).toBe(1);
 
   console.log = console_log;
-};
+}
 
-test('snapshot import failure', t => {
-  t.false(rk86_snapshot_restore('{}'));
-  t.false(rk86_snapshot_restore('{"id": "x"}'));
-  t.false(rk86_snapshot_restore({}));
-  t.false(rk86_snapshot_restore({ id: "x" }));
+test('snapshot restore from string', () => {
+  snapshot_restore_check(fs.readFileSync(snapshot_standard).toString());
 });
 
+test('snapshot restore from object/json', () => {
+  snapshot_restore_check(JSON.parse(fs.readFileSync(snapshot_standard).toString()));
+});
+
+test('snapshot import failure', () => {
+  expect(rk86_snapshot_restore('{}')).toBe(false);
+  expect(rk86_snapshot_restore('{"id": "x"}')).toBe(false);
+  expect(rk86_snapshot_restore({})).toBe(false);
+  expect(rk86_snapshot_restore({ id: 'x' })).toBe(false);
+});

@@ -1,11 +1,9 @@
-const test = require('ava');
+import { test, expect, beforeEach } from 'bun:test';
+import fs from 'node:fs';
 
-const fs = require('fs');
-const path = require('path');
-
-eval(fs.readFileSync('src/js/hex.js', 'utf-8'));
-eval(fs.readFileSync('src/i8080.js', 'utf-8'));
-eval(fs.readFileSync('src/rk86_memory.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/js/hex.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/i8080.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/rk86_memory.js', 'utf-8'));
 
 const testCpu = (memory) => {
   const cpu = new I8080(memory || new Memory(), undefined);
@@ -25,47 +23,45 @@ const testCpu = (memory) => {
   cpu.pc = 0x9999;
   cpu.iff = 1;
   return cpu;
-}
+};
 
-test.beforeEach(t => {
-  t.context = testCpu();
+let cpu;
+beforeEach(() => {
+  cpu = testCpu();
 });
 
-test('cpu export', t => {
-  const cpu = t.context;
+test('cpu export', () => {
   const exported = cpu.export();
-  t.is(exported.a, '0xE6');
-  t.is(exported.sf, 1);
-  t.is(exported.zf, 0);
-  t.is(exported.hf, 1);
-  t.is(exported.pf, 0);
-  t.is(exported.cf, 1);
-  t.is(exported.bc, '0x1122');
-  t.is(exported.de, '0x3344');
-  t.is(exported.hl, '0x5566');
-  t.is(exported.sp, '0x7788');
-  t.is(exported.pc, '0x9999');
-  t.is(exported.iff, 1);
+  expect(exported.a).toBe('0xE6');
+  expect(exported.sf).toBe(1);
+  expect(exported.zf).toBe(0);
+  expect(exported.hf).toBe(1);
+  expect(exported.pf).toBe(0);
+  expect(exported.cf).toBe(1);
+  expect(exported.bc).toBe('0x1122');
+  expect(exported.de).toBe('0x3344');
+  expect(exported.hl).toBe('0x5566');
+  expect(exported.sp).toBe('0x7788');
+  expect(exported.pc).toBe('0x9999');
+  expect(exported.iff).toBe(1);
 });
 
-test('cpu import', t => {
-  const cpu = t.context;
-
+test('cpu import', () => {
   const imported = new I8080(new Memory(), undefined);
   imported.import(cpu.export());
 
-  t.is(imported.a(), cpu.a());
-  t.is(imported.sf, cpu.sf);
-  t.is(imported.zf, cpu.zf);
-  t.is(imported.hf, cpu.hf);
-  t.is(imported.pf, cpu.pf);
-  t.is(imported.cf, cpu.cf);
-  t.is(imported.b(), cpu.b());
-  t.is(imported.c(), cpu.c());
-  t.is(imported.d(), cpu.d());
-  t.is(imported.e(), cpu.e());
-  t.is(imported.h(), cpu.h());
-  t.is(imported.l(), cpu.l());
-  t.is(imported.sp, cpu.sp);
-  t.is(imported.pc, cpu.pc);
+  expect(imported.a()).toBe(cpu.a());
+  expect(imported.sf).toBe(cpu.sf);
+  expect(imported.zf).toBe(cpu.zf);
+  expect(imported.hf).toBe(cpu.hf);
+  expect(imported.pf).toBe(cpu.pf);
+  expect(imported.cf).toBe(cpu.cf);
+  expect(imported.b()).toBe(cpu.b());
+  expect(imported.c()).toBe(cpu.c());
+  expect(imported.d()).toBe(cpu.d());
+  expect(imported.e()).toBe(cpu.e());
+  expect(imported.h()).toBe(cpu.h());
+  expect(imported.l()).toBe(cpu.l());
+  expect(imported.sp).toBe(cpu.sp);
+  expect(imported.pc).toBe(cpu.pc);
 });

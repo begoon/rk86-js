@@ -1,9 +1,10 @@
 {
     "name": "rk86",
     "version": "1.0.0",
+    "type": "module",
     "main": "main.js",
     "scripts": {
-        "test": "ava"
+        "test": "bun test"
     },
     "repository": {
         "type": "git",
@@ -15,14 +16,7 @@
         "url": "https://github.com/begoon/rk86-js/issues"
     },
     "homepage": "https://github.com/begoon/rk86-js#readme",
-    "devDependencies": {
-        "ava": "latest",
-        "http-server": "latest"
-    },
     "dependencies": {
-        "glob-all": "latest",
-        "ora": "latest",
-        "printj": "latest",
-        "swig": "latest"
+        "twig": "latest"
     }
 }

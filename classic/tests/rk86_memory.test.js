@@ -1,10 +1,8 @@
-const test = require('ava');
+import { test, expect, beforeEach } from 'bun:test';
+import fs from 'node:fs';
 
-const fs = require('fs');
-const path = require('path');
-
-eval(fs.readFileSync('src/js/hex.js', 'utf-8'));
-eval(fs.readFileSync('src/rk86_memory.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/js/hex.js', 'utf-8'));
+(0, eval)(fs.readFileSync('src/rk86_memory.js', 'utf-8'));
 
 const testMemory = () => {
   const memory = new Memory(undefined);
@@ -30,67 +28,65 @@ const testMemory = () => {
   memory.buf = [];
   for (let i = 0; i < 0x10000; ++i) memory.buf[i] = i & 0xff;
   return memory;
-}
+};
 
-test.beforeEach(t => {
-  t.context = testMemory();
+let memory;
+beforeEach(() => {
+  memory = testMemory();
 });
 
-test('memory export', t => {
-  const memory = t.context;
+test('memory export', () => {
   const exported = memory.export();
-  t.is(exported.vg75_c001_00_cmd, 1);
-  t.is(exported.video_screen_size_x_buf, 2);
-  t.is(exported.video_screen_size_y_buf, 3);
-  t.is(exported.vg75_c001_80_cmd, 4);
-  t.is(exported.cursor_x_buf, 5);
-  t.is(exported.cursor_y_buf, 6);
-  t.is(exported.vg75_c001_60_cmd, 7);
-  t.is(exported.ik57_e008_80_cmd, 8);
-  t.is(exported.tape_8002_as_output, 1);
-  t.is(exported.video_memory_base_buf, '0x1111');
-  t.is(exported.video_memory_size_buf, '0x2222');
-  t.is(exported.video_memory_base, '0x3333');
-  t.is(exported.video_memory_size, '0x4444');
-  t.is(exported.video_screen_size_x, 9);
-  t.is(exported.video_screen_size_y, 10);
-  t.is(exported.video_screen_cursor_x, 11);
-  t.is(exported.video_screen_cursor_y, 12);
-  t.is(exported.last_access_address, '0x5555');
-  t.is(exported.last_access_operation, 'erase');
-  t.is(Object.keys(exported.memory).length, 4096);
+  expect(exported.vg75_c001_00_cmd).toBe(1);
+  expect(exported.video_screen_size_x_buf).toBe(2);
+  expect(exported.video_screen_size_y_buf).toBe(3);
+  expect(exported.vg75_c001_80_cmd).toBe(4);
+  expect(exported.cursor_x_buf).toBe(5);
+  expect(exported.cursor_y_buf).toBe(6);
+  expect(exported.vg75_c001_60_cmd).toBe(7);
+  expect(exported.ik57_e008_80_cmd).toBe(8);
+  expect(exported.tape_8002_as_output).toBe(1);
+  expect(exported.video_memory_base_buf).toBe('0x1111');
+  expect(exported.video_memory_size_buf).toBe('0x2222');
+  expect(exported.video_memory_base).toBe('0x3333');
+  expect(exported.video_memory_size).toBe('0x4444');
+  expect(exported.video_screen_size_x).toBe(9);
+  expect(exported.video_screen_size_y).toBe(10);
+  expect(exported.video_screen_cursor_x).toBe(11);
+  expect(exported.video_screen_cursor_y).toBe(12);
+  expect(exported.last_access_address).toBe('0x5555');
+  expect(exported.last_access_operation).toBe('erase');
+  expect(Object.keys(exported.memory).length).toBe(4096);
   let i = 0;
   for (let [label, line] of Object.entries(exported.memory)) {
-    t.is(label, ':' + toHex16(i));
-    t.is(line, arrayToHexLine(memory.buf.slice(i, i + 16)));
+    expect(label).toBe(':' + toHex16(i));
+    expect(line).toBe(arrayToHexLine(memory.buf.slice(i, i + 16)));
     i += 16;
   }
 });
 
-test('memory import', t => {
-  const memory = t.context;
-
+test('memory import', () => {
   const imported = new Memory(undefined);
   imported.import(memory.export());
 
-  t.is(imported.vg75_c001_00_cmd, memory.vg75_c001_00_cmd);
-  t.is(imported.video_screen_size_x_buf, memory.video_screen_size_x_buf);
-  t.is(imported.video_screen_size_y_buf, memory.video_screen_size_y_buf);
-  t.is(imported.vg75_c001_80_cmd, memory.vg75_c001_80_cmd);
-  t.is(imported.cursor_x_buf, memory.cursor_x_buf);
-  t.is(imported.cursor_y_buf, memory.cursor_y_buf);
-  t.is(imported.vg75_c001_60_cmd, memory.vg75_c001_60_cmd);
-  t.is(imported.ik57_e008_80_cmd, memory.ik57_e008_80_cmd);
-  t.is(imported.tape_8002_as_output, memory.tape_8002_as_output);
-  t.is(imported.video_memory_base_buf, memory.video_memory_base_buf);
-  t.is(imported.video_memory_size_buf, memory.video_memory_size_buf);
-  t.is(imported.video_memory_base, memory.video_memory_base);
-  t.is(imported.video_memory_size, memory.video_memory_size);
-  t.is(imported.video_screen_size_x, memory.video_screen_size_x);
-  t.is(imported.video_screen_size_y, memory.video_screen_size_y);
-  t.is(imported.video_screen_cursor_x, memory.video_screen_cursor_x);
-  t.is(imported.video_screen_cursor_y, memory.video_screen_cursor_y);
-  t.is(imported.last_access_address, memory.last_access_address);
-  t.is(imported.last_access_operation, memory.last_access_operation);
-  t.is(imported.buf.length, 0x10000);
+  expect(imported.vg75_c001_00_cmd).toBe(memory.vg75_c001_00_cmd);
+  expect(imported.video_screen_size_x_buf).toBe(memory.video_screen_size_x_buf);
+  expect(imported.video_screen_size_y_buf).toBe(memory.video_screen_size_y_buf);
+  expect(imported.vg75_c001_80_cmd).toBe(memory.vg75_c001_80_cmd);
+  expect(imported.cursor_x_buf).toBe(memory.cursor_x_buf);
+  expect(imported.cursor_y_buf).toBe(memory.cursor_y_buf);
+  expect(imported.vg75_c001_60_cmd).toBe(memory.vg75_c001_60_cmd);
+  expect(imported.ik57_e008_80_cmd).toBe(memory.ik57_e008_80_cmd);
+  expect(imported.tape_8002_as_output).toBe(memory.tape_8002_as_output);
+  expect(imported.video_memory_base_buf).toBe(memory.video_memory_base_buf);
+  expect(imported.video_memory_size_buf).toBe(memory.video_memory_size_buf);
+  expect(imported.video_memory_base).toBe(memory.video_memory_base);
+  expect(imported.video_memory_size).toBe(memory.video_memory_size);
+  expect(imported.video_screen_size_x).toBe(memory.video_screen_size_x);
+  expect(imported.video_screen_size_y).toBe(memory.video_screen_size_y);
+  expect(imported.video_screen_cursor_x).toBe(memory.video_screen_cursor_x);
+  expect(imported.video_screen_cursor_y).toBe(memory.video_screen_cursor_y);
+  expect(imported.last_access_address).toBe(memory.last_access_address);
+  expect(imported.last_access_operation).toBe(memory.last_access_operation);
+  expect(imported.buf.length).toBe(0x10000);
 });

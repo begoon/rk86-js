@@ -18,9 +18,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-const fs = require('fs')
-const path = require('path')
-const assert = require('assert')
+import fs from "node:fs";
+import path from "node:path";
+import assert from "node:assert";
 
 function hex(n, width) {
   return n.toString(16).toUpperCase().padStart(width, '0');
@@ -99,7 +99,7 @@ function preloaded_files() {
   console.log("function preloaded_files() {");
   console.log("files = [];\n");
 
-  for (let file of fs.readdirSync('files')) {
+  for (let file of fs.readdirSync('files').sort()) {
     if (!file) continue;
     dump_file(file);
   }
@@ -111,7 +111,7 @@ function preloaded_files() {
 function tape_catalog() {
   console.log('function tape_catalog() {');
   console.log('  return [');
-  for (let file of fs.readdirSync('src/files')) {
+  for (let file of fs.readdirSync('src/files').sort()) {
     if (!file) continue;
     console.log(`    "${file}",`);
   }

@@ -1,39 +1,44 @@
-const test = require('ava');
+import { test, expect, beforeEach } from 'bun:test';
+import fs from 'node:fs';
 
-const fs = require('fs');
+(0, eval)(fs.readFileSync('src/rk86_file_parser.js', 'utf-8'));
 
-eval(fs.readFileSync('src/rk86_file_parser.js', 'utf-8'));
-
-test.beforeEach(t => {
-  t.context = new FileParser();
+let parser;
+beforeEach(() => {
+  parser = new FileParser();
 });
 
-test('extract_rk86_word', t => {
-  t.is(0x2233, t.context.extract_rk86_word([0x11, 0x22, 0x33], 1));
+test('extract_rk86_word', () => {
+  expect(parser.extract_rk86_word([0x11, 0x22, 0x33], 1)).toBe(0x2233);
 });
 
 const toArray = (s) => s.split('').map(c => c.charCodeAt(0));
 
-function is_hex_file(t, input, expected) {
-  t.true(t.context.is_hex_file(toArray(input)));
-}
+const testIsHexFile = (title, input) => {
+  test(title, () => {
+    expect(parser.is_hex_file(toArray(input))).toBe(true);
+  });
+};
 
-test('recognize the signature', is_hex_file, '#!rk86');
-test('recognize the signature followed by newline', is_hex_file, '#!rk86\n');
+testIsHexFile('recognize the signature', '#!rk86');
+testIsHexFile('recognize the signature followed by newline', '#!rk86\n');
 
-test('is_json file', t => {
-  t.false(t.context.is_json(null));
-  t.false(t.context.is_json(undefined));
-  t.false(t.context.is_json([1]));
-  t.deepEqual(t.context.is_json(toArray('{}')), {});
-  t.deepEqual(t.context.is_json(toArray('{"id": "rk86"}')), { id: 'rk86' });
-})
+test('is_json file', () => {
+  expect(parser.is_json(null)).toBe(false);
+  expect(parser.is_json(undefined)).toBe(false);
+  expect(parser.is_json([1])).toBe(false);
+  expect(parser.is_json(toArray('{}'))).toEqual({});
+  expect(parser.is_json(toArray('{"id": "rk86"}'))).toEqual({ id: 'rk86' });
+});
 
-function convert_hex_to_binary(t, input, expected) {
-  t.deepEqual(expected, t.context.convert_hex_to_binary(input));
-}
+const testConvertHexToBinary = (title, input, expected) => {
+  test(title, () => {
+    expect(parser.convert_hex_to_binary(input)).toEqual(expected);
+  });
+};
 
-test('convert multiline line with signature', convert_hex_to_binary,
+testConvertHexToBinary(
+  'convert multiline line with signature',
   '\n' +
   '#!rk86\n' +
   '0000 01 02 03 04 05 06 07 08\n' +
@@ -47,51 +52,53 @@ test('convert multiline line with signature', convert_hex_to_binary,
     0x09, 0x0a, 0x1b, 0x1c, 0x0d, 0x0e, 0xff, 0x00,
     0xa0, 0xb0, 0xc0, 0xd0, 0xe0, 0xff,
     0xaa,
-  ]
+  ],
 );
 
-function extract_metadata(t, input, expected) {
-  t.deepEqual(expected, t.context.extact_metadata(input));
-}
+const testExtractMetadata = (title, input, expected) => {
+  test(title, () => {
+    expect(parser.extact_metadata(input)).toEqual(expected);
+  });
+};
 
-test('extract name=name', extract_metadata, '!name=name', { name: 'name' });
-
-test('extract empty name', extract_metadata, '!name', {});
-
-test('extract name=name after signature', extract_metadata,
-  '#!rk86\n!name=name\n', { name: 'name' },
+testExtractMetadata('extract name=name', '!name=name', { name: 'name' });
+testExtractMetadata('extract empty name', '!name', {});
+testExtractMetadata(
+  'extract name=name after signature',
+  '#!rk86\n!name=name\n',
+  { name: 'name' },
 );
-
-test('extract name=name after signature on the same line', extract_metadata,
-  '#!rk86 !name=name\n', { name: 'name' }
+testExtractMetadata(
+  'extract name=name after signature on the same line',
+  '#!rk86 !name=name\n',
+  { name: 'name' },
 );
-
-test('extract tags from multiple lines', extract_metadata,
+testExtractMetadata(
+  'extract tags from multiple lines',
   '#!name=name\n!start=100 !end=200 !entry=300',
-  {
-    name: 'name',
-    start: '100',
-    end: '200',
-    entry: '300',
-  }
+  { name: 'name', start: '100', end: '200', entry: '300' },
 );
 
-function file_ext(t, input, expected) {
-  t.is(expected, t.context.file_ext(input));
-}
+const testFileExt = (title, input, expected) => {
+  test(title, () => {
+    expect(parser.file_ext(input)).toBe(expected);
+  });
+};
 
-test('name and ext', file_ext, 'name.ext', 'ext');
-test('name without ext', file_ext, 'name', '');
-test('name only with dot', file_ext, 'name.', '');
-test('empty name', file_ext, '', '');
-test('empty name as dot', file_ext, '.', '');
-test('empty name, ext only', file_ext, '.ext', 'ext');
+testFileExt('name and ext', 'name.ext', 'ext');
+testFileExt('name without ext', 'name', '');
+testFileExt('name only with dot', 'name.', '');
+testFileExt('empty name', '', '');
+testFileExt('empty name as dot', '.', '');
+testFileExt('empty name, ext only', '.ext', 'ext');
 
-function parse_rk86_binary(t, input, expected) {
-  t.deepEqual(expected, t.context.parse_rk86_binary(...input));
-}
+const testParseRk86Binary = (title, input, expected) => {
+  test(title, () => {
+    expect(parser.parse_rk86_binary(...input)).toEqual(expected);
+  });
+};
 
-test('name only', parse_rk86_binary,
+testParseRk86Binary('name only',
   ['name.rk', [0xe6, 0x11, 0x22, 0x33, 0x44, 0xaa]],
   {
     name: 'name.rk',
@@ -103,7 +110,7 @@ test('name only', parse_rk86_binary,
   },
 );
 
-test('name with folder', parse_rk86_binary,
+testParseRk86Binary('name with folder',
   ['folder/name.rk', [0xe6, 0x22, 0x11, 0x44, 0x33, 0x66]],
   {
     name: 'name.rk',
@@ -115,7 +122,7 @@ test('name with folder', parse_rk86_binary,
   },
 );
 
-test('name with URL', parse_rk86_binary,
+testParseRk86Binary('name with URL',
   ['https://domain.com/path/name.rk', [0xe6, 0x11, 0x22, 0x33, 0x44, 0xaa]],
   {
     name: 'name.rk',
@@ -127,7 +134,7 @@ test('name with URL', parse_rk86_binary,
   },
 );
 
-test('name PVO.GAM with hardcoded entry', parse_rk86_binary,
+testParseRk86Binary('name PVO.GAM with hardcoded entry',
   ['PVO.GAM', [0xe6, 0x11, 0x22, 0x33, 0x44, 0xaa]],
   {
     name: 'PVO.GAM',
@@ -139,7 +146,7 @@ test('name PVO.GAM with hardcoded entry', parse_rk86_binary,
   },
 );
 
-test('monitor binary with extension .bin', parse_rk86_binary,
+testParseRk86Binary('monitor binary with extension .bin',
   ['mon32.bin', [0x11, 0x22]],
   {
     name: 'mon32.bin',
@@ -151,7 +158,7 @@ test('monitor binary with extension .bin', parse_rk86_binary,
   },
 );
 
-test('monitor binary without extension', parse_rk86_binary,
+testParseRk86Binary('monitor binary without extension',
   ['mon32', [0x11, 0x22]],
   {
     name: 'mon32',
@@ -163,7 +170,7 @@ test('monitor binary without extension', parse_rk86_binary,
   },
 );
 
-test('binary with extension .bin', parse_rk86_binary,
+testParseRk86Binary('binary with extension .bin',
   ['binary.bin', [0x11, 0x22]],
   {
     name: 'binary.bin',
@@ -175,7 +182,7 @@ test('binary with extension .bin', parse_rk86_binary,
   },
 );
 
-test('regular binary with empty extension', parse_rk86_binary,
+testParseRk86Binary('regular binary with empty extension',
   ['binary', [0x11, 0x22, 0x33]],
   {
     name: 'binary',
@@ -187,114 +194,100 @@ test('regular binary with empty extension', parse_rk86_binary,
   },
 );
 
-test('parse, throws when file is too long', t => {
-  const error = t.throws(() => {
-    t.context.parse_rk86_binary('long.pki', new Array(0x10001));
-  }, { instanceOf: Error });
-  t.is(error.message, 'ERROR! Loaded file "long.pki" length 65537 is more than 65556.');
+test('parse, throws when file is too long', () => {
+  expect(() => parser.parse_rk86_binary('long.pki', new Array(0x10001)))
+    .toThrow('ERROR! Loaded file "long.pki" length 65537 is more than 65556.');
 });
 
-test('parse_rk86_binary, name should stay as given, start/entry=0', t => {
+test('parse_rk86_binary, name should stay as given, start/entry=0', () => {
   const image = [...toArray('#!rk86\n0000 11\n')];
-  const expected = {
+  expect(parser.parse_rk86_binary('random', image)).toEqual({
     name: 'random',
     start: 0,
     end: 0,
     entry: 0,
     size: 1,
     image: [0x11],
-  };
-  t.deepEqual(expected, t.context.parse_rk86_binary('random', image));
+  });
 });
 
-test('parse_rk86_binary, name should be taken from tags', t => {
+test('parse_rk86_binary, name should be taken from tags', () => {
   const image = [...toArray('#!rk86 !name=image.bin \n0000 11\n')];
-  const expected = {
+  expect(parser.parse_rk86_binary('random', image)).toEqual({
     name: 'image.bin',
     start: 0,
     end: 0,
     entry: 0,
     size: 1,
     image: [0x11],
-  };
-  t.deepEqual(expected, t.context.parse_rk86_binary('random', image));
+  });
 });
 
-test('parse_rk86_binary, start should be taken from tags in binary file', t => {
+test('parse_rk86_binary, start should be taken from tags in binary file', () => {
   const image = [...toArray('#!rk86 !name=image.bin !start=0100 \n0000 11\n')];
-  const expected = {
+  expect(parser.parse_rk86_binary('random', image)).toEqual({
     name: 'image.bin',
     start: 0x0100,
     end: 0x0100,
     entry: 0x0100,
     size: 1,
     image: [0x11],
-  };
-  t.deepEqual(expected, t.context.parse_rk86_binary('random', image));
+  });
 });
 
-test('parse_rk86_binary, entry should be taken from tags in binary file', t => {
+test('parse_rk86_binary, entry should be taken from tags in binary file', () => {
   const image = [
-    ...toArray('#!rk86 !name=image.bin !start=0100 !entry=0200 \n0000 11\n')
+    ...toArray('#!rk86 !name=image.bin !start=0100 !entry=0200 \n0000 11\n'),
   ];
-  const expected = {
+  expect(parser.parse_rk86_binary('random', image)).toEqual({
     name: 'image.bin',
     start: 0x0100,
     end: 0x0100,
     entry: 0x0200,
     size: 1,
     image: [0x11],
-  };
-  t.deepEqual(expected, t.context.parse_rk86_binary('random', image));
+  });
 });
 
-test('parse_rk86_binary, start should not be taken from tags in RK file', t => {
+test('parse_rk86_binary, start should not be taken from tags in RK file', () => {
   const image = [...toArray('#!rk86 !start=0100\n0000 E6 11 22 11 23 AA BB\n')];
-  const expected = {
+  expect(parser.parse_rk86_binary('image.rk', image)).toEqual({
     name: 'image.rk',
     start: 0x1122,
     end: 0x1123,
     entry: 0x1122,
     size: 2,
     image: [0xAA, 0xBB],
-  };
-  t.deepEqual(expected, t.context.parse_rk86_binary('image.rk', image));
+  });
 });
 
-test('parse_rk86_binary, entry should be taken from tags in RK file', t => {
+test('parse_rk86_binary, entry should be taken from tags in RK file', () => {
   const image = [
     ...toArray(
       '#!rk86 !name=image.rk !start=0100 !entry=0200\n' +
-      '0000 E6 11 22 11 23 AA BB\n')
+      '0000 E6 11 22 11 23 AA BB\n',
+    ),
   ];
-  const expected = {
+  expect(parser.parse_rk86_binary('random', image)).toEqual({
     name: 'image.rk',
     start: 0x1122,
     end: 0x1123,
     entry: 0x0200,
     size: 2,
     image: [0xAA, 0xBB],
-  };
-  t.deepEqual(expected, t.context.parse_rk86_binary('random', image));
+  });
 });
 
-function parse_rk86_hex(t, input, expected) {
-  const [name, image] = input;
-  t.deepEqual(expected, t.context.parse_rk86_binary(name, toArray(image)));
-}
-
-test('entry should be taken from tags in RK file', parse_rk86_hex,
-  [
-    'random',
+test('entry should be taken from tags in RK file', () => {
+  const image =
     '#!rk86 !name=image.rk !start=0100 !entry=0200\n' +
-    '0000 E6 11 22 11 23 AA BB\n'
-  ],
-  {
+    '0000 E6 11 22 11 23 AA BB\n';
+  expect(parser.parse_rk86_binary('random', toArray(image))).toEqual({
     name: 'image.rk',
     start: 0x1122,
     end: 0x1123,
     entry: 0x0200,
     size: 2,
     image: [0xAA, 0xBB],
-  }
-);
+  });
+});
