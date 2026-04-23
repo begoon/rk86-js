@@ -1,0 +1,16 @@
+name: classic
+
+on: push
+
+jobs:
+  test:
+    name: classic (bun test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: classic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: extractions/setup-just@v3
+      - uses: oven-sh/setup-bun@v2
+      - run: just ci

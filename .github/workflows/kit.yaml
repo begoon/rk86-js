@@ -1,20 +1,9 @@
-name: Test
+name: kit
 
 on: push
 
 jobs:
-  classic:
-    name: classic (ava)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: classic
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-      - run: make ci
-
-  kit:
+  test:
     name: kit (unit + i8080 ex1)
     runs-on: ubuntu-latest
     defaults:
@@ -29,7 +18,7 @@ jobs:
           node-version: 25.x
       - run: just test-ci
 
-  kit-bench-node:
+  bench-node:
     name: kit (i8080 ex1, node)
     runs-on: ubuntu-latest
     defaults:
