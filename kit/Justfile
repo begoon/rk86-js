@@ -30,12 +30,12 @@ test-ci: test-js test-ex1-bun
 #
 
 release-alpha:
-    BASE_PATH=/alpha bun run build 
-    cp -R ./build/* ../rk86-js/docs/alpha/ 
+    BASE_PATH=/alpha bun run build
+    cp -R ./build/* ../docs/alpha/
 
 release-beta:
-    BASE_PATH=/beta bun run build 
-    cp -R ./build/* ../rk86-js/docs/beta/
+    BASE_PATH=/beta bun run build
+    cp -R ./build/* ../docs/beta/
 
 release: release-beta release-alpha
 
@@ -58,16 +58,13 @@ terminal-publish: terminal-build terminal-bump
 
 #
 
-build-asm: build-claude build-exiter build-pong
+build-asm: build-claude build-exiter
 
 build-claude:
-    bunx asm8080 info/asm/claude.asm -o info/asm --split
+    bunx asm8080 ../info/asm/claude.asm -o ../info/asm --split
 
 build-exiter:
-    bunx asm8080 info/asm/exiter.asm -o info/asm --split
-
-build-pong:
-    bunx asm8080 info/asm/pong.asm -o info/asm --split
+    bunx asm8080 ../info/asm/exiter.asm -o ../info/asm --split
 
 update-playground:
     cp \

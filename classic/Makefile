@@ -14,20 +14,13 @@ build-catalog:
 build-tape:
 	node tools/build.js tape > build/rk86_tape_catalog.js
 
-release: release-production release-beta
+release: release-production
 
 release-production:
-	-rm -rf docs
-	mkdir docs
-	cp -R build/* docs
-
-release-beta:
-	-rm -rf docs/beta
-	mkdir docs/beta
-	cp -R build/* docs/beta
+	rsync -a build/ ../docs/
 
 serve-python:
-	(cd docs && python3 -m http.server --bind 127.0.0.1 8000)
+	(cd ../docs && python3 -m http.server --bind 127.0.0.1 8000)
 
 serve:
 	(cd build && npx http-server . -p 8000)
@@ -44,4 +37,3 @@ ci:
 
 clean:
 	-rm -rf build
-	git checkout -- docs/*

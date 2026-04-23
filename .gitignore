@@ -1,8 +1,19 @@
 .DS_Store
-
-/rk86_tape_catalog.js
-/catalog/index.html
-/build
 .venv
 .vscode
 node_modules
+
+# classic
+classic/build/
+classic/rk86_tape_catalog.js
+classic/catalog/index.html
+
+# kit
+kit/.svelte-kit/
+kit/build/
+kit/files.js
+kit/src/lib/catalog_data.ts
+kit/src/lib/tape_catalog.ts
+kit/src/lib/rk86_version.ts
+kit/.claude/settings.local.json
+.claude/settings.local.json

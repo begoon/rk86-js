@@ -1,8 +1,0 @@
-node_modules
-files.js
-.claude/settings.local.json
-.svelte-kit
-build
-src/lib/catalog_data.ts
-src/lib/tape_catalog.ts
-src/lib/rk86_version.ts
