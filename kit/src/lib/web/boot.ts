@@ -403,22 +403,29 @@ export async function main(host: HostCallbacks) {
     const auto_load = (match = url.match(/load=([^&]+)/)) ? decodeURIComponent(match[1]) : null;
     const handoff_id = (match = url.match(/handoff=([^&]+)/)) ? decodeURIComponent(match[1]) : null;
 
-    // `handoff=<uuid>` is a same-origin handoff from the asm8 playground: it
-    // writes `{ts, url}` JSON to localStorage under `asm8-handoff:<uuid>`
-    // (url = data-URL carrying the assembled .rk) to avoid URL-length limits,
-    // then opens us with the id. Read + delete + treat as a regular auto-run.
+    // `handoff=<uuid>` is a same-origin handoff from a playground (asm8, c8080,
+    // plm80): the playground writes `{ts, url}` JSON to localStorage under
+    // `<prefix>-handoff:<uuid>` (url = data-URL carrying the assembled .rk)
+    // to avoid URL-length limits, then opens us with the id. We probe each
+    // known prefix, read + delete, and treat as a regular auto-run.
     let handoff_url: string | null = null;
     if (handoff_id) {
-        const key = `asm8-handoff:${handoff_id}`;
-        try {
-            const raw = localStorage.getItem(key);
-            if (raw) {
-                localStorage.removeItem(key);
-                const payload = JSON.parse(raw);
-                if (typeof payload?.url === "string") handoff_url = payload.url;
-            }
-        } catch {}
-        if (!handoff_url) console.warn(`handoff ключ не найден или повреждён: ${key}`);
+        const prefixes = ["asm8-handoff:", "c8080-handoff:", "plm80-handoff:"];
+        for (const prefix of prefixes) {
+            const key = `${prefix}${handoff_id}`;
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw) {
+                    localStorage.removeItem(key);
+                    const payload = JSON.parse(raw);
+                    if (typeof payload?.url === "string") {
+                        handoff_url = payload.url;
+                        break;
+                    }
+                }
+            } catch {}
+        }
+        if (!handoff_url) console.warn(`handoff ключ не найден или повреждён: ${handoff_id}`);
     }
 
     if (handoff_url) {
