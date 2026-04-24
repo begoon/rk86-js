@@ -1,0 +1,16 @@
+/*  Radio-86RK "hello, pl/m" — prints a string via the monitor ROM
+    routine at F818h (puts: HL points to a 0-terminated string).
+*/
+
+PUTS: PROCEDURE (P) REGS(HL) AT (0F818H);
+    DECLARE P ADDRESS;
+END PUTS;
+
+PROMPT: PROCEDURE () AT (0F86CH);
+    DECLARE P ADDRESS;
+END PROMPT;
+
+DECLARE MSG BYTE(14) INITIAL('HELLO, PL/M', 0DH, 0AH, 0);
+
+CALL PUTS(.MSG);
+CALL PROMPT();

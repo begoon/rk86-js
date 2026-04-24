@@ -1,0 +1,25 @@
+/*  Fill the Radio-86RK video memory (78x30 = 2340 bytes, starting at
+    76D0h) with a running byte value.  Cell N gets byte value (N mod 256).
+
+    Direct write to video RAM via an absolute-address array — no monitor
+    call.  The RK glyph ROM maps each byte to a character, so the screen
+    fills with a visible ramp of symbols that wraps every 256 cells.
+*/
+
+DECLARE W_PIXELS   LITERALLY '78';
+DECLARE H_LINES    LITERALLY '30';
+DECLARE VMEM_BYTES LITERALLY '2340';    /* W_PIXELS * H_LINES */
+DECLARE VMEM_BASE  LITERALLY '76D0H';
+
+DECLARE SCREEN BYTE(VMEM_BYTES) AT (VMEM_BASE);
+
+DECLARE I ADDRESS;
+DECLARE V BYTE;
+
+I = 0;
+V = 0;
+DO WHILE I < VMEM_BYTES;
+    SCREEN(I) = V;
+    I = I + 1;
+    V = V + 1;                          /* natural BYTE wraparound at 256 */
+END;

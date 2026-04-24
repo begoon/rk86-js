@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>plm80 playground — PL/M-80 to Intel 8080</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="title">
+        <h1><span class="sub">PL/M-80 &rarr; Intel 8080</span></h1>
+        <div class="build-time" id="build-time"></div>
+      </div>
+      <div class="toolbar">
+        <label for="example">Example</label>
+        <select id="example">
+          <option value="">— load example —</option>
+        </select>
+        <label for="filename">File</label>
+        <input
+          type="text"
+          id="filename"
+          spellcheck="false"
+          autocomplete="off"
+        />
+        <label for="org">org</label>
+        <input
+          type="text"
+          id="org"
+          spellcheck="false"
+          autocomplete="off"
+          title="code origin (hex, default 0)"
+        />
+        <label for="stack">sp</label>
+        <input
+          type="text"
+          id="stack"
+          spellcheck="false"
+          autocomplete="off"
+          title="initial stack pointer (hex, default 76CFh)"
+        />
+        <button
+          type="button"
+          id="run-bin"
+          class="primary"
+          title="run on RK86 (Ctrl/Cmd+E)"
+        >
+          run <kbd>Ctrl+E</kbd>
+        </button>
+        <button type="button" id="upload-btn">upload</button>
+        <button type="button" id="download-btn">download</button>
+        <select id="download-format" title="download format">
+          <option value="plm" selected>.plm</option>
+          <option value="asm">.asm</option>
+          <option value="bin">.bin</option>
+          <option value="rk">.rk</option>
+          <option value="rkr">.rkr</option>
+          <option value="pki">.pki</option>
+          <option value="gam">.gam</option>
+        </select>
+        <button type="button" id="reset" class="danger">reset</button>
+        <button
+          type="button"
+          id="theme"
+          class="icon-btn"
+          title="toggle light/dark theme"
+          aria-label="toggle light/dark theme"
+        >
+          <svg class="icon icon-sun" viewBox="0 0 24 24" aria-hidden="true" width="16" height="16">
+            <circle cx="12" cy="12" r="4" fill="currentColor"/>
+            <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="12" y1="2"  x2="12" y2="5"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+              <line x1="2"  y1="12" x2="5"  y2="12"/>
+              <line x1="19" y1="12" x2="22" y2="12"/>
+              <line x1="4.9"  y1="4.9"  x2="7"    y2="7"/>
+              <line x1="17"   y1="17"   x2="19.1" y2="19.1"/>
+              <line x1="4.9"  y1="19.1" x2="7"    y2="17"/>
+              <line x1="17"   y1="7"    x2="19.1" y2="4.9"/>
+            </g>
+          </svg>
+          <svg class="icon icon-moon" viewBox="0 0 24 24" aria-hidden="true" width="16" height="16">
+            <path d="M20 14.5A8 8 0 0 1 9.5 4a0.5 0.5 0 0 0-0.7-0.6A10 10 0 1 0 20.6 15.2a0.5 0.5 0 0 0-0.6-0.7z" fill="currentColor"/>
+          </svg>
+        </button>
+        <input
+          type="file"
+          id="file-input"
+          accept=".plm,text/plain"
+          hidden
+        />
+      </div>
+    </header>
+    <main>
+      <div class="tabs" id="tabs"></div>
+      <div class="panes">
+        <section class="pane pane-source">
+          <div class="pane-title">source.plm</div>
+          <textarea
+            id="source"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            wrap="off"
+          ></textarea>
+        </section>
+        <section class="pane pane-asm">
+          <div class="pane-title">output.asm</div>
+          <pre id="asm"></pre>
+        </section>
+        <section class="pane pane-bytes">
+          <div class="pane-title" id="bytes-title">bytes</div>
+          <pre id="bytes"></pre>
+        </section>
+      </div>
+      <div id="error" class="error"></div>
+    </main>
+    <div id="confirm-modal" class="modal" hidden>
+      <div class="modal-panel confirm-panel" role="dialog" aria-modal="true">
+        <p id="confirm-message"></p>
+        <div class="modal-actions">
+          <button type="button" id="confirm-cancel">Cancel</button>
+          <button type="button" id="confirm-ok" class="primary">OK</button>
+        </div>
+      </div>
+    </div>
+    <script src="conf.js"></script>
+    <script src="examples.js"></script>
+    <script type="module" src="playground.js"></script>
+  </body>
+</html>

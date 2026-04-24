@@ -1,0 +1,47 @@
+/*  C-like strlen that accepts any string address.
+
+    The v0 subset has no BASED pointers, so we can't write
+    `DECLARE S BASED P BYTE` to deref a parameter directly.  Workaround:
+    declare the entire 8080 address space as a zero-based byte array
+    (MEM AT (0)) and index it with the pointer value.  MEM allocates no
+    storage — the codegen emits `mem equ 0000h` and translates MEM(P+N)
+    into `lhld ...; lxi d, mem; dad d; mov a, m` — exactly a byte load
+    through a pointer.
+
+    Once BASED lands (roadmap), this becomes the idiomatic:
+        DECLARE S BASED P BYTE;
+        DO WHILE S <> 0; P = P + 1; END;
+
+    Program: prints strlen of two strings separated by a space.
+             "HI" -> 0002, "HELLO, PL/M" -> 000B.
+*/
+
+PUTC: PROCEDURE (CH) REGS(C) AT (0F809H); DECLARE CH BYTE; END PUTC;
+HEXB: PROCEDURE (B)  REGS(A) AT (0F815H); DECLARE B  BYTE; END HEXB;
+
+DECLARE MEM BYTE(65535) AT (0);
+
+STRLEN: PROCEDURE (PTR) ADDRESS;
+    DECLARE PTR ADDRESS;
+    DECLARE N   ADDRESS;
+    N = 0;
+    DO WHILE MEM(PTR + N) <> 0;
+        N = N + 1;
+    END;
+    RETURN N;
+END STRLEN;
+
+PRINTW: PROCEDURE (W);
+    DECLARE W ADDRESS;
+    CALL HEXB(HIGH(W));
+    CALL HEXB(LOW(W));
+END PRINTW;
+
+DECLARE S1 BYTE(8)  INITIAL('HI', 0);
+DECLARE S2 BYTE(32) INITIAL('HELLO, PL/M', 0);
+
+CALL PRINTW(STRLEN(.S1));
+CALL PUTC(20H);
+CALL PRINTW(STRLEN(.S2));
+CALL PUTC(0DH);
+CALL PUTC(0AH);
