@@ -1,0 +1,11 @@
+/*  count + sum 0..9 into SUM  */
+
+DECLARE I BYTE;
+DECLARE SUM BYTE;
+
+I = 0;
+SUM = 0;
+DO WHILE I < 10;
+    SUM = SUM + I;
+    I = I + 1;
+END;

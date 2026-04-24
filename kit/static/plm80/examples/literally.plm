@@ -1,0 +1,31 @@
+/*  LITERALLY demo — textual token-level macros for named constants.
+
+    PL/M-80's LITERALLY substitutes a name with its body at the token
+    level, before parsing.  Handy for symbolic monitor-ROM addresses,
+    loop bounds, and shared magic numbers that would otherwise be
+    unnamed literals scattered through the code.
+
+    Prints "00 01 02 03 04 " via the Radio-86RK monitor ROM.
+*/
+
+DECLARE PUTC_ENTRY LITERALLY '0F809H';
+DECLARE HEXB_ENTRY LITERALLY '0F815H';
+DECLARE COUNT      LITERALLY '5';
+DECLARE SPACE      LITERALLY '20H';
+DECLARE CR         LITERALLY '0DH';
+DECLARE LF         LITERALLY '0AH';
+
+PUTC: PROCEDURE (CH) REGS(C) AT (PUTC_ENTRY); DECLARE CH BYTE; END PUTC;
+HEXB: PROCEDURE (B)  REGS(A) AT (HEXB_ENTRY); DECLARE B  BYTE; END HEXB;
+
+DECLARE I BYTE;
+
+I = 0;
+DO WHILE I < COUNT;
+    CALL HEXB(I);
+    CALL PUTC(SPACE);
+    I = I + 1;
+END;
+
+CALL PUTC(CR);
+CALL PUTC(LF);

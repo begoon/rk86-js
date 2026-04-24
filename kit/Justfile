@@ -66,7 +66,7 @@ build-claude:
 build-exiter:
     bunx asm8080 ../info/asm/exiter.asm -o ../info/asm --split
 
-update-playground:
+update-asm8:
     cp \
     ../../asm8/docs/playground.js \
     ../../asm8/docs/index.html \
@@ -80,3 +80,10 @@ update-c8080:
     ../../c8080-js/docs/style.css \
     ../../c8080-js/docs/initial.c \
     static/c8080/
+
+update-plm80:
+    cp \
+    ../../plm80/docs/playground.js \
+    ../../plm80/docs/index.html \
+    ../../plm80/docs/style.css \
+    static/plm80/
