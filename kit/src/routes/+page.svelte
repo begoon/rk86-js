@@ -81,6 +81,14 @@
         window.open(asset("/asm/"), "_blank", "noopener");
     }
 
+    function openC8080() {
+        window.open(asset("/c8080/"), "_blank", "noopener");
+    }
+
+    function openPlm80() {
+        window.open(asset("/plm80/"), "_blank", "noopener");
+    }
+
     function toggleVisualizer() {
         visualizerVisible = !visualizerVisible;
         if (machine) machine.ui.visualizer_visible = visualizerVisible;
@@ -273,6 +281,22 @@
                 onclick={openAssembler}
             >
                 <img class="icon" src="i/asm.svg" alt="Ассемблер" />
+            </button>
+            <button
+                type="button"
+                class="icon"
+                data-text="Компилятор C"
+                onclick={openC8080}
+            >
+                <img class="icon" src="i/c8080.svg" alt="Компилятор C" />
+            </button>
+            <button
+                type="button"
+                class="icon"
+                data-text="Компилятор PL/M-80"
+                onclick={openPlm80}
+            >
+                <img class="icon" src="i/plm80.svg" alt="Компилятор PL/M-80" />
             </button>
             <button
                 type="button"
