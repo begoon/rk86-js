@@ -10,6 +10,8 @@ const staticIndexFallback = {
 	configureServer(server: { middlewares: { use: (fn: any) => void } }) {
 		server.middlewares.use((req: any, _res: any, next: any) => {
 			if (req.url === '/asm' || req.url === '/asm/') req.url = '/asm/index.html';
+			if (req.url === '/c8080' || req.url === '/c8080/') req.url = '/c8080/index.html';
+			if (req.url === '/plm80' || req.url === '/plm80/') req.url = '/plm80/index.html';
 			next();
 		});
 	},
