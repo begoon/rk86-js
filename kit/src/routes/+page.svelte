@@ -449,7 +449,7 @@
                 <span class="dimmed">G{ui.selectedFileEntry.toString(16).toUpperCase().padStart(4, "0")}</span>
             </div>
         {/if}
-        <button type="button" id="shortcut-hint" onclick={() => shortcutsDialog?.showModal()}>cmd/ctrl-k</button>
+        <button type="button" id="shortcut-hint" onclick={() => shortcutsDialog?.showModal()}>CMD/CTRL-K</button>
     </div>
 </main>
 
@@ -686,13 +686,9 @@
     #shortcut-hint {
         all: unset;
         margin-left: auto;
-        opacity: 0.3;
+        font-family: monospace;
         color: white;
-        font-size: 1rem;
         cursor: pointer;
-    }
-    #shortcut-hint:hover {
-        opacity: 0.7;
     }
     #hint {
         position: fixed;
