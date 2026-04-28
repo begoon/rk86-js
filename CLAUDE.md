@@ -8,9 +8,10 @@ maintained side-by-side in one repository:
   as a `<radio86-emulator>` web component and the `rk86` npm package
   (terminal emulator).
 
-`docs/` is served by GitHub Pages at rk86.ru: `docs/` = classic,
-`docs/beta/` = kit, `docs/alpha/` = kit (currently mirror of beta,
-reserved for experiments), `docs/monitor/` = separately maintained.
+`docs/` is served by GitHub Pages at rk86.ru: `docs/` (root) = kit
+production, `docs/classic/` = classic, `docs/alpha/` and `docs/beta/`
+= kit experimental slots (built with `BASE_PATH=/alpha` and `/beta`
+respectively), `docs/monitor/` = separately maintained.
 
 ## Toolchain
 
@@ -42,7 +43,7 @@ for other platforms.
 - `just` — tests + build
 - `just test` — bun test (9 files, 53 tests)
 - `just build` — regenerates `build/` (copy of `src/` + catalog + tape)
-- `just release` — rsyncs `build/` into `../docs/` (root)
+- `just release` — rsyncs `build/` into `../docs/classic/`
 - `just watch` — bun-native fs.watch rebuilder
 - `just clean` — `rm -rf build node_modules`
 
@@ -53,9 +54,11 @@ for other platforms.
 - `bun run check` — svelte-check type checking
 - `just test` — unit tests + i8080 CPU tests
 - `just test-ci` — full CI suite
-- `just release-alpha` / `just release-beta` — deploy with base path
-  to `../docs/alpha/` and `../docs/beta/`
-- `just release` — both of the above
+- `just release` / `just release-root` — production deploy to
+  `../docs/` (root, no BASE_PATH)
+- `just release-alpha` / `just release-beta` — experimental deploy
+  with base path to `../docs/alpha/` and `../docs/beta/`
+- `just release-experimental` — both alpha and beta
 - `just terminal-run [args]` — run terminal emulator locally
   (executes `src/lib/terminal/rk86_terminal.ts` under bun directly;
   does not use the regenerable `kit/rk86.ts` bundle intermediate,
@@ -124,9 +127,10 @@ info/
   SNAPSHOT.md       — JSON snapshot format
   asm/              — i8080 assembly examples
 docs/
-  (root)            — classic output
-  beta/             — kit output
-  alpha/            — kit output (mirror of beta)
+  (root)            — kit output (production)
+  classic/          — classic output
+  alpha/            — kit output (experimental, BASE_PATH=/alpha)
+  beta/             — kit output (experimental, BASE_PATH=/beta)
   monitor/          — hand-maintained monitor viewer
 ```
 

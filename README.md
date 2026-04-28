@@ -5,7 +5,7 @@
 
 Эмулятор советского домашнего компьютера [Радио-86РК](https://ru.wikipedia.org/wiki/%D0%A0%D0%B0%D0%B4%D0%B8%D0%BE_86%D0%A0%D0%9A) (1986) на базе процессора Intel 8080 (КР580ВМ80А). Эмуляция на уровне команд процессора.
 
-Запустить можно сразу — [rk86.ru](http://rk86.ru/) (классический вариант) или [новую версию](https://rk86.ru/beta).
+Запустить можно сразу — [rk86.ru](https://rk86.ru/) (новая версия) или [классический вариант](https://rk86.ru/classic/).
 
 Проект основан на [i8080-js](http://github.com/begoon/i8080-js/). [Пост с описанием](http://demin.ws/blog/russian/2012/10/04/rk86-js/). Немного [информации о семействе микросхем КР580](http://demin.ws/projects/radio86/info/kr580/).
 
@@ -65,7 +65,7 @@ just clean && just
 cd classic
 just               # тесты + сборка
 just test          # тесты (bun test)
-just release       # сборка + публикация в ../docs/
+just release       # сборка + публикация в ../docs/classic/
 just watch         # пересборка при изменении файлов
 ```
 
@@ -80,7 +80,8 @@ bun run dev               # dev-сервер на http://localhost:5173
 bun run build             # статическая сборка в kit/build/
 just test                 # модульные тесты + тесты CPU
 just test-ci              # полный набор включая CPU Exerciser
-just release              # сборка + публикация в ../docs/{beta,alpha}
+just release              # сборка + публикация в ../docs/ (production)
+just release-experimental # публикация в ../docs/{alpha,beta}
 ```
 
 ## Деплой
@@ -89,12 +90,13 @@ GitHub Pages публикует [`docs/`](docs/) на <https://rk86.ru>.
 
 | Путь | Источник | Команда сборки |
 |------|----------|----------------|
-| `docs/` | `classic/src/` | `cd classic && just release` |
-| `docs/beta/` | `kit/` | `cd kit && just release-beta` |
-| `docs/alpha/` | `kit/` (зеркало beta) | `cd kit && just release-alpha` |
+| `docs/` (root) | `kit/` (production) | `cd kit && just release` |
+| `docs/classic/` | `classic/src/` | `cd classic && just release` |
+| `docs/alpha/` | `kit/` (экспериментальный) | `cd kit && just release-alpha` |
+| `docs/beta/` | `kit/` (экспериментальный) | `cd kit && just release-beta` |
 | `docs/monitor/` | поддерживается вручную | коммитится напрямую |
 
-Сейчас `docs/alpha/` повторяет `docs/beta/`; слот зарезервирован для экспериментов.
+`docs/alpha/` и `docs/beta/` зарезервированы для экспериментальных деплоев `kit/` (с `BASE_PATH=/alpha` и `/beta` соответственно).
 
 ## Возможности
 
@@ -211,7 +213,7 @@ GitHub Pages публикует [`docs/`](docs/) на <https://rk86.ru>.
 | `files-path` | `files/` | Базовый URL для файлов |
 | `scale` | 1:1 пиксель | `"auto"` для масштабирования |
 
-Каждый экземпляр полностью независим: собственный процессор, память, экран. Компонент генерирует событие `ready` с `machine` в `e.detail`. Демо с четырьмя эмуляторами — [demo.html](https://rk86.ru/beta/demo.html).
+Каждый экземпляр полностью независим: собственный процессор, память, экран. Компонент генерирует событие `ready` с `machine` в `e.detail`. Демо с четырьмя эмуляторами — [demo.html](https://rk86.ru/demo.html).
 
 ## Терминальный эмулятор
 
@@ -260,9 +262,10 @@ kit/                    — новая версия (SvelteKit)
   tests/                — bun-тесты (166 тестов, 1.7M проверок)
   packages/rk86/        — npm-пакет для терминала
 docs/                   — публикуемый сайт (GH Pages, rk86.ru)
-  (root)                — классическая версия
-  beta/                 — новая версия
-  alpha/                — новая версия (зеркало beta, для экспериментов)
+  (root)                — новая версия (production)
+  classic/              — классическая версия
+  alpha/                — новая версия (экспериментальный слот)
+  beta/                 — новая версия (экспериментальный слот)
   monitor/              — просмотрщик ROM-монитора (отдельный артефакт)
 info/                   — общая документация и ассемблерные примеры
   RK86.md               — справочник программиста (память, периферия, монитор, видео, клавиатура)
