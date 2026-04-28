@@ -246,8 +246,14 @@
         <a href="/classic/" target="_blank" rel="noopener" class="icon" data-text="Классическая версия">
             <img class="icon" src="i/classic.svg" alt="Классическая версия" />
         </a>
+        <a
+            href="https://donate.stripe.com/eVa9ATeZr18u2o8289"
+            target="_blank"
+            rel="noopener"
+            style="margin: 0 auto; color: white; font-family: monospace; align-self: center;"
+        >Поддержать проект</a>
         <!-- Кнопки справа -->
-        <div style="margin-left: auto; display: flex; align-items: center; gap: 4px">
+        <div style="display: flex; align-items: center; gap: 4px">
             <button class="icon" data-text="Запись на ленту">
                 {#if ui.tapeActivityActive}
                     {#if ui.tapeHighlight}
