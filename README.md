@@ -106,6 +106,7 @@ GitHub Pages публикует [`docs/`](docs/) на <https://rk86.ru>.
 - Ассемблер Intel 8080 (встроенный [asm8](https://github.com/begoon/asm8) playground)
 - Компилятор C для i8080 (встроенный [c8080-js](https://github.com/begoon/c8080-js) playground)
 - Компилятор PL/M-80 (встроенный [plm80](https://github.com/begoon/plm80) playground)
+- Визуализатор WAV-лент (встроенный [rk86-tape](https://github.com/begoon/rk86-tape) playground)
 - Дизассемблер с навигацией по коду и данным
 - Визуализатор набора команд
 - Отладочная консоль: дамп памяти, точки останова, пошаговое выполнение
@@ -187,6 +188,12 @@ GitHub Pages публикует [`docs/`](docs/) на <https://rk86.ru>.
 Под `/plm80/` развёрнут [plm80 playground](https://github.com/begoon/plm80) — компилятор PL/M-80 (язык системного программирования Intel, 1973) в ассемблер i8080. Кнопка «Компилятор PL/M-80» в тулбаре открывает его в новой вкладке; «run» доставляет результат эмулятору через тот же handoff-протокол.
 
 Примеры — `static/plm80/examples/*.plm` (hello, counter, greeting, literally, strlen, sum, videomem). Обновить playground: `just update-plm80` из `kit/`.
+
+## Визуализатор WAV-лент
+
+Под `/tape/` развёрнут [rk86-tape playground](https://github.com/begoon/rk86-tape) — визуализатор WAV-записей кассетных лент Радио-86РК (полог, синхромаркер, заголовок, данные, контрольная сумма; binary и BASIC). Кнопка с иконкой ленты в тулбаре открывает его в новой вкладке.
+
+Демо-WAV — `static/tape/wav/*.wav`.
 
 ## Веб-компонент
 
