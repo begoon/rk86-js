@@ -87,3 +87,10 @@ update-plm80:
     ../../plm80/docs/index.html \
     ../../plm80/docs/style.css \
     static/plm80/
+
+update-tape:
+    cp \
+    ../../rk86-tape/docs/index.html \
+    ../../rk86-tape/docs/examples.json \
+    static/tape/
+    rsync -a --delete ../../rk86-tape/docs/wav/ static/tape/wav/
