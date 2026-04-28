@@ -243,6 +243,9 @@
         <a href={resolve("/catalog")} class="icon" data-text="Каталог программ">
             <img class="icon" src="i/open-catalog.svg" alt="Каталог программ" />
         </a>
+        <a href="/classic/" target="_blank" rel="noopener" class="icon" data-text="Классическая версия">
+            <img class="icon" src="i/classic.svg" alt="Классическая версия" />
+        </a>
         <!-- Кнопки справа -->
         <div style="margin-left: auto; display: flex; align-items: center; gap: 4px">
             <button class="icon" data-text="Запись на ленту">
