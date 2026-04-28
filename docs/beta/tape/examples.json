@@ -1,0 +1,152 @@
+[
+  {
+    "label": "wav",
+    "files": [
+      {
+        "name": "BASIC PSF",
+        "path": "wav/BASIC PSF.wav"
+      },
+      {
+        "name": "BASIC Микрон",
+        "path": "wav/BASIC Микрон.wav"
+      },
+      {
+        "name": "BASIC Поиск",
+        "path": "wav/BASIC Поиск.wav"
+      },
+      {
+        "name": "BASIC",
+        "path": "wav/BASIC.wav"
+      },
+      {
+        "name": "BEST",
+        "path": "wav/BEST.wav"
+      },
+      {
+        "name": "DP STF",
+        "path": "wav/DP STF.wav"
+      },
+      {
+        "name": "DUMPCOR",
+        "path": "wav/DUMPCOR.wav"
+      },
+      {
+        "name": "ED Микрон",
+        "path": "wav/ED Микрон.wav"
+      },
+      {
+        "name": "EDASSM",
+        "path": "wav/EDASSM.wav"
+      },
+      {
+        "name": "EDDIS",
+        "path": "wav/EDDIS.wav"
+      },
+      {
+        "name": "RAMDOS",
+        "path": "wav/RAMDOS.wav"
+      },
+      {
+        "name": "SPACE",
+        "path": "wav/SPACE.wav"
+      },
+      {
+        "name": "SPY'S Demise",
+        "path": "wav/SPY'S Demise.wav"
+      },
+      {
+        "name": "TP STF",
+        "path": "wav/TP STF.wav"
+      },
+      {
+        "name": "Кин Дза Дза",
+        "path": "wav/Кин Дза Дза.wav"
+      },
+      {
+        "name": "Охота на скалоеда",
+        "path": "wav/Охота на скалоеда.wav"
+      },
+      {
+        "name": "Питон",
+        "path": "wav/Питон.wav"
+      },
+      {
+        "name": "Теннис",
+        "path": "wav/Теннис.wav"
+      },
+      {
+        "name": "ЦМУ",
+        "path": "wav/ЦМУ.wav"
+      },
+      {
+        "name": "Шахматы",
+        "path": "wav/Шахматы.wav"
+      }
+    ]
+  },
+  {
+    "label": "wav/BASIC",
+    "files": [
+      {
+        "name": "Боинг 747",
+        "path": "wav/BASIC/Боинг 747.wav"
+      },
+      {
+        "name": "Дурак",
+        "path": "wav/BASIC/Дурак.wav"
+      },
+      {
+        "name": "Калах",
+        "path": "wav/BASIC/Калах.wav"
+      },
+      {
+        "name": "Колобок",
+        "path": "wav/BASIC/Колобок.wav"
+      },
+      {
+        "name": "Лотос",
+        "path": "wav/BASIC/Лотос.wav"
+      },
+      {
+        "name": "Морской бой",
+        "path": "wav/BASIC/Морской бой.wav"
+      },
+      {
+        "name": "Орегонская тропа",
+        "path": "wav/BASIC/Орегонская тропа.wav"
+      },
+      {
+        "name": "Охота на лис",
+        "path": "wav/BASIC/Охота на лис.wav"
+      },
+      {
+        "name": "Очко",
+        "path": "wav/BASIC/Очко.wav"
+      },
+      {
+        "name": "Пилот",
+        "path": "wav/BASIC/Пилот.wav"
+      },
+      {
+        "name": "Посадка на луну",
+        "path": "wav/BASIC/Посадка на луну.wav"
+      },
+      {
+        "name": "Птицеферма",
+        "path": "wav/BASIC/Птицеферма.wav"
+      },
+      {
+        "name": "Стратегия",
+        "path": "wav/BASIC/Стратегия.wav"
+      },
+      {
+        "name": "Угадай число",
+        "path": "wav/BASIC/Угадай число.wav"
+      },
+      {
+        "name": "Ханойская башня",
+        "path": "wav/BASIC/Ханойская башня.wav"
+      }
+    ]
+  }
+]
