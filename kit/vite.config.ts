@@ -12,6 +12,7 @@ const staticIndexFallback = {
 			if (req.url === '/asm' || req.url === '/asm/') req.url = '/asm/index.html';
 			if (req.url === '/c8080' || req.url === '/c8080/') req.url = '/c8080/index.html';
 			if (req.url === '/plm80' || req.url === '/plm80/') req.url = '/plm80/index.html';
+			if (req.url === '/tape' || req.url === '/tape/') req.url = '/tape/index.html';
 			next();
 		});
 	},
