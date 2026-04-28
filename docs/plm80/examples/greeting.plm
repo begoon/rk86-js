@@ -1,0 +1,41 @@
+/*  Radio-86RK demo
+    - prints a hello banner via monitor PUTS
+    - prints 00..0A in hex via HEXB, separated by spaces
+    - prints SUM = <hex of 0+1+...+10>
+    - halts (emulator exits on HLT)
+
+    rk86 runs the monitor ROM from F800 for the first 500 ms (so the
+    CRTC and monitor work area get initialized), then jumps to our
+    entry at 0.  We only need to set SP ourselves before we start
+    pushing to the CPU stack.
+
+    Build + run:
+        plm80 examples/greeting.plm --org 0 --stack 76CFh -o /tmp/demo.asm
+        bunx rk86 --exit-halt /tmp/demo.bin                                           */
+
+PUTS:  PROCEDURE (P)  REGS(HL) AT (0F818H); DECLARE P ADDRESS; END PUTS;
+PUTC:  PROCEDURE (CH) REGS(C)  AT (0F809H); DECLARE CH BYTE;   END PUTC;
+HEXB:  PROCEDURE (B)  REGS(A)  AT (0F815H); DECLARE B BYTE;    END HEXB;
+
+DECLARE HELLO     BYTE(24) INITIAL('PL/M-80 COMPILER HERE', 0DH, 0AH, 0);
+DECLARE SUM_LABEL BYTE(16) INITIAL('SUM (0..10) = ', 0);
+DECLARE CRLF      BYTE(3)  INITIAL(0DH, 0AH, 0);
+
+DECLARE I   BYTE;
+DECLARE SUM BYTE;
+
+CALL PUTS(.HELLO);
+
+I   = 0;
+SUM = 0;
+DO WHILE I <= 10;
+    CALL HEXB(I);
+    CALL PUTC(20H);
+    SUM = SUM + I;
+    I = I + 1;
+END;
+
+CALL PUTS(.CRLF);
+CALL PUTS(.SUM_LABEL);
+CALL HEXB(SUM);
+CALL PUTS(.CRLF);

@@ -1,0 +1,295 @@
+:root {
+  --bg: #1e1f22;
+  --fg: #d7d7d7;
+  --panel: #2a2c31;
+  --pane-bg: #1e1f22;
+  --pane-title-bg: #25272b;
+  --border: #33353a;
+  --btn-bg: #3a3b40;
+  --btn-hover: #44454a;
+  --btn-border: #4a4b50;
+  --btn-disabled-bg: #2a2b30;
+  --btn-disabled-fg: #888;
+  --primary-bg: #2e7d32;
+  --primary-hover: #388e3c;
+  --primary-active: #1b5e20;
+  --primary-border: #1b5e20;
+  --primary-fg: #fff;
+  --danger-bg: #5a2b2b;
+  --danger-hover: #6e3535;
+  --danger-active: #4a2323;
+  --danger-border: #7a3b3b;
+  --danger-fg: #ffb4b4;
+  --asm-fg: #c8e6c9;
+  --bytes-fg: #90caf9;
+  --err-bg: #3a1d1d;
+  --err-fg: #ffb4b4;
+  --err-border: #5a2b2b;
+  --modal-backdrop: rgba(0, 0, 0, 0.55);
+  --modal-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+
+body.theme-light {
+  --bg: #ffffff;
+  --fg: #1f1f1f;
+  --panel: #f3f3f3;
+  --pane-bg: #ffffff;
+  --pane-title-bg: #ececec;
+  --border: #d0d0d0;
+  --btn-bg: #ffffff;
+  --btn-hover: #f0f0f0;
+  --btn-border: #c6c6c6;
+  --btn-disabled-bg: #f0f0f0;
+  --btn-disabled-fg: #a0a0a0;
+  --primary-bg: #2e7d32;
+  --primary-hover: #388e3c;
+  --primary-active: #1b5e20;
+  --primary-border: #1b5e20;
+  --primary-fg: #fff;
+  --danger-bg: #ffeef0;
+  --danger-hover: #ffdcdf;
+  --danger-active: #f9aeb3;
+  --danger-border: #f9aeb3;
+  --danger-fg: #b31d28;
+  --asm-fg: #1f5a23;
+  --bytes-fg: #0b5fa5;
+  --err-bg: #ffeef0;
+  --err-fg: #b31d28;
+  --err-border: #f9aeb3;
+  --modal-backdrop: rgba(0, 0, 0, 0.35);
+  --modal-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: ui-sans-serif, -apple-system, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+h1 {
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.sub {
+  font-weight: 400;
+  opacity: 0.6;
+  font-size: 0.85rem;
+  margin-left: 0.5rem;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+button {
+  font: inherit;
+  font-size: 0.85rem;
+  background: var(--btn-bg);
+  color: var(--fg);
+  border: 1px solid var(--btn-border);
+  padding: 0.3rem 0.7rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) { background: var(--btn-hover); }
+
+button.primary {
+  background: var(--primary-bg);
+  color: var(--primary-fg);
+  border-color: var(--primary-border);
+}
+
+button.primary:hover:not(:disabled) { background: var(--primary-hover); }
+button.primary:active:not(:disabled) { background: var(--primary-active); }
+
+button:disabled,
+button.primary:disabled {
+  background: var(--btn-disabled-bg);
+  color: var(--btn-disabled-fg);
+  border-color: var(--btn-disabled-bg);
+  cursor: not-allowed;
+}
+
+.toolbar select {
+  font: inherit;
+  font-size: 0.85rem;
+  background: var(--pane-bg);
+  color: var(--fg);
+  border: 1px solid var(--btn-border);
+  padding: 0.25rem 0.35rem;
+  border-radius: 4px;
+}
+
+button.danger {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+  border-color: var(--danger-border);
+}
+button.danger:hover:not(:disabled) { background: var(--danger-hover); }
+button.danger:active:not(:disabled) { background: var(--danger-active); }
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-backdrop);
+  z-index: 10;
+}
+.modal[hidden] { display: none; }
+
+.modal-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--panel);
+  border: 1px solid var(--btn-border);
+  border-radius: 6px;
+  padding: 1.2rem 1.5rem;
+  min-width: 320px;
+  max-width: 480px;
+  box-shadow: var(--modal-shadow);
+}
+
+.modal-panel p {
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+main {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  background: var(--pane-bg);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pane-title {
+  padding: 0.3rem 0.75rem;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.55;
+  background: var(--pane-title-bg);
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+
+.pane-title.secondary { margin-top: auto; }
+
+#source {
+  flex: 1 1 auto;
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--pane-bg);
+  color: var(--fg);
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  tab-size: 4;
+}
+
+#asm, #bytes {
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 0.75rem;
+  overflow: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--asm-fg);
+}
+
+#bytes {
+  color: var(--bytes-fg);
+  max-height: 30%;
+  border-top: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+
+.error {
+  padding: 0.5rem 0.75rem;
+  margin: 0;
+  background: var(--err-bg);
+  color: var(--err-fg);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12.5px;
+  white-space: pre-wrap;
+  border-top: 1px solid var(--err-border);
+  flex: 0 0 auto;
+}
+
+footer {
+  padding: 0.4rem 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+  font-size: 0.75rem;
+  opacity: 0.55;
+  text-align: right;
+}
+
+footer a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+}
+
+footer a:hover { opacity: 0.9; }
+
+@media (max-width: 720px) {
+  main {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+}
