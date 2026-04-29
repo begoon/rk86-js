@@ -194,6 +194,40 @@
             });
         }
     });
+
+    let dragActive = $state(false);
+    let dragDepth = 0;
+
+    function onDragEnter(e: DragEvent) {
+        if (!e.dataTransfer?.types.includes("Files")) return;
+        e.preventDefault();
+        dragDepth += 1;
+        dragActive = true;
+    }
+
+    function onDragOver(e: DragEvent) {
+        if (!e.dataTransfer?.types.includes("Files")) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+    }
+
+    function onDragLeave(e: DragEvent) {
+        if (!e.dataTransfer?.types.includes("Files")) return;
+        dragDepth -= 1;
+        if (dragDepth <= 0) {
+            dragDepth = 0;
+            dragActive = false;
+        }
+    }
+
+    async function onDrop(e: DragEvent) {
+        if (!e.dataTransfer?.types.includes("Files")) return;
+        e.preventDefault();
+        dragDepth = 0;
+        dragActive = false;
+        const file = e.dataTransfer.files?.[0];
+        if (file) await machine?.uploadFile(file);
+    }
 </script>
 
 <svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />
@@ -202,6 +236,11 @@
 <!-- svelte-ignore a11y_mouse_events_have_key_events -->
 <main
     bind:this={mainElement}
+    class:drag-active={dragActive}
+    ondragenter={onDragEnter}
+    ondragover={onDragOver}
+    ondragleave={onDragLeave}
+    ondrop={onDrop}
     onmouseover={(e) => {
         const button = (e.target as HTMLElement).closest("[data-text]") as HTMLElement | null;
         hintText = button?.dataset.text ?? "";
@@ -451,6 +490,9 @@
         {/if}
         <button type="button" id="shortcut-hint" onclick={() => shortcutsDialog?.showModal()}>CMD/CTRL-K</button>
     </div>
+    {#if dragActive}
+        <div id="drop-overlay">Перетащите файл сюда</div>
+    {/if}
 </main>
 
 <dialog
@@ -718,5 +760,19 @@
     .tape_active {
         color: white;
         background-color: green;
+    }
+    #drop-overlay {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.6);
+        color: white;
+        font-family: monospace;
+        font-size: 2em;
+        border: 4px dashed #ffcc00;
+        z-index: 3000;
+        pointer-events: none;
     }
 </style>
