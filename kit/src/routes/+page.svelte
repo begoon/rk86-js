@@ -98,6 +98,11 @@
         if (machine) machine.ui.visualizer_visible = visualizerVisible;
     }
 
+    function toggleRusLat() {
+        emulatorKeyDown?.("F10");
+        setTimeout(() => emulatorKeyUp?.("F10"), 100);
+    }
+
     function toggleDebugger() {
         if (debuggerVisible && canvas && canvasPlaceholder) {
             canvasPlaceholder.appendChild(canvas);
@@ -403,7 +408,7 @@
                 {/if}
             </button>
             <span id="sound_image" class={soundImageVisible ? "visible" : ""}>{soundEnabled ? "🔉" : "🔇"}</span>
-            <button>
+            <button type="button" data-text="Переключить РУС/ЛАТ (F10)" onclick={toggleRusLat}>
                 <span
                     style="font-family: monospace; background: white; color: black; padding: 2px 4px; border-radius: 2px"
                     >{ui.rusLat ? "РУС" : "ЛАТ"}</span
