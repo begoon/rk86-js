@@ -41,7 +41,7 @@
 </script>
 
 <main>
-    <h1>Каталог программ для Радио-86РК</h1>
+    <h1 id="top">Каталог программ для Радио-86РК</h1>
     <div class="search-bar">
         <!-- svelte-ignore a11y_autofocus -->
         <input type="text" placeholder="Поиск..." bind:value={filter} autofocus />
@@ -71,12 +71,13 @@
                         <tr><td>Адреса и длина:</td><td>{hex4(entry.start)}—{hex4(entry.end)}, {hex4(entry.size)}</td></tr>
                         <tr><td>Стартовый адрес:</td><td>{hex4(entry.entry)}</td></tr>
                         <tr><td>Контрольная сумма:</td><td>{hex4(entry.checkSum)}</td></tr>
-                        <tr><td>Маркер 0xE6:</td><td>{entry.leadingE6 ? "есть" : "нет"}</td></tr>
+                        <tr><td>Маркер E6:</td><td>{entry.leadingE6 ? "есть" : "нет"}</td></tr>
                     </tbody>
                 </table>
                 <div class="actions">
                     <a class="run-btn" href="{resolve('/')}?run={entry.name}">Запустить</a>
                     <a class="load-btn" href="{resolve('/')}?load={entry.name}">Загрузить</a>
+                    <a class="top-btn" href="#top">В начало</a>
                 </div>
             </div>
             <div class="card-screens">
@@ -125,6 +126,9 @@
 {/if}
 
 <style>
+    :global(html) {
+        scrollbar-gutter: stable;
+    }
     :global(body) {
         background-color: white;
         color: #333;
@@ -185,7 +189,7 @@
         background: #ddd;
     }
     .card-info {
-        flex: 1;
+        flex: 0 0 40%;
         min-width: 0;
     }
     .card-info h2 {
@@ -229,6 +233,11 @@
     .load-btn {
         background: #68b;
         color: white;
+    }
+    .top-btn {
+        background: transparent;
+        color: #333;
+        margin-left: auto;
     }
     .card-screens {
         display: grid;
