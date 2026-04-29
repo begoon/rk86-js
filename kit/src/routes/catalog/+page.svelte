@@ -2,6 +2,8 @@
     import { resolve } from "$app/paths";
     import { catalog } from "$lib/catalog_data";
 
+    const hex4 = (n: number) => n.toString(16).toUpperCase().padStart(4, "0");
+
     let filter = $state("игра");
 
     const filtered = $derived(
@@ -66,6 +68,10 @@
                 <table class="meta">
                     <tbody>
                         <tr><td>Файл:</td><td>{entry.name}</td></tr>
+                        <tr><td>Адреса и длина:</td><td>{hex4(entry.start)}—{hex4(entry.end)}, {hex4(entry.size)}</td></tr>
+                        <tr><td>Стартовый адрес:</td><td>{hex4(entry.entry)}</td></tr>
+                        <tr><td>Контрольная сумма:</td><td>{hex4(entry.checkSum)}</td></tr>
+                        <tr><td>Маркер 0xE6:</td><td>{entry.leadingE6 ? "есть" : "нет"}</td></tr>
                     </tbody>
                 </table>
                 <div class="actions">

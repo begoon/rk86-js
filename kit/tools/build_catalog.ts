@@ -18,6 +18,74 @@ interface CatalogEntry {
     title: string;
     description: string;
     screenshots: string[];
+    start: number;
+    end: number;
+    size: number;
+    entry: number;
+    checkSum: number;
+    leadingE6: boolean;
+}
+
+function rk86_check_sum(v: Uint8Array): number {
+    let sum = 0;
+    let j = 0;
+    while (j < v.length - 1) {
+        const c = v[j];
+        sum = (sum + c + (c << 8)) & 0xffff;
+        j += 1;
+    }
+    const sum_h = sum & 0xff00;
+    const sum_l = sum & 0xff;
+    sum = sum_h | ((sum_l + v[j]) & 0xff);
+    return sum;
+}
+
+const skip_check_sum = new Set(["I8080TST.GAM", "OilsWell.rkr"]);
+
+function extract_metadata(name: string, image: Uint8Array) {
+    if (name.endsWith(".bin")) {
+        let start = 0;
+        let entry = 0;
+        if (name.startsWith("mon_")) {
+            start = 0x10000 - image.length;
+            entry = 0xf800;
+        }
+        return {
+            start,
+            end: start + image.length - 1,
+            size: image.length,
+            entry,
+            checkSum: rk86_check_sum(image),
+            leadingE6: false,
+        };
+    }
+
+    const w = (i: number) => ((image[i] & 0xff) << 8) | (image[i + 1] & 0xff);
+    let i = 0;
+    const leadingE6 = image[i] === 0xe6;
+    if (leadingE6) i += 1;
+    const start = w(i);
+    const end = w(i + 2);
+    const size = end - start + 1;
+    i += 4;
+
+    const realCheckSum = rk86_check_sum(image.slice(i, i + size));
+    i += size;
+
+    while (i < image.length && image[i] !== 0xe6) i += 1;
+    const trailerCheckSum = i + 2 < image.length ? w(i + 1) : realCheckSum;
+
+    if (trailerCheckSum !== realCheckSum && !skip_check_sum.has(name)) {
+        errors.push(
+            `${name}: trailer checksum 0x${trailerCheckSum.toString(16).padStart(4, "0").toUpperCase()} != computed 0x${realCheckSum.toString(16).padStart(4, "0").toUpperCase()}`,
+        );
+    }
+
+    let entry = start;
+    if (name === "PVO.GAM") entry = 0x3400;
+    if (name === "RAMDOS.PKI") entry = 0x3600;
+
+    return { start, end, size, entry, checkSum: realCheckSum, leadingE6 };
 }
 
 const entries: CatalogEntry[] = [];
@@ -42,7 +110,10 @@ for (const name of fileNames) {
     const files = readdirSync(dir);
     const screenshots = files.filter((f) => f.endsWith(".png")).sort();
 
-    entries.push({ name, title, description, screenshots });
+    const image = new Uint8Array(readFileSync(join(filesDir, name)));
+    const meta = extract_metadata(name, image);
+
+    entries.push({ name, title, description, screenshots, ...meta });
 }
 
 if (errors.length > 0) {
@@ -60,6 +131,12 @@ export interface CatalogEntry {
     title: string;
     description: string;
     screenshots: string[];
+    start: number;
+    end: number;
+    size: number;
+    entry: number;
+    checkSum: number;
+    leadingE6: boolean;
 }
 
 export const catalog: CatalogEntry[] = ${JSON.stringify(entries, null, 4)};
