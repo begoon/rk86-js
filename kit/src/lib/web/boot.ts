@@ -99,23 +99,38 @@ export class UI {
     computer_snapshot_count = 1;
 
     emulator_snapshot() {
+        const base = ui.selectedFileName ? `${ui.selectedFileName}-snapshot` : "rk86-snapshot";
+        if (base !== this.computer_snapshot_name) {
+            this.computer_snapshot_name = base;
+            this.computer_snapshot_count = 1;
+        }
         const json = rk86_snapshot(this.machine, "2.0.0");
-        const filename = `${this.computer_snapshot_name}-${this.computer_snapshot_count}.json`;
+        const filename = `${base}-${this.computer_snapshot_count}.json`;
         const blob = new Blob([json], { type: "application/json" });
         saveAs(blob, filename);
         this.computer_snapshot_count += 1;
     }
 
     screenshot() {
-        const filename = `${this.screenshot_name}-${this.screenshot_count}.png`;
+        const base = ui.selectedFileName || "rk86-screen";
+        if (base !== this.screenshot_name) {
+            this.screenshot_name = base;
+            this.screenshot_count = 1;
+        }
+        const filename = `${base}-${this.screenshot_count}.png`;
         this.screenshot_count += 1;
         this.canvas.toBlob((blob: Blob | null) => blob && saveAs(blob, filename));
     }
 
     memory_snapshot() {
+        const base = ui.selectedFileName ? `${ui.selectedFileName}-memory` : "rk86-memory";
+        if (base !== this.memory_snapshot_name) {
+            this.memory_snapshot_name = base;
+            this.memory_snapshot_count = 1;
+        }
         const snapshot = new Uint8Array(this.machine.memory.snapshot(0, 0x10000));
         const blob = new Blob([snapshot], { type: "application/octet-stream" });
-        const filename = `${this.memory_snapshot_name}-${this.memory_snapshot_count}.bin`;
+        const filename = `${base}-${this.memory_snapshot_count}.bin`;
         saveAs(blob, filename);
         this.memory_snapshot_count += 1;
     }

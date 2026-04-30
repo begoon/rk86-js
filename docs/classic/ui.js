@@ -242,6 +242,10 @@ function UI(tape_catalog, runner, memory, autoexec) {
 
     this.screenshot_name = file.name;
     this.screenshot_count = 1;
+    this.memory_snapshot_name = file.name + "-memory";
+    this.memory_snapshot_count = 1;
+    this.computer_snapshot_name = file.name + "-snapshot";
+    this.computer_snapshot_count = 1;
 
     if (this.load_mode == "load") {
       var sz = file.start + file.image.length - 1;

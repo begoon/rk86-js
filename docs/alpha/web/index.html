@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Эмулятор Радио-86РК — 12 эмуляторов</title>
+        <style>
+            body {
+                margin: 0;
+                background: #111;
+                color: #ccc;
+                font-family: sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 1.5em;
+                gap: 1em;
+            }
+            h1 {
+                margin: 0;
+                font-size: 1.4em;
+            }
+            p {
+                margin: 0;
+                font-size: 0.9em;
+                color: #888;
+            }
+            .grid {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1em;
+                max-width: 100%;
+            }
+            .cell {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+            }
+            .cell .label {
+                font-size: 0.85em;
+                color: #aaa;
+            }
+            radio86-emulator {
+                display: inline-block;
+                border: 2px solid #444;
+                outline: none;
+                cursor: pointer;
+            }
+            radio86-emulator:focus {
+                border-color: #4f4;
+            }
+            radio86-emulator canvas {
+                display: block;
+                width: 320px;
+                height: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Эмулятор Радио-86РК — 12 эмуляторов</h1>
+        <p>Кликните по эмулятору, чтобы передать ему ввод с клавиатуры (зелёная рамка — активен).</p>
+        <div class="grid">
+            <div class="cell">
+                <span class="label">RK86 Demo</span>
+                <radio86-emulator
+                    focusable
+                    monitor="mon32.bin"
+                    file="rk86demo.bin"
+                    files-path="/files/"
+                ></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">Volcano</span>
+                <radio86-emulator
+                    focusable
+                    monitor="mon32.bin"
+                    file="VOLCANO.RKR"
+                    files-path="/files/"
+                ></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">Diverse</span>
+                <radio86-emulator
+                    focusable
+                    monitor="mon32.bin"
+                    file="DIVERSE.GAM"
+                    files-path="/files/"
+                ></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">Glass</span>
+                <radio86-emulator
+                    focusable
+                    monitor="mon32.bin"
+                    file="GLASS1.GAM"
+                    files-path="/files/"
+                ></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">Пиф-Паф</span>
+                <radio86-emulator focusable monitor="mon32.bin" file="PIF.RK" files-path="/files/"></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">Screen Test</span>
+                <radio86-emulator
+                    focusable
+                    monitor="mon32.bin"
+                    file="screentest.bin"
+                    files-path="/files/"
+                ></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">Алиаз</span>
+                <radio86-emulator
+                    focusable
+                    monitor="mon32.bin"
+                    file="ALIAZ1.RK"
+                    files-path="/files/"
+                ></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">Цирк</span>
+                <radio86-emulator
+                    focusable
+                    monitor="mon32.bin"
+                    file="CIRCUS.RKR"
+                    files-path="/files/"
+                ></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">Стакан</span>
+                <radio86-emulator focusable monitor="mon32.bin" file="MAZE.GAM" files-path="/files/"></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">ПВО</span>
+                <radio86-emulator focusable monitor="mon32.bin" file="PVO.GAM" files-path="/files/"></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">Шахматы</span>
+                <radio86-emulator
+                    focusable
+                    monitor="mon32.bin"
+                    file="CHESS.GAM"
+                    files-path="/files/"
+                ></radio86-emulator>
+            </div>
+            <div class="cell">
+                <span class="label">Замок</span>
+                <radio86-emulator focusable monitor="mon32.bin" file="ZAMOK.RK" files-path="/files/"></radio86-emulator>
+            </div>
+        </div>
+
+        <script type="module" src="../radio86-emulator.js"></script>
+    </body>
+</html>

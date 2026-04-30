@@ -295,6 +295,9 @@
         <a href="/classic/" target="_blank" rel="noopener" class="icon" data-text="Классическая версия">
             <img class="icon" src="i/classic.svg" alt="Классическая версия" />
         </a>
+        <a href="/web/" target="_blank" rel="noopener" class="icon" data-text="Веб-компоненты">
+            <img class="icon" src="i/web.svg" alt="Веб-компоненты" />
+        </a>
         <a
             href="https://donate.stripe.com/eVa9ATeZr18u2o8289"
             target="_blank"

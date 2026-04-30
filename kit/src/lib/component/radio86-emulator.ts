@@ -81,21 +81,25 @@ export class Radio86Emulator extends HTMLElement {
     private canvas?: HTMLCanvasElement;
     private _keydownHandler?: (e: KeyboardEvent) => void;
     private _keyupHandler?: (e: KeyboardEvent) => void;
+    private _focusable = false;
 
     static get observedAttributes() {
-        return ["monitor", "file", "scale", "files-path"];
+        return ["monitor", "file", "scale", "files-path", "focusable"];
     }
 
     connectedCallback() {
+        this._focusable = this.hasAttribute("focusable");
         this.canvas = document.createElement("canvas");
         this.canvas.style.display = "block";
         this.appendChild(this.canvas);
+        if (this._focusable && this.tabIndex < 0) this.tabIndex = 0;
         this.boot();
     }
 
     disconnectedCallback() {
-        if (this._keydownHandler) document.removeEventListener("keydown", this._keydownHandler);
-        if (this._keyupHandler) document.removeEventListener("keyup", this._keyupHandler);
+        const target: EventTarget = this._focusable ? this : document;
+        if (this._keydownHandler) target.removeEventListener("keydown", this._keydownHandler as EventListener);
+        if (this._keyupHandler) target.removeEventListener("keyup", this._keyupHandler as EventListener);
     }
 
     private async boot() {
@@ -171,15 +175,20 @@ export class Radio86Emulator extends HTMLElement {
             setTimeout(() => machine.cpu.jump(entryPoint!), 500);
         }
 
-        // Keyboard wiring
+        // Keyboard wiring: in `focusable` mode, listen on the host so only the
+        // focused emulator receives input; otherwise listen on document.
+        const focusable = this._focusable;
         this._keydownHandler = (e: KeyboardEvent) => {
             keyboard.onkeydown(e.code);
+            if (focusable && e.code !== "Tab") e.preventDefault();
         };
         this._keyupHandler = (e: KeyboardEvent) => {
             keyboard.onkeyup(e.code);
+            if (focusable && e.code !== "Tab") e.preventDefault();
         };
-        document.addEventListener("keydown", this._keydownHandler);
-        document.addEventListener("keyup", this._keyupHandler);
+        const target: EventTarget = focusable ? this : document;
+        target.addEventListener("keydown", this._keydownHandler as EventListener);
+        target.addEventListener("keyup", this._keyupHandler as EventListener);
 
         machine.reset = () => {
             keyboard.reset();
