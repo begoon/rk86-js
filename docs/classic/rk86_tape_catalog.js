@@ -85,7 +85,7 @@ function tape_catalog() {
     "LORUNNER.GAM",
     "MARS.RKR",
     "MAZE.GAM",
-    "MESHANINA.rk",
+    "MESHANINA.RK",
     "MICRON_R.PKI",
     "MICR_PRT.PKI",
     "MORSE16.RKR",
