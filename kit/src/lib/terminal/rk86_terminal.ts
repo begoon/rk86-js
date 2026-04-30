@@ -2,9 +2,13 @@
 // Usage: bun src/lib/rk86_terminal.ts [program.GAM]
 
 import { asm } from "asm8080";
+import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
+import { basename } from "node:path";
 import pkg from "../../../packages/rk86/package.json";
+
+const UPLOAD_SERVER = "https://rk86.ea.deno.net";
 import { hex16 } from "../core/hex.js";
 import { I8080 } from "../core/i8080.js";
 import * as FileParser from "../core/rk86_file_parser.js";
@@ -446,6 +450,7 @@ function printHelp() {
   --snapshot <файл>        сохранить снимок состояния (JSON) при выходе
   --input <seq>            инъекция клавиш (через запятую): KeyA,Digit1,Enter,...
                            токен *N задаёт паузу N мс (например *200)
+  --online                 открыть в онлайн-эмуляторе rk86.ru
 
 Примеры:
   bunx rk86                          запуск монитора
@@ -507,6 +512,44 @@ function arg<T>(
     return convert(value);
 }
 
+async function runOnline(file: string | undefined): Promise<void> {
+    if (!file) {
+        console.error("--online требует имя файла");
+        process.exit(1);
+    }
+    if (!existsSync(file)) {
+        console.error(`файл не найден: ${file}`);
+        process.exit(1);
+    }
+    const data = await readFile(file);
+    const binary = Buffer.from(data).toString("base64");
+    const name = basename(file);
+
+    const response = await fetch(`${UPLOAD_SERVER}/load`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ binary, name }),
+    });
+    if (!response.ok) {
+        console.error(`ошибка загрузки: HTTP ${response.status}`);
+        process.exit(1);
+    }
+    const { id } = (await response.json()) as { id: string };
+
+    const fileUrl = `${UPLOAD_SERVER}/file/${encodeURIComponent(name)}?${id}`;
+    const url = `https://rk86.ru/index.html?run=${encodeURIComponent(fileUrl)}`;
+    console.log(url);
+
+    const opener =
+        process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
+    const openerArgs = process.platform === "win32" ? ["", url] : [url];
+    spawn(opener, openerArgs, {
+        detached: true,
+        stdio: "ignore",
+        shell: process.platform === "win32",
+    }).unref();
+}
+
 async function main() {
     const args = process.argv.slice(2);
 
@@ -522,6 +565,11 @@ async function main() {
 
     if (flag(args, "-l") || flag(args, "--list")) {
         await listFiles();
+        process.exit(0);
+    }
+
+    if (flag(args, "--online")) {
+        await runOnline(args[0]);
         process.exit(0);
     }
 

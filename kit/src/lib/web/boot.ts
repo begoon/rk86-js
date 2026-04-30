@@ -138,7 +138,10 @@ function filenameURL(name: string): string {
     return "files/" + name;
 }
 
-const basename = (url: string): string => url.split("/").at(-1) || url;
+const basename = (url: string): string => {
+    const path = url.split("?")[0].split("#")[0];
+    return path.split("/").at(-1) || url;
+};
 
 export interface DecodedDataURL {
     name: string;
@@ -382,7 +385,11 @@ export async function main(host: HostCallbacks) {
         }
         const content = await fetch_file(name);
         if (!content) return;
-        parseAndPlaceFile(machine, simulate_keyboard, name, content);
+        // For http(s) URLs, derive a clean filename (no query/hash) so the
+        // parser's extension-based dispatch sees e.g. "CHESS.GAM" rather than
+        // "CHESS.GAM?<id>" used by the online loader.
+        const cleanName = name.startsWith("http") ? decodeURIComponent(basename(name)) : name;
+        parseAndPlaceFile(machine, simulate_keyboard, cleanName, content);
     }
 
     const monitor = await load_catalog_file("mon32.bin");
