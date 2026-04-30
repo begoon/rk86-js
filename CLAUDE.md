@@ -93,7 +93,8 @@ kit/
                       --memory[-from|-to], --snapshot,
                       --input "Key…[,*ms…]", -g <addr> (CPU jump),
                       -G <addr> (route through monitor G command)
-                      for e2e testing)
+                      for e2e testing; --online uploads file to
+                      UPLOAD_SERVER and opens rk86.ru in browser)
   src/lib/component/— standalone <radio86-emulator> web component
   src/routes/       — SvelteKit pages and UI components
   src/routes/state.svelte.ts — reactive bridge between imperative
@@ -132,6 +133,19 @@ docs/
   alpha/            — kit output (experimental, BASE_PATH=/alpha)
   beta/             — kit output (experimental, BASE_PATH=/beta)
   monitor/          — hand-maintained monitor viewer
+loader/
+  main.ts           — Deno Deploy single-file server for the rk86
+                      --online flag. POST /load chunks the binary
+                      into Deno KV (32KB Uint8Array values) with a
+                      60s TTL, returns {id} (6 chars). GET /file/
+                      <name>?<id> looks up by bare-query id and
+                      serves application/octet-stream with permissive
+                      CORS; <name> in the path is purely a hint for
+                      rk86.ru's extension-based parser dispatch. TTL
+                      handles cleanup; no explicit delete on GET.
+                      Deployed manually via Deno Deploy² playground;
+                      requires {"unstable":["kv"]} in deno.json or
+                      the project's unstable-APIs toggle.
 ```
 
 ## Generated files (gitignored)

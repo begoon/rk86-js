@@ -223,6 +223,7 @@ bunx rk86 CHESS.GAM                        # загрузить и запуст�
 bunx rk86 -p CHESS.GAM                     # загрузить без запуска
 bunx rk86 --exit-halt prog.bin             # выход при HLT
 bunx rk86 -l                               # список файлов
+bunx rk86 --online CHESS.GAM               # открыть в онлайн-эмуляторе rk86.ru
 
 # детерминированные e2e-сценарии
 bunx rk86 --headless --turbo --exit-halt \
@@ -240,6 +241,7 @@ bunx rk86 --headless --turbo --exit-halt \
 | `--headless` / `--turbo` / `--timeout <сек>` | режимы для автотестов |
 | `--memory[-from\|-to] <…>` / `--screen <файл>` / `--snapshot <файл>` | дампы при выходе |
 | `--input <seq>` | инъекция клавиш (`*N` — пауза на N мс) |
+| `--online` | загрузить файл на [rk86.ea.deno.net](https://rk86.ea.deno.net) (TTL 60 с) и открыть в браузере на [rk86.ru](https://rk86.ru) |
 
 Форматы файлов: `.pki`/`.gam`/`.rk`/`.rkr` — магнитофонный формат с заголовком; `.bin` — сырой бинарный (с `0000h`, или `10000h - размер` если имя начинается на `mon`); `.json` — полный снимок состояния.
 

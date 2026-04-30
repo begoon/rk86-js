@@ -31,7 +31,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "ALIAZ1.RK-1.png",
         "ALIAZ1.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 17543,
+      size: 17544,
+      entry: 0,
+      checkSum: 29760,
+      leadingE6: false
     },
     {
       name: "ASM-ED.RK",
@@ -39,7 +45,13 @@ var init_catalog_data = __esm(() => {
       description: '\u041F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u0440\u0435\u0430\u043B\u044C\u043D\u043E \u043D\u0435 \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442, \u0432\u044B\u0434\u0430\u0435\u0442 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435 "\u041C\u0410\u041B\u041E \u041E\u0417\u0423". \u041D\u0435\u043C\u043D\u043E\u0433\u043E \u0434\u0440\u0443\u0433\u043E\u0439 \u0444\u0430\u0439\u043B (\u043E\u0442\u043B\u0438\u0447\u0430\u0435\u0442\u0441\u044F \u043D\u0430 \u043F\u0430\u0440\u0443 \u0434\u0435\u0441\u044F\u0442\u043A\u043E\u0432 \u0431\u0430\u0439\u0442).',
       screenshots: [
         "ASM-ED.RK-1.png"
-      ]
+      ],
+      start: 0,
+      end: 4095,
+      size: 4096,
+      entry: 0,
+      checkSum: 7233,
+      leadingE6: false
     },
     {
       name: "ASM_ED.RKR",
@@ -47,7 +59,13 @@ var init_catalog_data = __esm(() => {
       description: '\u041F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u0440\u0435\u0430\u043B\u044C\u043D\u043E \u043D\u0435 \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442, \u0432\u044B\u0434\u0430\u0435\u0442 \u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435 "\u041C\u0410\u041B\u041E \u041E\u0417\u0423".',
       screenshots: [
         "ASM_ED.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 4095,
+      size: 4096,
+      entry: 0,
+      checkSum: 56575,
+      leadingE6: false
     },
     {
       name: "ASSM_MIC.RKR",
@@ -55,7 +73,29 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "ASSM_MIC.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 4175,
+      size: 4176,
+      entry: 0,
+      checkSum: 28700,
+      leadingE6: false
+    },
+    {
+      name: "ATTACK.RK",
+      title: "\u0418\u0433\u0440\u0430 Attack",
+      description: "\u0410\u0432\u0442\u043E\u0440: \u0421\u0442\u0435\u0440\u043B\u0438\u043A\u043E\u0432 \u0421., \u041C\u043E\u0441\u043A\u0432\u0430, 1989.",
+      screenshots: [
+        "ATTACK.RK-1.png",
+        "ATTACK.RK-2.png",
+        "ATTACK.RK-3.png"
+      ],
+      start: 256,
+      end: 4901,
+      size: 4646,
+      entry: 256,
+      checkSum: 31649,
+      leadingE6: false
     },
     {
       name: "BARMEN.RK",
@@ -64,7 +104,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "BARMEN.RK-1.png",
         "BARMEN.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 3727,
+      size: 3728,
+      entry: 0,
+      checkSum: 10030,
+      leadingE6: false
     },
     {
       name: "BASIC.RK",
@@ -72,7 +118,13 @@ var init_catalog_data = __esm(() => {
       description: '\u041F\u0440\u0438\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 " =>". \u0420\u0435\u0430\u043B\u044C\u043D\u043E \u043D\u0435 \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442, \u0432\u044B\u0432\u0430\u043B\u0438\u0432\u0430\u0435\u0442 \u043C\u0443\u0441\u043E\u0440 \u043D\u0430 \u044D\u043A\u0440\u0430\u043D, \u043A\u0430\u043A \u043D\u0430 \u0441\u043A\u0440\u0438\u043D\u0448\u043E\u0442\u0435.',
       screenshots: [
         "BASIC.RK-1.png"
-      ]
+      ],
+      start: 0,
+      end: 8191,
+      size: 8192,
+      entry: 0,
+      checkSum: 51200,
+      leadingE6: false
     },
     {
       name: "BASIC80.RKR",
@@ -80,7 +132,27 @@ var init_catalog_data = __esm(() => {
       description: '\u041F\u0440\u0438\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 "OK".',
       screenshots: [
         "BASIC80.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 6655,
+      size: 6656,
+      entry: 0,
+      checkSum: 21612,
+      leadingE6: false
+    },
+    {
+      name: "BASICMICRON.RK",
+      title: "BASIC \xAB\u041C\u0438\u043A\u0440\u043E\u043D\xBB",
+      description: "\u0412\u0430\u0440\u0438\u0430\u043D\u0442 BASIC \xAB\u041C\u0438\u043A\u0440\u043E\u043D\xBB \u0441 \u043F\u0440\u0438\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435\u043C NEW?",
+      screenshots: [
+        "BASICMICRON.RK-1.png"
+      ],
+      start: 0,
+      end: 8191,
+      size: 8192,
+      entry: 0,
+      checkSum: 51251,
+      leadingE6: false
     },
     {
       name: "BASICMUS.RKR",
@@ -92,7 +164,13 @@ var init_catalog_data = __esm(() => {
         "BASICMUS.RKR-2.png",
         "BASICMUS.RKR-3.png",
         "BASICMUS.RKR-4.png"
-      ]
+      ],
+      start: 0,
+      end: 10731,
+      size: 10732,
+      entry: 0,
+      checkSum: 36845,
+      leadingE6: false
     },
     {
       name: "BASICPC.RKR",
@@ -100,7 +178,42 @@ var init_catalog_data = __esm(() => {
       description: '\u041F\u0440\u0438\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 "READY!".',
       screenshots: [
         "BASICPC.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 8191,
+      size: 8192,
+      entry: 0,
+      checkSum: 59290,
+      leadingE6: false
+    },
+    {
+      name: "BASICPOISK.RK",
+      title: "\u0423\u0442\u0438\u043B\u0438\u0442\u0430 SEARCH \u0434\u043B\u044F BASIC",
+      description: "\u041F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u043F\u043E\u0438\u0441\u043A\u0430 \u0442\u0435\u043A\u0441\u0442\u0430 \u0432 \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430\u0445 \u043D\u0430 BASIC.",
+      screenshots: [
+        "BASICPOISK.RK-1.png"
+      ],
+      start: 24576,
+      end: 25343,
+      size: 768,
+      entry: 24576,
+      checkSum: 36796,
+      leadingE6: false
+    },
+    {
+      name: "BASICPSF.RK",
+      title: "PSF BASIC 32K, \u0432\u0435\u0440\u0441\u0438\u044F 3.2",
+      description: `\u0423\u0441\u043E\u0432\u0435\u0440\u0448\u0435\u043D\u0441\u0442\u0432\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0438\u043D\u0442\u0435\u0440\u043F\u0440\u0435\u0442\u0430\u0442\u043E\u0440 \xAB\u041C\u0438\u043A\u0440\u043E\u0448\u0430 BASIC\xBB (\u043F\u043E \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u044F\u043C \u0438\u0437 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \xAB\u0420\u0430\u0434\u0438\u043E\xBB \u0437\u0430 1985 \u0433. \u21161\u20143 \u0438 1987 \u0433. \u21161).
+\u0412\u0435\u0440\u0441\u0438\u044E \u0441\u043E\u0441\u0442\u0430\u0432\u0438\u043B: \u0410\u043D\u0430\u0448\u043A\u0438\u043D \u0410.\u0410., 24 \u0444\u0435\u0432\u0440\u0430\u043B\u044F 1987.`,
+      screenshots: [
+        "BASICPSF.RK-1.png"
+      ],
+      start: 0,
+      end: 10731,
+      size: 10732,
+      entry: 0,
+      checkSum: 50980,
+      leadingE6: false
     },
     {
       name: "BASICSER.RKR",
@@ -108,7 +221,41 @@ var init_catalog_data = __esm(() => {
       description: '\u041F\u0440\u0438\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 "OK". \u0424\u0430\u0439\u043B \u043E\u0442\u043B\u0438\u0447\u0430\u0435\u0442\u0441\u044F \u043E\u0442 BASIC80.RKR.',
       screenshots: [
         "BASICSER.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 7423,
+      size: 7424,
+      entry: 0,
+      checkSum: 37972,
+      leadingE6: false
+    },
+    {
+      name: "BASICSERVICE.RKR",
+      title: "*BASIC-\u0421\u0415\u0420\u0412\u0418\u0421*",
+      description: "\u0421\u0435\u0440\u0432\u0438\u0441\u043D\u044B\u0439 BASIC \u0441 \u0434\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u043C\u0438 \u043A\u043E\u043C\u0430\u043D\u0434\u0430\u043C\u0438 (EDIT, AUTO, MLOAD, MSAVE \u0438 \u0434\u0440.).",
+      screenshots: [
+        "BASICSERVICE.RKR-1.png"
+      ],
+      start: 0,
+      end: 7423,
+      size: 7424,
+      entry: 0,
+      checkSum: 36712,
+      leadingE6: false
+    },
+    {
+      name: "BASIC_BF.RK",
+      title: "BASIC \xAB\u041C\u0438\u043A\u0440\u043E\u043D\xBB (\u0411\u0430\u0440\u0447\u0443\u043A\u043E\u0432-\u0424\u0430\u0434\u0435\u0435\u0432)",
+      description: "\u0410\u0432\u0442\u043E\u0440\u044B: \u0411\u0430\u0440\u0447\u0443\u043A\u043E\u0432 \u0412.\u041D., \u0424\u0430\u0434\u0435\u0435\u0432 \u0415.\u041F., 1986. \u0420\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u0430\u043D \u0434\u043B\u044F \xAB\u041C\u0438\u043A\u0440\u043E-80\xBB, \u0430\u0434\u0430\u043F\u0442\u0438\u0440\u043E\u0432\u0430\u043D \u0434\u043B\u044F \xAB\u0420\u0430\u0434\u0438\u043E-86\u0420\u041A\xBB \u0432 \u0436\u0443\u0440\u043D\u0430\u043B\u0435 \xAB\u0420\u0430\u0434\u0438\u043E\xBB.",
+      screenshots: [
+        "BASIC_BF.RK-1.png"
+      ],
+      start: 0,
+      end: 8192,
+      size: 8193,
+      entry: 0,
+      checkSum: 54892,
+      leadingE6: false
     },
     {
       name: "BASIC_OK.PKI",
@@ -116,7 +263,13 @@ var init_catalog_data = __esm(() => {
       description: '\u041F\u0440\u0438\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 "OK :". \u0413\u043B\u044E\u0447\u0438\u0442, \u043F\u0440\u0438 \u0440\u0430\u0431\u043E\u0442\u0435 \u043C\u043E\u0436\u0435\u0442 \u0432\u044B\u0432\u043E\u0434\u0438\u0442 \u043C\u0443\u0441\u043E\u0440 \u0438 \u0432\u044B\u0432\u0430\u043B\u0438\u0432\u0430\u0442\u044C\u0441\u044F \u0432 \u041C\u043E\u043D\u0438\u0442\u043E\u0440.',
       screenshots: [
         "BASIC_OK.PKI-1.png"
-      ]
+      ],
+      start: 0,
+      end: 8191,
+      size: 8192,
+      entry: 0,
+      checkSum: 36065,
+      leadingE6: true
     },
     {
       name: "BASIC_PR.PKI",
@@ -124,7 +277,13 @@ var init_catalog_data = __esm(() => {
       description: '\u041F\u0440\u0438\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 "=>".',
       screenshots: [
         "BASIC_PR.PKI-1.png"
-      ]
+      ],
+      start: 0,
+      end: 7423,
+      size: 7424,
+      entry: 0,
+      checkSum: 33370,
+      leadingE6: true
     },
     {
       name: "BASIC_RK.RKR",
@@ -132,7 +291,13 @@ var init_catalog_data = __esm(() => {
       description: "\u0424\u0430\u0439\u043B \u043E\u0442\u043B\u0438\u0447\u0430\u0435\u0442\u0441\u044F \u043E\u0442 BASIC_PR.PKI, \u043D\u043E \u0432\u0438\u0437\u0443\u0430\u043B\u044C\u043D\u043E \u043E\u0442\u043B\u0438\u0447\u0438\u044F \u043D\u0435\u043F\u043E\u043D\u044F\u0442\u043D\u044B.",
       screenshots: [
         "BASIC_RK.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 6837,
+      size: 6838,
+      entry: 0,
+      checkSum: 27879,
+      leadingE6: false
     },
     {
       name: "BASMIC.RKR",
@@ -140,7 +305,13 @@ var init_catalog_data = __esm(() => {
       description: '\u041F\u0440\u0438\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 "=>".',
       screenshots: [
         "BASMIC.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 6592,
+      size: 6593,
+      entry: 0,
+      checkSum: 33238,
+      leadingE6: false
     },
     {
       name: "BAS_MICR.PKI",
@@ -148,7 +319,27 @@ var init_catalog_data = __esm(() => {
       description: '\u0417\u0430\u043F\u0440\u043E\u0441 "NEW?", \u043F\u0440\u0438\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 "\u0416\u0414\u0423:".',
       screenshots: [
         "BAS_MICR.PKI-1.png"
-      ]
+      ],
+      start: 0,
+      end: 8191,
+      size: 8192,
+      entry: 0,
+      checkSum: 21953,
+      leadingE6: true
+    },
+    {
+      name: "BEST.RK",
+      title: "BEST \u2014 BASIC Editor, Screen and Translation",
+      description: "\u0420\u0435\u0434\u0430\u043A\u0442\u043E\u0440 \u0434\u043B\u044F \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C \u043D\u0430 BASIC \u0441 \u0443\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435\u043C \u044D\u043A\u0440\u0430\u043D\u043E\u043C \u0438 \u0442\u0440\u0430\u043D\u0441\u043B\u044F\u0446\u0438\u0435\u0439.",
+      screenshots: [
+        "BEST.RK-1.png"
+      ],
+      start: 24576,
+      end: 26623,
+      size: 2048,
+      entry: 24576,
+      checkSum: 52181,
+      leadingE6: false
     },
     {
       name: "BOMBER.GAM",
@@ -157,7 +348,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "BOMBER.GAM-1.png",
         "BOMBER.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 4095,
+      size: 4096,
+      entry: 0,
+      checkSum: 32250,
+      leadingE6: true
     },
     {
       name: "BS_M_OLD.RKR",
@@ -165,7 +362,13 @@ var init_catalog_data = __esm(() => {
       description: '\u041F\u0440\u0438\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 "\u0416\u0414\u0423:". \u0424\u0430\u0439\u043B \u0441\u0438\u043B\u044C\u043D\u043E \u043E\u0442\u043B\u0438\u0447\u0430\u0435\u0442\u0441\u044F \u043E\u0442 BAS_MICR.PKI.',
       screenshots: [
         "BS_M_OLD.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 8191,
+      size: 8192,
+      entry: 0,
+      checkSum: 10698,
+      leadingE6: false
     },
     {
       name: "BS_PSF.RKR",
@@ -173,7 +376,13 @@ var init_catalog_data = __esm(() => {
       description: "\u0410\u0432\u0442\u043E\u0440 \u0410\u043D\u0430\u0448\u043A\u0438\u043D \u0410.\u0410., 24 \u0444\u0435\u0432\u0440\u0430\u043B\u044F 1987. \u0424\u0430\u0439\u043B \u0437\u043D\u0430\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E \u043E\u0442\u043B\u0438\u0447\u0430\u0435\u0442\u0441\u044F \u043E\u0442 BASICMUS.RKR, \u043D\u043E \u0432\u0438\u0437\u0443\u0430\u043B\u044C\u043D\u043E \u043E\u0442\u043B\u0438\u0447\u0438\u044F \u043D\u0435\u043F\u043E\u043D\u044F\u0442\u043D\u044B. \u0414\u0430\u043D\u043D\u0430\u044F \u0432\u0435\u0440\u0441\u0438\u044F \u043D\u0435 \u0438\u043C\u0435\u0435\u0442 \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u044F \u043F\u043E \u043A\u043E\u043C\u0430\u043D\u0434\u0435 LIST \u043F\u043E\u0441\u043B\u0435 \u043F\u0435\u0440\u0432\u043E\u0433\u043E \u0441\u0442\u0430\u0440\u0442\u0430.",
       screenshots: [
         "BS_PSF.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 6719,
+      size: 6720,
+      entry: 0,
+      checkSum: 25695,
+      leadingE6: false
     },
     {
       name: "BS_SVVI.RKR",
@@ -181,7 +390,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "BS_SVVI.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 6895,
+      size: 6896,
+      entry: 0,
+      checkSum: 7428,
+      leadingE6: false
     },
     {
       name: "BULNIK.GAM",
@@ -189,7 +404,13 @@ var init_catalog_data = __esm(() => {
       description: "\u0421\u0442\u0440\u0430\u043D\u043D\u0430\u044F, \u043D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u0434\u0435\u043B\u0430\u044E\u0449\u0430\u044F \u0438\u0433\u0440\u0430.",
       screenshots: [
         "BULNIK.GAM-1.png"
-      ]
+      ],
+      start: 256,
+      end: 1535,
+      size: 1280,
+      entry: 256,
+      checkSum: 50691,
+      leadingE6: true
     },
     {
       name: "C.PKI",
@@ -197,7 +418,13 @@ var init_catalog_data = __esm(() => {
       description: "\u0421\u0413\u0423, \u0424\u0438\u0437\u0438\u043A\u0430-1989, \u041A\u043E\u0432\u0430\u043B\u0435\u043D\u043A\u043E \u0414.\u0418.",
       screenshots: [
         "C.PKI-1.png"
-      ]
+      ],
+      start: 0,
+      end: 18431,
+      size: 18432,
+      entry: 0,
+      checkSum: 1479,
+      leadingE6: true
     },
     {
       name: "CHERV.RKR",
@@ -206,7 +433,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "CHERV.RKR-1.png",
         "CHERV.RKR-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2159,
+      size: 2160,
+      entry: 0,
+      checkSum: 64591,
+      leadingE6: false
     },
     {
       name: "CHESS.GAM",
@@ -215,7 +448,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "CHESS.GAM-1.png",
         "CHESS.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 28928,
+      size: 28929,
+      entry: 0,
+      checkSum: 65181,
+      leadingE6: true
     },
     {
       name: "CHESS2.RKR",
@@ -223,7 +462,13 @@ var init_catalog_data = __esm(() => {
       description: "Handikraft",
       screenshots: [
         "CHESS2.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 26367,
+      size: 26368,
+      entry: 0,
+      checkSum: 22263,
+      leadingE6: false
     },
     {
       name: "CHESS_X.GAM",
@@ -232,7 +477,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "CHESS_X.GAM-1.png",
         "CHESS_X.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 28928,
+      size: 28929,
+      entry: 0,
+      checkSum: 46691,
+      leadingE6: true
     },
     {
       name: "CHUDOV.RK",
@@ -240,7 +491,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "CHUDOV.RK-1.png"
-      ]
+      ],
+      start: 4352,
+      end: 5312,
+      size: 961,
+      entry: 4352,
+      checkSum: 11288,
+      leadingE6: false
     },
     {
       name: "CIRCUS.RKR",
@@ -249,7 +506,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "CIRCUS.RKR-1.png",
         "CIRCUS.RKR-2.png"
-      ]
+      ],
+      start: 0,
+      end: 7648,
+      size: 7649,
+      entry: 0,
+      checkSum: 58259,
+      leadingE6: false
     },
     {
       name: "CIRK.GAM",
@@ -258,13 +521,25 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "CIRK.GAM-1.png",
         "CIRK.GAM-2.png"
-      ]
+      ],
+      start: 256,
+      end: 7455,
+      size: 7200,
+      entry: 256,
+      checkSum: 46182,
+      leadingE6: true
     },
     {
       name: "CONSTMAG.RKR",
       title: "\u0427\u0442\u043E-\u0442\u043E \u0434\u043B\u044F \u043C\u0430\u0433\u043D\u0438\u0442\u043E\u0444\u043E\u043D\u043D\u043E\u0439 \u043A\u043E\u043D\u0441\u0442\u0430\u043D\u0442\u044B",
       description: "\u041D\u0435\u043F\u043E\u043D\u044F\u0442\u043D\u043E, \u0447\u0442\u043E \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u0434\u0435\u043B\u0430\u0435\u0442.",
-      screenshots: []
+      screenshots: [],
+      start: 12288,
+      end: 12401,
+      size: 114,
+      entry: 12288,
+      checkSum: 32601,
+      leadingE6: false
     },
     {
       name: "CPM.RKR",
@@ -272,7 +547,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "CPM.RKR-1.png"
-      ]
+      ],
+      start: 29440,
+      end: 30117,
+      size: 678,
+      entry: 29440,
+      checkSum: 63973,
+      leadingE6: false
     },
     {
       name: "DEBUG.PKI",
@@ -281,7 +562,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "DEBUG.PKI-1.png",
         "DEBUG.PKI-2.png"
-      ]
+      ],
+      start: 24832,
+      end: 29695,
+      size: 4864,
+      entry: 24832,
+      checkSum: 42637,
+      leadingE6: true
     },
     {
       name: "DEBUG.RK",
@@ -290,7 +577,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "DEBUG.RK-1.png",
         "DEBUG.RK-2.png"
-      ]
+      ],
+      start: 24832,
+      end: 29695,
+      size: 4864,
+      entry: 24832,
+      checkSum: 29787,
+      leadingE6: false
     },
     {
       name: "DESCENT.RK",
@@ -299,7 +592,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "DESCENT.RK-1.png",
         "DESCENT.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 10495,
+      size: 10496,
+      entry: 0,
+      checkSum: 7279,
+      leadingE6: false
     },
     {
       name: "DISASM.RK",
@@ -307,7 +606,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "DISASM.RK-1.png"
-      ]
+      ],
+      start: 2048,
+      end: 4095,
+      size: 2048,
+      entry: 2048,
+      checkSum: 1004,
+      leadingE6: false
     },
     {
       name: "DISMIC.PKI",
@@ -315,7 +620,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "DISMIC.PKI-1.png"
-      ]
+      ],
+      start: 0,
+      end: 4095,
+      size: 4096,
+      entry: 0,
+      checkSum: 12029,
+      leadingE6: true
     },
     {
       name: "DIVERSE.GAM",
@@ -324,13 +635,39 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "DIVERSE.GAM-1.png",
         "DIVERSE.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 5903,
+      size: 5904,
+      entry: 0,
+      checkSum: 44187,
+      leadingE6: true
     },
     {
       name: "DSSM-CPM.RKR",
       title: "\u0414\u0438\u0437\u0430\u0441\u0441\u0435\u043C\u0431\u043B\u0435\u0440 \u043E\u0442 Ward Christersen",
       description: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0437\u0430\u0441\u0442\u0430\u0432\u0438\u0442\u044C \u0440\u0430\u0431\u043E\u0442\u0430\u0442\u044C, \u043C\u043E\u0436\u0435\u0442 \u043D\u0435\u0432\u0435\u0440\u043D\u044B\u0439 \u0430\u0434\u0440\u0435\u0441 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438.",
-      screenshots: []
+      screenshots: [],
+      start: 0,
+      end: 5919,
+      size: 5920,
+      entry: 0,
+      checkSum: 19127,
+      leadingE6: false
+    },
+    {
+      name: "DUMPCOR.RK",
+      title: "\u0420\u0435\u0434\u0430\u043A\u0442\u043E\u0440 \u043F\u0430\u043C\u044F\u0442\u0438 DUMPCOR",
+      description: "\u0410\u0432\u0442\u043E\u0440: \u0410.\u0412.\u0423., 1990",
+      screenshots: [
+        "DUMPCOR.RK-1.png"
+      ],
+      start: 28672,
+      end: 29887,
+      size: 1216,
+      entry: 28672,
+      checkSum: 58602,
+      leadingE6: false
     },
     {
       name: "DUMPCOR1.RK",
@@ -338,7 +675,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "DUMPCOR1.RK-1.png"
-      ]
+      ],
+      start: 29696,
+      end: 30207,
+      size: 512,
+      entry: 29696,
+      checkSum: 43163,
+      leadingE6: false
     },
     {
       name: "DUMPCOR2.RK",
@@ -346,7 +689,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "DUMPCOR2.RK-1.png"
-      ]
+      ],
+      start: 28672,
+      end: 29368,
+      size: 697,
+      entry: 28672,
+      checkSum: 61129,
+      leadingE6: false
     },
     {
       name: "DUMPED.PKI",
@@ -354,7 +703,13 @@ var init_catalog_data = __esm(() => {
       description: "\u0410\u0432\u0442\u043E\u0440: \u0414\u0435\u043C\u0438\u043D \u0410\u043B\u0435\u043A\u0441\u0430\u043D\u0434\u0440.",
       screenshots: [
         "DUMPED.PKI-1.png"
-      ]
+      ],
+      start: 24832,
+      end: 25471,
+      size: 640,
+      entry: 24832,
+      checkSum: 16161,
+      leadingE6: true
     },
     {
       name: "ED-DSSM.RKR",
@@ -362,7 +717,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "ED-DSSM.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 4095,
+      size: 4096,
+      entry: 0,
+      checkSum: 21538,
+      leadingE6: false
     },
     {
       name: "ED-DSSM2.RKR",
@@ -370,7 +731,13 @@ var init_catalog_data = __esm(() => {
       description: "\u041E\u0442\u043B\u0438\u0447\u0430\u0435\u0442\u0441\u044F \u043D\u0430 \u043F\u0430\u0440\u0443 \u0431\u0430\u0439\u0442 \u043E\u0442 ED-DSSM.RKR, \u043D\u043E \u0432\u0438\u0437\u0443\u0430\u043B\u044C\u043D\u043E \u043E\u0442\u043B\u0438\u0447\u0438\u044F \u043D\u0435\u043F\u043E\u043D\u044F\u0442\u043D\u044B.",
       screenshots: [
         "ED-DSSM2.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 4095,
+      size: 4096,
+      entry: 0,
+      checkSum: 12029,
+      leadingE6: false
     },
     {
       name: "EDITSORT.PKI",
@@ -378,7 +745,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "EDITSORT.PKI-1.png"
-      ]
+      ],
+      start: 0,
+      end: 3733,
+      size: 3734,
+      entry: 0,
+      checkSum: 29940,
+      leadingE6: true
     },
     {
       name: "EDMASM.PKI",
@@ -387,7 +760,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "EDMASM.PKI-1.png",
         "EDMASM.PKI-2.png"
-      ]
+      ],
+      start: 0,
+      end: 4095,
+      size: 4096,
+      entry: 0,
+      checkSum: 52172,
+      leadingE6: true
     },
     {
       name: "E_STAKAN.RKR",
@@ -395,7 +774,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "E_STAKAN.RKR-1.png"
-      ]
+      ],
+      start: 4352,
+      end: 5888,
+      size: 1537,
+      entry: 4352,
+      checkSum: 6433,
+      leadingE6: false
     },
     {
       name: "FORMULA.RK",
@@ -404,7 +789,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "FORMULA.RK-1.png",
         "FORMULA.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 6527,
+      size: 6528,
+      entry: 0,
+      checkSum: 11416,
+      leadingE6: false
     },
     {
       name: "FORTH.PKI",
@@ -413,7 +804,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "FORTH.PKI-1.png",
         "FORTH.PKI-2.png"
-      ]
+      ],
+      start: 256,
+      end: 18115,
+      size: 17860,
+      entry: 256,
+      checkSum: 13438,
+      leadingE6: true
     },
     {
       name: "FOXHUNT.RK",
@@ -422,7 +819,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "FOXHUNT.RK-1.png",
         "FOXHUNT.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2931,
+      size: 2932,
+      entry: 0,
+      checkSum: 11697,
+      leadingE6: false
     },
     {
       name: "FULLEDIT.PKI",
@@ -430,16 +833,28 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "FULLEDIT.PKI-1.png"
-      ]
+      ],
+      start: 0,
+      end: 4095,
+      size: 4096,
+      entry: 0,
+      checkSum: 60346,
+      leadingE6: true
     },
     {
       name: "GFIRE.GAM",
-      title: "Crossfire, \u0412\u0435\u0440\u0441\u0438\u044F 002 (\u041C\u0438\u043A\u0440\u043E\u0448\u0430)",
+      title: "\u0418\u0433\u0440\u0430 \xABCrossfire\xBB, \u0432\u0435\u0440\u0441\u0438\u044F 002 (\u041C\u0438\u043A\u0440\u043E\u0448\u0430)",
       description: "\u0420\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u0447\u0438\u043A: \u0417\u044B\u0440\u044F\u043D\u043E\u0432 \u0410.\u0412., 1988.",
       screenshots: [
         "GFIRE.GAM-1.png",
         "GFIRE.GAM-2.png"
-      ]
+      ],
+      start: 4080,
+      end: 15359,
+      size: 11280,
+      entry: 4080,
+      checkSum: 65102,
+      leadingE6: true
     },
     {
       name: "GLASS1.GAM",
@@ -447,7 +862,13 @@ var init_catalog_data = __esm(() => {
       description: "ALG, \u041A\u043E\u043B\u043E\u043C\u043D\u0430 \u0418\u043D\u0442\u0435\u0433\u0440\u0430\u043B, 1988",
       screenshots: [
         "GLASS1.GAM-1.png"
-      ]
+      ],
+      start: 0,
+      end: 1535,
+      size: 1536,
+      entry: 0,
+      checkSum: 48167,
+      leadingE6: true
     },
     {
       name: "GLASS2.GAM",
@@ -456,7 +877,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "GLASS2.GAM-1.png",
         "GLASS2.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2304,
+      size: 2305,
+      entry: 0,
+      checkSum: 8277,
+      leadingE6: true
     },
     {
       name: "HEXEDIT1.RKR",
@@ -465,7 +892,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "HEXEDIT1.RKR-1.png",
         "HEXEDIT1.RKR-2.png"
-      ]
+      ],
+      start: 0,
+      end: 3743,
+      size: 3744,
+      entry: 0,
+      checkSum: 14176,
+      leadingE6: false
     },
     {
       name: "HEXEDIT2.RKR",
@@ -474,7 +907,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "HEXEDIT2.RKR-1.png",
         "HEXEDIT2.RKR-2.png"
-      ]
+      ],
+      start: 0,
+      end: 3743,
+      size: 3744,
+      entry: 0,
+      checkSum: 62672,
+      leadingE6: false
     },
     {
       name: "I8080TST.GAM",
@@ -482,7 +921,13 @@ var init_catalog_data = __esm(() => {
       description: "\u0410\u0434\u0430\u043F\u0442\u0438\u0440\u043E\u0432\u0430\u043D \u0434\u043B\u044F \u0432\u044B\u0432\u043E\u0434\u0430 \u043D\u0430 \u044D\u043A\u0440\u0430\u043D \u0447\u0435\u0440\u0435\u0437 \u043F\u043E\u0434\u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u044B \u0420\u041A.",
       screenshots: [
         "I8080TST.GAM-1.png"
-      ]
+      ],
+      start: 0,
+      end: 1286,
+      size: 1287,
+      entry: 0,
+      checkSum: 3272,
+      leadingE6: true
     },
     {
       name: "JUMP.RK",
@@ -492,7 +937,13 @@ var init_catalog_data = __esm(() => {
         "JUMP.RK-1.png",
         "JUMP.RK-2.png",
         "JUMP.RK-3.png"
-      ]
+      ],
+      start: 0,
+      end: 6826,
+      size: 6827,
+      entry: 0,
+      checkSum: 52922,
+      leadingE6: false
     },
     {
       name: "KAKVAS.GAM",
@@ -500,7 +951,13 @@ var init_catalog_data = __esm(() => {
       description: "\u041F\u0440\u0438\u043C\u0438\u0442\u0438\u0432\u043D\u0430\u044F \u0434\u0435\u043C\u043E-\u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430.",
       screenshots: [
         "KAKVAS.GAM-1.png"
-      ]
+      ],
+      start: 256,
+      end: 443,
+      size: 188,
+      entry: 256,
+      checkSum: 28766,
+      leadingE6: true
     },
     {
       name: "KALAH.RKR",
@@ -508,7 +965,30 @@ var init_catalog_data = __esm(() => {
       description: "Handikraft",
       screenshots: [
         "KALAH.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 10240,
+      size: 10241,
+      entry: 0,
+      checkSum: 50151,
+      leadingE6: false
+    },
+    {
+      name: "KINDZADZA.RK",
+      title: "\u0418\u0433\u0440\u0430 \xAB\u0413\u0430\u043B\u0430\u043A\u0442\u0438\u043A\u0430 \u041A\u0438\u043D-\u0434\u0437\u0430-\u0434\u0437\u0430\xBB",
+      description: "\u041F\u043E \u043C\u043E\u0442\u0438\u0432\u0430\u043C \u043E\u0434\u043D\u043E\u0438\u043C\u0451\u043D\u043D\u043E\u0433\u043E \u0444\u0438\u043B\u044C\u043C\u0430 \u0413. \u0414\u0430\u043D\u0435\u043B\u0438\u044F. \u0412\u043A\u043B\u044E\u0447\u0430\u0435\u0442 \u0440\u0443\u0441\u0441\u043A\u043E-\u0447\u0430\u0442\u043B\u0430\u043D\u0441\u043A\u0438\u0439 \u0441\u043B\u043E\u0432\u0430\u0440\u044C (\u043F\u0430\u0446\u0430\u043A, \u0447\u0430\u0442\u043B, \u043A\u0443, \u044D\u0446\u0438\u043B\u043E\u043F\u043F \u0438 \u0442.\u043F.).",
+      screenshots: [
+        "KINDZADZA.RK-1.png",
+        "KINDZADZA.RK-2.png",
+        "KINDZADZA.RK-3.png",
+        "KINDZADZA.RK-4.png"
+      ],
+      start: 0,
+      end: 8191,
+      size: 8192,
+      entry: 0,
+      checkSum: 18045,
+      leadingE6: false
     },
     {
       name: "KLAD.RK",
@@ -517,7 +997,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "KLAD.RK-1.png",
         "KLAD.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 13135,
+      size: 13136,
+      entry: 0,
+      checkSum: 34205,
+      leadingE6: false
     },
     {
       name: "KLAD.RKR",
@@ -526,7 +1012,30 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "KLAD.RKR-1.png",
         "KLAD.RKR-2.png"
-      ]
+      ],
+      start: 0,
+      end: 13135,
+      size: 13136,
+      entry: 0,
+      checkSum: 35490,
+      leadingE6: false
+    },
+    {
+      name: "KOSMNASEKOMYE.RK",
+      title: "\u0418\u0433\u0440\u0430 \u041A\u043E\u0441\u043C\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u041D\u0430\u0441\u0435\u043A\u043E\u043C\u044B\u0435",
+      description: "\u0410\u0432\u0442\u043E\u0440: \u0425\u0430\u0440\u044C\u043A\u043E\u0432\u0441\u043A\u0438\u0439 \u0410.\u0410., \u041B\u0435\u043D\u0438\u043D\u0433\u0440\u0430\u0434",
+      screenshots: [
+        "KOSMNASEKOMYE.RK-1.png",
+        "KOSMNASEKOMYE.RK-2.png",
+        "KOSMNASEKOMYE.RK-3.png",
+        "KOSMNASEKOMYE.RK-4.png"
+      ],
+      start: 0,
+      end: 4920,
+      size: 4921,
+      entry: 0,
+      checkSum: 25482,
+      leadingE6: false
     },
     {
       name: "KRESTNO.GAM",
@@ -535,7 +1044,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "KRESTNO.GAM-1.png",
         "KRESTNO.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 5120,
+      size: 5121,
+      entry: 0,
+      checkSum: 15166,
+      leadingE6: true
     },
     {
       name: "KROK.GAM",
@@ -544,7 +1059,28 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "KROK.GAM-1.png",
         "KROK.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 6911,
+      size: 6912,
+      entry: 0,
+      checkSum: 45568,
+      leadingE6: true
+    },
+    {
+      name: "KROT.RK",
+      title: "\u0418\u0433\u0440\u0430 \u041A\u0440\u043E\u0442",
+      description: "*BSV* corp., \u0411\u043E\u0433\u0434\u0430\u043D\u043E\u0432 \u0421.\u0412., \u041C\u043E\u0441\u043A\u0432\u0430, \u044F\u043D\u0432\u0430\u0440\u044C 1990. \u0412\u0435\u0440\u0441\u0438\u044F 1.0.",
+      screenshots: [
+        "KROT.RK-1.png",
+        "KROT.RK-2.png"
+      ],
+      start: 0,
+      end: 11109,
+      size: 11110,
+      entry: 0,
+      checkSum: 14586,
+      leadingE6: false
     },
     {
       name: "LABYRINT.GAM",
@@ -553,7 +1089,28 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "LABYRINT.GAM-1.png",
         "LABYRINT.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 7956,
+      size: 7957,
+      entry: 0,
+      checkSum: 63705,
+      leadingE6: true
+    },
+    {
+      name: "LANDING.RK",
+      title: "\u0418\u0433\u0440\u0430 Landing",
+      description: "\u0410\u0432\u0442\u043E\u0440: \u0421\u0442\u0435\u0440\u043B\u0438\u043A\u043E\u0432 \u0421.\u0410., \u041C\u043E\u0441\u043A\u0432\u0430, 1989",
+      screenshots: [
+        "LANDING.RK-1.png",
+        "LANDING.RK-2.png"
+      ],
+      start: 0,
+      end: 6030,
+      size: 6031,
+      entry: 0,
+      checkSum: 84,
+      leadingE6: false
     },
     {
       name: "LEST.GAM",
@@ -562,7 +1119,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "LEST.GAM-1.png",
         "LEST.GAM-2.png"
-      ]
+      ],
+      start: 256,
+      end: 1887,
+      size: 1632,
+      entry: 256,
+      checkSum: 58609,
+      leadingE6: true
     },
     {
       name: "LESTN.RK",
@@ -571,7 +1134,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "LESTN.RK-1.png",
         "LESTN.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 7967,
+      size: 7968,
+      entry: 0,
+      checkSum: 28231,
+      leadingE6: false
     },
     {
       name: "LESTN1.GAM",
@@ -580,7 +1149,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "LESTN1.GAM-1.png",
         "LESTN1.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 7967,
+      size: 7968,
+      entry: 0,
+      checkSum: 54451,
+      leadingE6: true
     },
     {
       name: "LESTNICA.GAM",
@@ -589,7 +1164,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "LESTNICA.GAM-1.png",
         "LESTNICA.GAM-2.png"
-      ]
+      ],
+      start: 256,
+      end: 7967,
+      size: 7712,
+      entry: 256,
+      checkSum: 44683,
+      leadingE6: true
     },
     {
       name: "LIFE.RKR",
@@ -598,7 +1179,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "LIFE.RKR-1.png",
         "LIFE.RKR-2.png"
-      ]
+      ],
+      start: 24576,
+      end: 28512,
+      size: 3937,
+      entry: 24576,
+      checkSum: 49085,
+      leadingE6: false
     },
     {
       name: "LINKRK.RKR",
@@ -606,7 +1193,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "LINKRK.RKR-1.png"
-      ]
+      ],
+      start: 28928,
+      end: 29647,
+      size: 720,
+      entry: 28928,
+      checkSum: 13841,
+      leadingE6: false
     },
     {
       name: "LOMAZE.RK",
@@ -615,7 +1208,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "LOMAZE.RK-1.png",
         "LOMAZE.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 7935,
+      size: 7936,
+      entry: 0,
+      checkSum: 52137,
+      leadingE6: false
     },
     {
       name: "LORUNNER.GAM",
@@ -625,7 +1224,28 @@ var init_catalog_data = __esm(() => {
         "LORUNNER.GAM-1.png",
         "LORUNNER.GAM-2.png",
         "LORUNNER.GAM-3.png"
-      ]
+      ],
+      start: 0,
+      end: 12543,
+      size: 12544,
+      entry: 0,
+      checkSum: 53004,
+      leadingE6: true
+    },
+    {
+      name: "MARS.RKR",
+      title: "\u0418\u0433\u0440\u0430 \xABS.O.S.\xBB \u2014 \u0437\u0430\u0449\u0438\u0442\u0430 \u0417\u0435\u043C\u043B\u0438 \u043E\u0442 \u043C\u0430\u0440\u0441\u0438\u0430\u043D",
+      description: "\u041A\u043E\u043C\u043F\u044C\u044E\u0442\u0435\u0440 \xAB\u041F\u0430\u0440\u0442\u043D\u0451\u0440\xBB. \u0421\u043F\u0430\u0441\u0438\u0442\u0435 \u0446\u0438\u0432\u0438\u043B\u0438\u0437\u0430\u0446\u0438\u044E \u043E\u0442 22-\u0439 \u044D\u0441\u043A\u0430\u0434\u0440\u044B \u043C\u0430\u0440\u0441\u0438\u0430\u043D (30 \u0431\u043E\u0435\u0432\u044B\u0445 \u043A\u043E\u0440\u0430\u0431\u043B\u0435\u0439).",
+      screenshots: [
+        "MARS.RKR-1.png",
+        "MARS.RKR-2.png"
+      ],
+      start: 0,
+      end: 5631,
+      size: 5632,
+      entry: 0,
+      checkSum: 60858,
+      leadingE6: false
     },
     {
       name: "MAZE.GAM",
@@ -634,7 +1254,28 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "MAZE.GAM-1.png",
         "MAZE.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 7935,
+      size: 7936,
+      entry: 0,
+      checkSum: 42637,
+      leadingE6: true
+    },
+    {
+      name: "MESHANINA.rk",
+      title: "\u0418\u0433\u0440\u0430 \xAB\u041C\u0435\u0448\u0430\u043D\u0438\u043D\u0430\xBB, \u0432\u0435\u0440\u0441\u0438\u044F 1.1",
+      description: `\u041B\u042D\u041C\u0417, 1989. \u041F\u0435\u0440\u0435\u0440\u0430\u0431\u043E\u0442\u043A\u0430 \u0430\u043D\u0433\u043B\u0438\u0439\u0441\u043A\u043E\u0433\u043E \u0432\u0430\u0440\u0438\u0430\u043D\u0442\u0430.
+\u0418\u0433\u0440\u0430 \u043D\u0430 \u0440\u0430\u0437\u0432\u0438\u0442\u0438\u0435 \u0438\u043D\u0442\u0443\u0438\u0446\u0438\u0438 \u0438 \u043D\u0430\u0432\u044B\u043A\u043E\u0432 \u0440\u0430\u0431\u043E\u0442\u044B \u0441 \u043A\u043B\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u043E\u0439: \u043A\u043E\u043C\u043F\u044C\u044E\u0442\u0435\u0440 \u0432\u044B\u0431\u0438\u0440\u0430\u0435\u0442 \u0441\u043B\u043E\u0432\u043E \u0438\u0437 3\u20147 \u0431\u0443\u043A\u0432 \u0438 \u043F\u0440\u043E\u0438\u0437\u0432\u043E\u043B\u044C\u043D\u043E \u043F\u0435\u0440\u0435\u0441\u0442\u0430\u0432\u043B\u044F\u0435\u0442 \u0432 \u043D\u0451\u043C \u0431\u0443\u043A\u0432\u044B \u2014 \u043D\u0443\u0436\u043D\u043E \u0443\u0433\u0430\u0434\u0430\u0442\u044C.`,
+      screenshots: [
+        "MESHANINA.rk-1.png"
+      ],
+      start: 256,
+      end: 3344,
+      size: 3089,
+      entry: 256,
+      checkSum: 34687,
+      leadingE6: false
     },
     {
       name: "MICRON_R.PKI",
@@ -642,7 +1283,13 @@ var init_catalog_data = __esm(() => {
       description: '\u041F\u0440\u0438\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 "\u0416\u0414\u0423". \u0413\u043B\u044E\u0447\u0438\u0442, \u043F\u0440\u0438 \u0441\u0442\u0430\u0440\u0442\u0435 \u0432\u044B\u0432\u043E\u0434\u0438\u0442 \u043C\u0443\u0441\u043E\u0440 \u0438 \u0432\u0438\u0441\u043D\u0435\u0442.',
       screenshots: [
         "MICRON_R.PKI-1.png"
-      ]
+      ],
+      start: 0,
+      end: 8191,
+      size: 8192,
+      entry: 0,
+      checkSum: 38917,
+      leadingE6: true
     },
     {
       name: "MICR_PRT.PKI",
@@ -650,7 +1297,13 @@ var init_catalog_data = __esm(() => {
       description: '\u041F\u0440\u0438\u0433\u043B\u0430\u0436\u0435\u043D\u0438\u0435 "\u0416\u0414\u0423:". \u041F\u0440\u0438 \u0441\u0442\u0430\u0440\u0442\u0435 \u0437\u0430\u0434\u0430\u0435\u0442 \u0432\u043E\u043F\u0440\u043E\u0441 \u043E \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0438 \u043F\u0435\u0447\u0430\u0442\u0438.',
       screenshots: [
         "MICR_PRT.PKI-1.png"
-      ]
+      ],
+      start: 0,
+      end: 8537,
+      size: 8538,
+      entry: 0,
+      checkSum: 60583,
+      leadingE6: true
     },
     {
       name: "MORSE16.RKR",
@@ -658,7 +1311,28 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "MORSE16.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 735,
+      size: 736,
+      entry: 0,
+      checkSum: 20574,
+      leadingE6: false
+    },
+    {
+      name: "MURAVEINIK.RK",
+      title: "\u0418\u0433\u0440\u0430 \xAB\u041C\u0443\u0440\u0430\u0432\u0435\u0439\u043D\u0438\u043A\xBB",
+      description: "\u0410\u0432\u0442\u043E\u0440: \u0424\u0435\u043E\u043A\u0442\u0438\u0441\u0442\u043E\u0432 \u0421.\u0410., 1987.",
+      screenshots: [
+        "MURAVEINIK.RK-1.png",
+        "MURAVEINIK.RK-2.png"
+      ],
+      start: 24576,
+      end: 26469,
+      size: 1894,
+      entry: 24576,
+      checkSum: 40892,
+      leadingE6: false
     },
     {
       name: "MUSIC.RKR",
@@ -666,7 +1340,13 @@ var init_catalog_data = __esm(() => {
       description: "\u041E\u0442\u043B\u0438\u0447\u0430\u0435\u0442\u0441\u044F \u043D\u0430 \u043F\u0430\u0440\u0443 \u0431\u0430\u0439\u0442 \u043E\u0442 PMS.PKI, \u043D\u043E \u0432\u0438\u0437\u0443\u0430\u043B\u044C\u043D\u043E \u043E\u0442\u043B\u0438\u0447\u0438\u044F \u043D\u0435\u043F\u043E\u043D\u044F\u0442\u043D\u044B.",
       screenshots: [
         "MUSIC.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 4671,
+      size: 4672,
+      entry: 0,
+      checkSum: 7840,
+      leadingE6: false
     },
     {
       name: "MUZUKRED.RKR",
@@ -674,7 +1354,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "MUZUKRED.RKR-1.png"
-      ]
+      ],
+      start: 24576,
+      end: 27228,
+      size: 2653,
+      entry: 24576,
+      checkSum: 35320,
+      leadingE6: false
     },
     {
       name: "MUZ_SYST.RKR",
@@ -682,7 +1368,25 @@ var init_catalog_data = __esm(() => {
       description: "\u041E\u0442\u043B\u0438\u0447\u0430\u0435\u0442\u0441\u044F \u043C\u043D\u043E\u0433\u0438\u043C\u0438 \u0431\u0430\u0439\u0442\u0430\u043C\u0438 \u043E\u0442 PMS.PKI \u0438 MUSIC.RKR, \u043D\u043E \u0432\u0438\u0437\u0443\u0430\u043B\u044C\u043D\u043E \u043E\u0442\u043B\u0438\u0447\u0438\u044F \u043D\u0435\u043F\u043E\u043D\u044F\u0442\u043D\u044B.",
       screenshots: [
         "MUZ_SYST.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 4591,
+      size: 4592,
+      entry: 0,
+      checkSum: 4250,
+      leadingE6: false
+    },
+    {
+      name: "MYZIKA.RK",
+      title: "\u041C\u0443\u0437\u044B\u043A\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430",
+      description: "\u0412\u043E\u0441\u043F\u0440\u043E\u0438\u0437\u0432\u0435\u0434\u0435\u043D\u0438\u0435 \u043C\u0443\u0437\u044B\u043A\u0438. \u0417\u0430\u043F\u0443\u0441\u043A\u0430\u0435\u0442\u0441\u044F \u0438\u0437 BASIC \xAB\u041C\u0438\u043A\u0440\u043E\u043D\xBB.",
+      screenshots: [],
+      start: 0,
+      end: 2058,
+      size: 2059,
+      entry: 0,
+      checkSum: 3106,
+      leadingE6: false
     },
     {
       name: "NALET.RK",
@@ -693,7 +1397,13 @@ var init_catalog_data = __esm(() => {
         "NALET.RK-1.png",
         "NALET.RK-2.png",
         "NALET.RK-3.png"
-      ]
+      ],
+      start: 0,
+      end: 9216,
+      size: 9217,
+      entry: 0,
+      checkSum: 56615,
+      leadingE6: false
     },
     {
       name: "O1.GAM",
@@ -707,7 +1417,28 @@ var init_catalog_data = __esm(() => {
         "O1.GAM-5.png",
         "O1.GAM-6.png",
         "O1.GAM-7.png"
-      ]
+      ],
+      start: 6144,
+      end: 22743,
+      size: 16600,
+      entry: 6144,
+      checkSum: 63847,
+      leadingE6: true
+    },
+    {
+      name: "OTELLO.RK",
+      title: "\u0418\u0433\u0440\u0430 \xABOthello\xBB (\u0420\u0435\u0432\u0435\u0440\u0441\u0438)",
+      description: "\u041D\u0430 \u0430\u043D\u0433\u043B\u0438\u0439\u0441\u043A\u043E\u043C \u044F\u0437\u044B\u043A\u0435, \u043F\u043E\u0440\u0442 \u0441 \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u044B \u043D\u0430 FORTRAN. \u0418\u0433\u0440\u043E\u0432\u043E\u0435 \u043F\u043E\u043B\u0435 8\xD78, \u0438\u0433\u0440\u0430\u0435\u0442\u0435 \u0441\u0438\u043C\u0432\u043E\u043B\u043E\u043C \xABX\xBB.",
+      screenshots: [
+        "OTELLO.RK-1.png",
+        "OTELLO.RK-2.png"
+      ],
+      start: 0,
+      end: 26111,
+      size: 26112,
+      entry: 0,
+      checkSum: 19527,
+      leadingE6: false
     },
     {
       name: "OTELLO.RKR",
@@ -716,7 +1447,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "OTELLO.RKR-1.png",
         "OTELLO.RKR-2.png"
-      ]
+      ],
+      start: 22528,
+      end: 28576,
+      size: 6049,
+      entry: 22528,
+      checkSum: 56971,
+      leadingE6: false
     },
     {
       name: "OilsWell.rkr",
@@ -726,7 +1463,13 @@ var init_catalog_data = __esm(() => {
         "OilsWell.rkr-1.png",
         "OilsWell.rkr-2.png",
         "OilsWell.rkr-3.png"
-      ]
+      ],
+      start: 0,
+      end: 10496,
+      size: 10497,
+      entry: 0,
+      checkSum: 58240,
+      leadingE6: true
     },
     {
       name: "PACMAN.GAM",
@@ -734,7 +1477,13 @@ var init_catalog_data = __esm(() => {
       description: "Pacman-87.",
       screenshots: [
         "PACMAN.GAM-1.png"
-      ]
+      ],
+      start: 24576,
+      end: 29110,
+      size: 4535,
+      entry: 24576,
+      checkSum: 37645,
+      leadingE6: true
     },
     {
       name: "PACMAN.RK",
@@ -742,7 +1491,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "PACMAN.RK-1.png"
-      ]
+      ],
+      start: 24576,
+      end: 30207,
+      size: 5632,
+      entry: 24576,
+      checkSum: 28534,
+      leadingE6: false
     },
     {
       name: "PACMAN1.GAM",
@@ -750,7 +1505,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "PACMAN1.GAM-1.png"
-      ]
+      ],
+      start: 0,
+      end: 9808,
+      size: 9809,
+      entry: 0,
+      checkSum: 58234,
+      leadingE6: true
     },
     {
       name: "PAKET.GAM",
@@ -768,7 +1529,29 @@ var init_catalog_data = __esm(() => {
         "PAKET.GAM-09.png",
         "PAKET.GAM-10.png",
         "PAKET.GAM-11.png"
-      ]
+      ],
+      start: 0,
+      end: 16065,
+      size: 16066,
+      entry: 0,
+      checkSum: 36298,
+      leadingE6: true
+    },
+    {
+      name: "PANIKA.RK",
+      title: "\u0418\u0433\u0440\u0430 \xAB\u041F\u0430\u043D\u0438\u043A\u0430\xBB",
+      description: "\u0410\u0432\u0442\u043E\u0440: \u0421\u0435\u043B\u043E\u0432 \u0415.\u0410., \u041C\u043E\u0441\u043A\u0432\u0430, 1989.",
+      screenshots: [
+        "PANIKA.RK-1.png",
+        "PANIKA.RK-2.png",
+        "PANIKA.RK-3.png"
+      ],
+      start: 0,
+      end: 5080,
+      size: 5081,
+      entry: 0,
+      checkSum: 533,
+      leadingE6: false
     },
     {
       name: "PASCAL.PKI",
@@ -776,7 +1559,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "PASCAL.PKI-1.png"
-      ]
+      ],
+      start: 0,
+      end: 16382,
+      size: 16383,
+      entry: 0,
+      checkSum: 21764,
+      leadingE6: true
     },
     {
       name: "PENTIS.RK",
@@ -785,7 +1574,28 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "PENTIS.RK-1.png",
         "PENTIS.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2303,
+      size: 2304,
+      entry: 0,
+      checkSum: 2944,
+      leadingE6: false
+    },
+    {
+      name: "PIF.RK",
+      title: "\u0418\u0433\u0440\u0430 \xAB\u041F\u0418\u0424\xBB",
+      description: "\u0410\u0432\u0442\u043E\u0440\u044B: \u0421\u0442\u0435\u0440\u043B\u0438\u043A\u043E\u0432 \u0421.\u0410., \u0417\u0430\u0445\u0430\u0440\u043E\u0432 \u0414.\u0410., \u041C\u043E\u0441\u043A\u0432\u0430, 1988.",
+      screenshots: [
+        "PIF.RK-1.png",
+        "PIF.RK-2.png"
+      ],
+      start: 0,
+      end: 1536,
+      size: 1537,
+      entry: 0,
+      checkSum: 62768,
+      leadingE6: false
     },
     {
       name: "PINGPONG.GAM",
@@ -794,7 +1604,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "PINGPONG.GAM-1.png",
         "PINGPONG.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2935,
+      size: 2936,
+      entry: 0,
+      checkSum: 9945,
+      leadingE6: true
     },
     {
       name: "PITON.GAM",
@@ -802,7 +1618,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "PITON.GAM-1.png"
-      ]
+      ],
+      start: 4352,
+      end: 4863,
+      size: 512,
+      entry: 4352,
+      checkSum: 55879,
+      leadingE6: true
     },
     {
       name: "PITON.RK",
@@ -810,7 +1632,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "PITON.RK-1.png"
-      ]
+      ],
+      start: 4352,
+      end: 4745,
+      size: 394,
+      entry: 4352,
+      checkSum: 12723,
+      leadingE6: false
     },
     {
       name: "PITON2.RK",
@@ -819,7 +1647,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "PITON2.RK-1.png",
         "PITON2.RK-2.png"
-      ]
+      ],
+      start: 2464,
+      end: 4751,
+      size: 2288,
+      entry: 2464,
+      checkSum: 16244,
+      leadingE6: false
     },
     {
       name: "PITON_X.RKR",
@@ -827,7 +1661,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "PITON_X.RKR-1.png"
-      ]
+      ],
+      start: 4352,
+      end: 4744,
+      size: 393,
+      entry: 4352,
+      checkSum: 17093,
+      leadingE6: false
     },
     {
       name: "PMS.PKI",
@@ -835,7 +1675,27 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "PMS.PKI-1.png"
-      ]
+      ],
+      start: 0,
+      end: 4671,
+      size: 4672,
+      entry: 0,
+      checkSum: 9896,
+      leadingE6: true
+    },
+    {
+      name: "POSADKA.RK",
+      title: "\u0418\u0433\u0440\u0430 \u041F\u043E\u0441\u0430\u0434\u043A\u0430",
+      description: "",
+      screenshots: [
+        "POSADKA.RK-1.png"
+      ],
+      start: 0,
+      end: 2304,
+      size: 2305,
+      entry: 0,
+      checkSum: 40436,
+      leadingE6: false
     },
     {
       name: "PRESS.RK",
@@ -845,7 +1705,13 @@ var init_catalog_data = __esm(() => {
         "PRESS.RK-1.png",
         "PRESS.RK-2.png",
         "PRESS.RK-3.png"
-      ]
+      ],
+      start: 0,
+      end: 2335,
+      size: 2336,
+      entry: 0,
+      checkSum: 38428,
+      leadingE6: false
     },
     {
       name: "PROGR0.RKR",
@@ -854,7 +1720,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "PROGR0.RKR-1.png",
         "PROGR0.RKR-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2047,
+      size: 2048,
+      entry: 0,
+      checkSum: 34059,
+      leadingE6: false
     },
     {
       name: "PROGR1.RKR",
@@ -863,7 +1735,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "PROGR1.RKR-1.png",
         "PROGR1.RKR-2.png"
-      ]
+      ],
+      start: 4096,
+      end: 6143,
+      size: 2048,
+      entry: 4096,
+      checkSum: 34059,
+      leadingE6: false
     },
     {
       name: "PROGR2.RKR",
@@ -871,7 +1749,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "PROGR2.RKR-1.png"
-      ]
+      ],
+      start: 12288,
+      end: 13403,
+      size: 1116,
+      entry: 12288,
+      checkSum: 39964,
+      leadingE6: false
     },
     {
       name: "PROGR3.RKR",
@@ -879,7 +1763,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "PROGR3.RKR-1.png"
-      ]
+      ],
+      start: 12288,
+      end: 13823,
+      size: 1536,
+      entry: 12288,
+      checkSum: 32913,
+      leadingE6: false
     },
     {
       name: "PUSHER.GAM",
@@ -887,7 +1777,13 @@ var init_catalog_data = __esm(() => {
       description: "AYL, 18.05.91.",
       screenshots: [
         "PUSHER.GAM-1.png"
-      ]
+      ],
+      start: 0,
+      end: 1189,
+      size: 1190,
+      entry: 0,
+      checkSum: 5703,
+      leadingE6: true
     },
     {
       name: "PVO.GAM",
@@ -895,7 +1791,13 @@ var init_catalog_data = __esm(() => {
       description: "1987.",
       screenshots: [
         "PVO.GAM-1.png"
-      ]
+      ],
+      start: 12288,
+      end: 13568,
+      size: 1281,
+      entry: 13312,
+      checkSum: 26319,
+      leadingE6: true
     },
     {
       name: "RAMDOS.PKI",
@@ -904,7 +1806,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "RAMDOS.PKI-1.png",
         "RAMDOS.PKI-2.png"
-      ]
+      ],
+      start: 13536,
+      end: 17173,
+      size: 3638,
+      entry: 13824,
+      checkSum: 62637,
+      leadingE6: true
     },
     {
       name: "RDISK1.PKI",
@@ -912,7 +1820,13 @@ var init_catalog_data = __esm(() => {
       description: "00.09.88",
       screenshots: [
         "RDISK1.PKI-1.png"
-      ]
+      ],
+      start: 13824,
+      end: 25713,
+      size: 11890,
+      entry: 13824,
+      checkSum: 18432,
+      leadingE6: true
     },
     {
       name: "RDISK2.PKI",
@@ -920,7 +1834,13 @@ var init_catalog_data = __esm(() => {
       description: "00.09.88",
       screenshots: [
         "RDISK2.PKI-1.png"
-      ]
+      ],
+      start: 13824,
+      end: 27804,
+      size: 13981,
+      entry: 13824,
+      checkSum: 52239,
+      leadingE6: true
     },
     {
       name: "RDISK3.PKI",
@@ -928,7 +1848,13 @@ var init_catalog_data = __esm(() => {
       description: "00.09.88",
       screenshots: [
         "RDISK3.PKI-1.png"
-      ]
+      ],
+      start: 13824,
+      end: 27044,
+      size: 13221,
+      entry: 13824,
+      checkSum: 25897,
+      leadingE6: true
     },
     {
       name: "RDISK4.PKI",
@@ -936,7 +1862,13 @@ var init_catalog_data = __esm(() => {
       description: "00.09.88. \u041E\u0442\u043B\u0438\u0447\u0430\u0435\u0442\u0441\u044F \u043E\u0442 RDISK3.PKI \u043D\u0430 \u043D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0431\u0430\u0439\u0442.",
       screenshots: [
         "RDISK4.PKI-1.png"
-      ]
+      ],
+      start: 13824,
+      end: 27044,
+      size: 13221,
+      entry: 13824,
+      checkSum: 32065,
+      leadingE6: true
     },
     {
       name: "RDISK6.PKI",
@@ -944,7 +1876,13 @@ var init_catalog_data = __esm(() => {
       description: "00.09.88.",
       screenshots: [
         "RDISK6.PKI-1.png"
-      ]
+      ],
+      start: 13824,
+      end: 25706,
+      size: 11883,
+      entry: 13824,
+      checkSum: 25763,
+      leadingE6: true
     },
     {
       name: "RDISK7.PKI",
@@ -952,7 +1890,13 @@ var init_catalog_data = __esm(() => {
       description: "00.09.88.",
       screenshots: [
         "RDISK7.PKI-1.png"
-      ]
+      ],
+      start: 9216,
+      end: 13304,
+      size: 4089,
+      entry: 9216,
+      checkSum: 44836,
+      leadingE6: true
     },
     {
       name: "RDISK8.PKI",
@@ -960,7 +1904,13 @@ var init_catalog_data = __esm(() => {
       description: "00.09.88.",
       screenshots: [
         "RDISK8.PKI-1.png"
-      ]
+      ],
+      start: 13824,
+      end: 22268,
+      size: 8445,
+      entry: 13824,
+      checkSum: 40269,
+      leadingE6: true
     },
     {
       name: "REDASM.PKI",
@@ -968,7 +1918,31 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "REDASM.PKI-1.png"
-      ]
+      ],
+      start: 256,
+      end: 4270,
+      size: 4015,
+      entry: 256,
+      checkSum: 20838,
+      leadingE6: true
+    },
+    {
+      name: "REIN.RK",
+      title: "\u0418\u0433\u0440\u0430 \xAB\u0420\u0435\u0439\u043D\xBB",
+      description: "\u0422\u0440\u0435\u043D\u0438\u0440\u043E\u0432\u043E\u0447\u043D\u043E-\u044D\u043A\u043E\u043B\u043E\u0433\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u0438\u0433\u0440\u0430. \u041E\u0447\u0438\u0449\u0430\u0439\u0442\u0435 \u0420\u0435\u0439\u043D \u043E\u0442 \u0445\u0438\u043C\u0438\u0447\u0435\u0441\u043A\u0438\u0445 \u043E\u0442\u0445\u043E\u0434\u043E\u0432 6 \u0437\u0430\u0432\u043E\u0434\u043E\u0432 \u0424\u0420\u0413, \u0428\u0432\u0435\u0439\u0446\u0430\u0440\u0438\u0438 \u0438 \u0434\u0440\u0443\u0433\u0438\u0445 \u0441\u0442\u0440\u0430\u043D. \u0418\u0433\u0440\u0430 \u0441\u043F\u043E\u0441\u043E\u0431\u0441\u0442\u0432\u0443\u0435\u0442 \u0440\u0430\u0437\u0432\u0438\u0442\u0438\u044E \u043D\u0430\u0432\u044B\u043A\u043E\u0432 \u0440\u0430\u0431\u043E\u0442\u044B \u0441 \u043A\u043B\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u043E\u0439.",
+      screenshots: [
+        "REIN.RK-1.png",
+        "REIN.RK-2.png",
+        "REIN.RK-3.png",
+        "REIN.RK-4.png",
+        "REIN.RK-5.png"
+      ],
+      start: 4096,
+      end: 11024,
+      size: 6929,
+      entry: 4096,
+      checkSum: 39967,
+      leadingE6: false
     },
     {
       name: "RENDZU.RKR",
@@ -977,7 +1951,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "RENDZU.RKR-1.png",
         "RENDZU.RKR-2.png"
-      ]
+      ],
+      start: 0,
+      end: 1957,
+      size: 1958,
+      entry: 0,
+      checkSum: 16314,
+      leadingE6: false
     },
     {
       name: "RESCUE.GAM",
@@ -986,7 +1966,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "RESCUE.GAM-1.png",
         "RESCUE.GAM-2.png"
-      ]
+      ],
+      start: 256,
+      end: 4095,
+      size: 3840,
+      entry: 256,
+      checkSum: 5874,
+      leadingE6: true
     },
     {
       name: "REVERSI2.RKR",
@@ -996,7 +1982,13 @@ var init_catalog_data = __esm(() => {
         "REVERSI2.RKR-1.png",
         "REVERSI2.RKR-2.png",
         "REVERSI2.RKR-3.png"
-      ]
+      ],
+      start: 0,
+      end: 22527,
+      size: 22528,
+      entry: 0,
+      checkSum: 27423,
+      leadingE6: false
     },
     {
       name: "RIKOSHET.RK",
@@ -1005,7 +1997,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "RIKOSHET.RK-1.png",
         "RIKOSHET.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 12239,
+      size: 12240,
+      entry: 0,
+      checkSum: 45207,
+      leadingE6: false
     },
     {
       name: "ROCKER.RK",
@@ -1013,7 +2011,43 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "ROCKER.RK-1.png"
-      ]
+      ],
+      start: 12544,
+      end: 14416,
+      size: 1873,
+      entry: 12544,
+      checkSum: 10620,
+      leadingE6: false
+    },
+    {
+      name: "SABOTEUR.RK",
+      title: "\u0418\u0433\u0440\u0430 \xABThe Saboteur\xBB, \u0432\u0435\u0440\u0441\u0438\u044F 01",
+      description: "\u0410\u0432\u0442\u043E\u0440: \u0421\u0442\u0435\u0440\u043B\u0438\u043A\u043E\u0432 \u0421.\u0410., \u041C\u043E\u0441\u043A\u0432\u0430, 3.8.1988. \u041D\u0430\u043F\u0438\u0441\u0430\u043D \u043D\u0430 \u0430\u0441\u0441\u0435\u043C\u0431\u043B\u0435\u0440\u0435 \u0434\u043B\u044F \u041A580, \u0430\u0434\u0430\u043F\u0442\u0438\u0440\u043E\u0432\u0430\u043D \u0434\u043B\u044F \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A.",
+      screenshots: [
+        "SABOTEUR.RK-1.png",
+        "SABOTEUR.RK-2.png"
+      ],
+      start: 0,
+      end: 3328,
+      size: 3329,
+      entry: 0,
+      checkSum: 34269,
+      leadingE6: false
+    },
+    {
+      name: "SAD.RKR",
+      title: "\u0418\u0433\u0440\u0430 \u0421\u0430\u0434",
+      description: '(C) Copyright "HMR", \u041C\u043E\u0441\u043A\u0432\u0430, 1988. \u0412\u0435\u0440\u0441\u0438\u044F \u0434\u043B\u044F \u0420\u041A-86 \u0438 \u041C\u0438\u043A\u0440\u043E\u0448\u0438.',
+      screenshots: [
+        "SAD.RKR-1.png",
+        "SAD.RKR-2.png"
+      ],
+      start: 0,
+      end: 2768,
+      size: 2769,
+      entry: 0,
+      checkSum: 18268,
+      leadingE6: false
     },
     {
       name: "SAPPER.RK",
@@ -1022,7 +2056,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "SAPPER.RK-1.png",
         "SAPPER.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2338,
+      size: 2339,
+      entry: 0,
+      checkSum: 17580,
+      leadingE6: false
     },
     {
       name: "SDEMISE.GAM",
@@ -1031,7 +2071,43 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "SDEMISE.GAM-1.png",
         "SDEMISE.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 6280,
+      size: 6281,
+      entry: 0,
+      checkSum: 58384,
+      leadingE6: true
+    },
+    {
+      name: "SHAHMATY.RK",
+      title: "\u0428\u0430\u0445\u043C\u0430\u0442\u044B (\u043D\u0430 BASIC \xAB\u041C\u0438\u043A\u0440\u043E\u043D\xBB)",
+      description: "\u0410\u0432\u0442\u043E\u0440: \u0412.\u0411. \u0424\u0435\u0440\u0441\u0442\u0435\u0440. \u041F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u043D\u0430 BASIC, \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u043D\u044B\u0439 BASIC \xAB\u041C\u0438\u043A\u0440\u043E\u043D\xBB. \u0418\u0433\u0440\u0430 \u0438\u043C\u0435\u0435\u0442 3 \u0443\u0440\u043E\u0432\u043D\u044F (0, 1 \u0438 2).",
+      screenshots: [
+        "SHAHMATY.RK-1.png",
+        "SHAHMATY.RK-2.png"
+      ],
+      start: 0,
+      end: 20223,
+      size: 20224,
+      entry: 0,
+      checkSum: 54910,
+      leadingE6: false
+    },
+    {
+      name: "SHAHTY.RK",
+      title: "\u0418\u0433\u0440\u0430 \xAB\u0428\u0430\u0445\u0442\u044B\xBB",
+      description: "\u0410\u0432\u0442\u043E\u0440: \u0411\u043E\u0440\u0438\u043D\u0441\u043A\u0438\u0439 \u042E.\u041D., \u041F\u043E\u043B\u0442\u0430\u0432\u0430, 1987.",
+      screenshots: [
+        "SHAHTY.RK-1.png",
+        "SHAHTY.RK-2.png"
+      ],
+      start: 0,
+      end: 15295,
+      size: 15296,
+      entry: 0,
+      checkSum: 13568,
+      leadingE6: false
     },
     {
       name: "SIRIUS.RK",
@@ -1040,7 +2116,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "SIRIUS.RK-1.png",
         "SIRIUS.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 21696,
+      size: 21697,
+      entry: 0,
+      checkSum: 7027,
+      leadingE6: false
     },
     {
       name: "SKACHKI.GAM",
@@ -1048,7 +2130,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "SKACHKI.GAM-1.png"
-      ]
+      ],
+      start: 0,
+      end: 1279,
+      size: 1280,
+      entry: 0,
+      checkSum: 10371,
+      leadingE6: true
     },
     {
       name: "SKACHKI.RK",
@@ -1057,7 +2145,28 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "SKACHKI.RK-1.png",
         "SKACHKI.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2623,
+      size: 2624,
+      entry: 0,
+      checkSum: 18416,
+      leadingE6: false
+    },
+    {
+      name: "SKALOED.RK",
+      title: "\u0418\u0433\u0440\u0430 \xAB\u041E\u0445\u043E\u0442\u0430 \u043D\u0430 \u0441\u043A\u0430\u043B\u043E\u0435\u0434\u0430\xBB",
+      description: "\u0420\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u0430\u043B: \u0417\u0430\u0445\u0430\u0440\u043E\u0432 \u0414.\u0410.",
+      screenshots: [
+        "SKALOED.RK-1.png",
+        "SKALOED.RK-2.png"
+      ],
+      start: 4352,
+      end: 6304,
+      size: 1953,
+      entry: 4352,
+      checkSum: 55910,
+      leadingE6: false
     },
     {
       name: "SKVOTCH.GAM",
@@ -1065,7 +2174,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "SKVOTCH.GAM-1.png"
-      ]
+      ],
+      start: 4352,
+      end: 5058,
+      size: 707,
+      entry: 4352,
+      checkSum: 5120,
+      leadingE6: true
     },
     {
       name: "SLAMS.GAM",
@@ -1075,7 +2190,28 @@ var init_catalog_data = __esm(() => {
         "SLAMS.GAM-1.png",
         "SLAMS.GAM-2.png",
         "SLAMS.GAM-3.png"
-      ]
+      ],
+      start: 0,
+      end: 3839,
+      size: 3840,
+      entry: 0,
+      checkSum: 20786,
+      leadingE6: true
+    },
+    {
+      name: "SMERTPUT.RK",
+      title: "\u0418\u0433\u0440\u0430 \u0421\u043C\u0435\u0440\u0442\u0435\u043B\u044C\u043D\u044B\u0439 \u043F\u0443\u0442\u044C",
+      description: "\u0410\u0432\u0442\u043E\u0440: \u0418\u0432\u0430\u043D\u043E\u0432 \u041C.\u0412., \u041C\u043E\u0441\u043A\u0432\u0430, 1990",
+      screenshots: [
+        "SMERTPUT.RK-1.png",
+        "SMERTPUT.RK-2.png"
+      ],
+      start: 256,
+      end: 1904,
+      size: 1649,
+      entry: 256,
+      checkSum: 47339,
+      leadingE6: false
     },
     {
       name: "SOS1.GAM",
@@ -1084,7 +2220,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "SOS1.GAM-1.png",
         "SOS1.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 4095,
+      size: 4096,
+      entry: 0,
+      checkSum: 23459,
+      leadingE6: true
     },
     {
       name: "SOS2.GAM",
@@ -1093,7 +2235,29 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "SOS2.GAM-1.png",
         "SOS2.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 3296,
+      size: 3297,
+      entry: 0,
+      checkSum: 45967,
+      leadingE6: true
+    },
+    {
+      name: "SPACE.RK",
+      title: "\u0418\u0433\u0440\u0430 Space",
+      description: "\u0410\u0432\u0442\u043E\u0440: \u0416\u0435\u043B\u043D\u043E\u0432 \u041F.\u0410., \u0433. \u041E\u0442\u0440\u0430\u0434\u043D\u044B\u0439, \u041A\u0443\u0439\u0431\u044B\u0448\u0435\u0432\u0441\u043A\u0430\u044F \u043E\u0431\u043B. \u0412\u0435\u0440\u0441\u0438\u044F 1.12. \u0420\u041A-\u0412\u0435\u043A\u0442\u043E\u0440.",
+      screenshots: [
+        "SPACE.RK-1.png",
+        "SPACE.RK-2.png",
+        "SPACE.RK-3.png"
+      ],
+      start: 256,
+      end: 3647,
+      size: 3392,
+      entry: 256,
+      checkSum: 14463,
+      leadingE6: false
     },
     {
       name: "SPITON.GAM",
@@ -1102,7 +2266,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "SPITON.GAM-1.png",
         "SPITON.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 16143,
+      size: 16144,
+      entry: 0,
+      checkSum: 5532,
+      leadingE6: true
     },
     {
       name: "SPYSDEM.RK",
@@ -1111,7 +2281,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "SPYSDEM.RK-1.png",
         "SPYSDEM.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 6314,
+      size: 6315,
+      entry: 0,
+      checkSum: 37733,
+      leadingE6: false
     },
     {
       name: "SP_COMP.RKR",
@@ -1119,7 +2295,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "SP_COMP.RKR-1.png"
-      ]
+      ],
+      start: 4352,
+      end: 4646,
+      size: 295,
+      entry: 4352,
+      checkSum: 13510,
+      leadingE6: false
     },
     {
       name: "SP_GAMES.RKR",
@@ -1129,7 +2311,13 @@ var init_catalog_data = __esm(() => {
         "SP_GAMES.RKR-1.png",
         "SP_GAMES.RKR-2.png",
         "SP_GAMES.RKR-3.png"
-      ]
+      ],
+      start: 0,
+      end: 2047,
+      size: 2048,
+      entry: 0,
+      checkSum: 21556,
+      leadingE6: false
     },
     {
       name: "STELBY.RK",
@@ -1138,7 +2326,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "STELBY.RK-1.png",
         "STELBY.RK-2.png"
-      ]
+      ],
+      start: 4096,
+      end: 8415,
+      size: 4320,
+      entry: 4096,
+      checkSum: 25523,
+      leadingE6: false
     },
     {
       name: "STONEFLD.RK",
@@ -1146,7 +2340,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "STONEFLD.RK-1.png"
-      ]
+      ],
+      start: 0,
+      end: 2351,
+      size: 2352,
+      entry: 0,
+      checkSum: 47583,
+      leadingE6: false
     },
     {
       name: "STOPKR.RK",
@@ -1158,7 +2358,13 @@ var init_catalog_data = __esm(() => {
         "STOPKR.RK-3.png",
         "STOPKR.RK-4.png",
         "STOPKR.RK-5.png"
-      ]
+      ],
+      start: 0,
+      end: 14312,
+      size: 14313,
+      entry: 0,
+      checkSum: 56150,
+      leadingE6: false
     },
     {
       name: "STRANGER.GAM",
@@ -1167,7 +2373,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "STRANGER.GAM-1.png",
         "STRANGER.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 4128,
+      size: 4129,
+      entry: 0,
+      checkSum: 29081,
+      leadingE6: true
     },
     {
       name: "SUBMARIN.RK",
@@ -1176,7 +2388,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "SUBMARIN.RK-1.png",
         "SUBMARIN.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 4368,
+      size: 4369,
+      entry: 0,
+      checkSum: 17395,
+      leadingE6: false
     },
     {
       name: "SVVI.RKR",
@@ -1198,7 +2416,13 @@ var init_catalog_data = __esm(() => {
         "SVVI.RKR-13.png",
         "SVVI.RKR-14.png",
         "SVVI.RKR-15.png"
-      ]
+      ],
+      start: 0,
+      end: 13455,
+      size: 13456,
+      entry: 0,
+      checkSum: 35342,
+      leadingE6: false
     },
     {
       name: "TAPPER.GAM",
@@ -1207,7 +2431,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "TAPPER.GAM-1.png",
         "TAPPER.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 4095,
+      size: 4096,
+      entry: 0,
+      checkSum: 56034,
+      leadingE6: true
     },
     {
       name: "TENNIS.GAM",
@@ -1216,7 +2446,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "TENNIS.GAM-1.png",
         "TENNIS.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 4940,
+      size: 4941,
+      entry: 0,
+      checkSum: 1388,
+      leadingE6: true
     },
     {
       name: "TENNIS.RK",
@@ -1225,7 +2461,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "TENNIS.RK-1.png",
         "TENNIS.RK-2.png"
-      ]
+      ],
+      start: 16384,
+      end: 18431,
+      size: 2048,
+      entry: 16384,
+      checkSum: 62111,
+      leadingE6: false
     },
     {
       name: "TENNIS_X.RKR",
@@ -1234,7 +2476,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "TENNIS_X.RKR-1.png",
         "TENNIS_X.RKR-2.png"
-      ]
+      ],
+      start: 8192,
+      end: 10553,
+      size: 2362,
+      entry: 8192,
+      checkSum: 20729,
+      leadingE6: false
     },
     {
       name: "TETR1.GAM",
@@ -1242,7 +2490,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "TETR1.GAM-1.png"
-      ]
+      ],
+      start: 12288,
+      end: 13919,
+      size: 1632,
+      entry: 12288,
+      checkSum: 56210,
+      leadingE6: true
     },
     {
       name: "TETR2.GAM",
@@ -1251,7 +2505,28 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "TETR2.GAM-1.png",
         "TETR2.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 3169,
+      size: 3170,
+      entry: 0,
+      checkSum: 54402,
+      leadingE6: true
+    },
+    {
+      name: "TETRIS.RK",
+      title: "\u0418\u0433\u0440\u0430 \xAB\u0422\u0435\u0442\u0440\u0438\u0441\xBB",
+      description: "\u0410\u0432\u0442\u043E\u0440: \u041E\u043C\u0435\u043B\u044C\u0447\u0435\u043D\u043A\u043E \u0421.\u0424., \u0420\u043E\u0441\u0442\u043E\u0432-\u043D\u0430-\u0414\u043E\u043D\u0443, 1987.",
+      screenshots: [
+        "TETRIS.RK-1.png",
+        "TETRIS.RK-2.png"
+      ],
+      start: 25600,
+      end: 29951,
+      size: 4352,
+      entry: 25600,
+      checkSum: 38179,
+      leadingE6: false
     },
     {
       name: "TETRIS1.RKR",
@@ -1259,7 +2534,13 @@ var init_catalog_data = __esm(() => {
       description: "\u041A\u043E\u043B\u043E\u043C\u043D\u0430",
       screenshots: [
         "TETRIS1.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 1279,
+      size: 1280,
+      entry: 0,
+      checkSum: 23745,
+      leadingE6: false
     },
     {
       name: "TETRIS2.RK",
@@ -1268,7 +2549,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "TETRIS2.RK-1.png",
         "TETRIS2.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 3213,
+      size: 3214,
+      entry: 0,
+      checkSum: 50802,
+      leadingE6: false
     },
     {
       name: "TOCHKI.GAM",
@@ -1276,7 +2563,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "TOCHKI.GAM-1.png"
-      ]
+      ],
+      start: 0,
+      end: 1162,
+      size: 1163,
+      entry: 0,
+      checkSum: 43472,
+      leadingE6: true
     },
     {
       name: "TORPATT.RK",
@@ -1285,7 +2578,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "TORPATT.RK-1.png",
         "TORPATT.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 4352,
+      size: 4353,
+      entry: 0,
+      checkSum: 10048,
+      leadingE6: false
     },
     {
       name: "TRASSA.RK",
@@ -1293,7 +2592,13 @@ var init_catalog_data = __esm(() => {
       description: "ORLO/R, 1992.",
       screenshots: [
         "TRASSA.RK-1.png"
-      ]
+      ],
+      start: 0,
+      end: 23583,
+      size: 23584,
+      entry: 0,
+      checkSum: 58522,
+      leadingE6: false
     },
     {
       name: "UDAV.GAM",
@@ -1302,7 +2607,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "UDAV.GAM-1.png",
         "UDAV.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2047,
+      size: 2048,
+      entry: 0,
+      checkSum: 49779,
+      leadingE6: true
     },
     {
       name: "UDAW.GAM",
@@ -1311,7 +2622,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "UDAW.GAM-1.png",
         "UDAW.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2047,
+      size: 2048,
+      entry: 0,
+      checkSum: 14863,
+      leadingE6: true
     },
     {
       name: "UTKA.GAM",
@@ -1320,7 +2637,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "UTKA.GAM-1.png",
         "UTKA.GAM-2.png"
-      ]
+      ],
+      start: 4096,
+      end: 5936,
+      size: 1841,
+      entry: 4096,
+      checkSum: 6100,
+      leadingE6: true
     },
     {
       name: "VOLCANO.RKR",
@@ -1329,7 +2652,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "VOLCANO.RKR-1.png",
         "VOLCANO.RKR-2.png"
-      ]
+      ],
+      start: 0,
+      end: 4080,
+      size: 4081,
+      entry: 0,
+      checkSum: 31636,
+      leadingE6: false
     },
     {
       name: "WALL.RK",
@@ -1339,7 +2668,13 @@ var init_catalog_data = __esm(() => {
         "WALL.RK-1.png",
         "WALL.RK-2.png",
         "WALL.RK-3.png"
-      ]
+      ],
+      start: 0,
+      end: 11583,
+      size: 11584,
+      entry: 0,
+      checkSum: 6817,
+      leadingE6: false
     },
     {
       name: "WEL.RKR",
@@ -1347,7 +2682,13 @@ var init_catalog_data = __esm(() => {
       description: "",
       screenshots: [
         "WEL.RKR-1.png"
-      ]
+      ],
+      start: 0,
+      end: 5631,
+      size: 5632,
+      entry: 0,
+      checkSum: 60704,
+      leadingE6: false
     },
     {
       name: "XON.GAM",
@@ -1356,7 +2697,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "XON.GAM-1.png",
         "XON.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2815,
+      size: 2816,
+      entry: 0,
+      checkSum: 36787,
+      leadingE6: true
     },
     {
       name: "XONIX-S.RKR",
@@ -1365,7 +2712,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "XONIX-S.RKR-1.png",
         "XONIX-S.RKR-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2047,
+      size: 2048,
+      entry: 0,
+      checkSum: 25747,
+      leadingE6: false
     },
     {
       name: "XONIX.GAM",
@@ -1374,7 +2727,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "XONIX.GAM-1.png",
         "XONIX.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 1909,
+      size: 1910,
+      entry: 0,
+      checkSum: 33864,
+      leadingE6: true
     },
     {
       name: "XONIX1.GAM",
@@ -1383,7 +2742,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "XONIX1.GAM-1.png",
         "XONIX1.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2815,
+      size: 2816,
+      entry: 0,
+      checkSum: 56330,
+      leadingE6: true
     },
     {
       name: "XONIX2.RKR",
@@ -1392,7 +2757,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "XONIX2.RKR-1.png",
         "XONIX2.RKR-2.png"
-      ]
+      ],
+      start: 0,
+      end: 1986,
+      size: 1987,
+      entry: 0,
+      checkSum: 27926,
+      leadingE6: false
     },
     {
       name: "XONIXZM.GAM",
@@ -1403,7 +2774,13 @@ var init_catalog_data = __esm(() => {
         "XONIXZM.GAM-2.png",
         "XONIXZM.GAM-3.png",
         "XONIXZM.GAM-4.png"
-      ]
+      ],
+      start: 0,
+      end: 3823,
+      size: 3824,
+      entry: 0,
+      checkSum: 56074,
+      leadingE6: true
     },
     {
       name: "ZAGIB.GAM",
@@ -1412,7 +2789,27 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "ZAGIB.GAM-1.png",
         "ZAGIB.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 1023,
+      size: 1024,
+      entry: 0,
+      checkSum: 3526,
+      leadingE6: true
+    },
+    {
+      name: "ZAMOK.RK",
+      title: "\u0418\u0433\u0440\u0430 \xAB\u0417\u0430\u043C\u043E\u043A\xBB (\u041C\u0412\u0420-3.2)",
+      description: "1989. \u041B\u0430\u0431\u0438\u0440\u0438\u043D\u0442\u043D\u0430\u044F \u0438\u0433\u0440\u0430 \u2014 \u043D\u0443\u0436\u043D\u043E \u0432\u044B\u0431\u0440\u0430\u0442\u044C\u0441\u044F \u0438\u0437 \u0437\u0430\u043C\u043A\u0430, \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u044F \u043C\u0435\u0447, \u0434\u0438\u043D\u0430\u043C\u0438\u0442 \u0438 \u043F\u0430\u0442\u0440\u043E\u043D\u044B.",
+      screenshots: [
+        "ZAMOK.RK-1.png"
+      ],
+      start: 0,
+      end: 24576,
+      size: 24577,
+      entry: 0,
+      checkSum: 31936,
+      leadingE6: false
     },
     {
       name: "ZMEIGOG.GAM",
@@ -1421,7 +2818,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "ZMEIGOG.GAM-1.png",
         "ZMEIGOG.GAM-2.png"
-      ]
+      ],
+      start: 0,
+      end: 4240,
+      size: 4241,
+      entry: 0,
+      checkSum: 51164,
+      leadingE6: true
     },
     {
       name: "ZMEYA.RK",
@@ -1430,7 +2833,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "ZMEYA.RK-1.png",
         "ZMEYA.RK-2.png"
-      ]
+      ],
+      start: 0,
+      end: 2111,
+      size: 2112,
+      entry: 0,
+      checkSum: 32408,
+      leadingE6: false
     },
     {
       name: "ZVZDNTIR.RK",
@@ -1439,7 +2848,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "ZVZDNTIR.RK-1.png",
         "ZVZDNTIR.RK-2.png"
-      ]
+      ],
+      start: 4352,
+      end: 8624,
+      size: 4273,
+      entry: 4352,
+      checkSum: 63227,
+      leadingE6: false
     },
     {
       name: "adjust75.rkr",
@@ -1447,7 +2862,13 @@ var init_catalog_data = __esm(() => {
       description: "\u0410\u0432\u0442\u043E\u0440: \u0420\u0443\u0441\u043B\u0430\u043D \u0410\u043B\u0438\u043A\u0431\u0435\u0440\u043E\u0432, 2021.",
       screenshots: [
         "adjust75.rkr-1.png"
-      ]
+      ],
+      start: 0,
+      end: 767,
+      size: 768,
+      entry: 0,
+      checkSum: 60909,
+      leadingE6: false
     },
     {
       name: "chars.bin",
@@ -1455,13 +2876,25 @@ var init_catalog_data = __esm(() => {
       description: '\u0410\u0432\u0442\u043E\u0440 \u0414\u0435\u043C\u0438\u043D \u0410\u043B\u0435\u043A\u0441\u0430\u043D\u0434\u0440, 2012 (<a href="https://github.com/begoon/rk86-maximite/blob/master/programs/chars/chars.asm">\u0438\u0441\u0445\u043E\u0434\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442</a>).',
       screenshots: [
         "chars.bin-1.png"
-      ]
+      ],
+      start: 0,
+      end: 190,
+      size: 191,
+      entry: 0,
+      checkSum: 44381,
+      leadingE6: false
     },
     {
       name: "cputest.bin",
       title: "\u0422\u0435\u0441\u0442 CPU TEST DIAGNOSTICS II V1.2",
       description: 'SUPERSOFT ASSOCIATES, 1981. \u0417\u0430\u043F\u0443\u0441\u043A\u0430\u0442\u044C "G100".',
-      screenshots: []
+      screenshots: [],
+      start: 0,
+      end: 19455,
+      size: 19456,
+      entry: 0,
+      checkSum: 65444,
+      leadingE6: false
     },
     {
       name: "mars3-lpe.rkr",
@@ -1470,19 +2903,37 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "mars3-lpe.rkr-1.png",
         "mars3-lpe.rkr-2.png"
-      ]
+      ],
+      start: 0,
+      end: 5702,
+      size: 5703,
+      entry: 0,
+      checkSum: 58227,
+      leadingE6: false
     },
     {
       name: "mon16.bin",
       title: "\u041E\u0440\u0438\u0433\u0438\u043D\u0430\u043B\u044C\u043D\u044B\u0439 \u041C\u043E\u043D\u0438\u0442\u043E\u0440 16\u041A\u0411",
       description: "",
-      screenshots: []
+      screenshots: [],
+      start: 0,
+      end: 2047,
+      size: 2048,
+      entry: 0,
+      checkSum: 64981,
+      leadingE6: false
     },
     {
       name: "mon32.bin",
       title: '\u041E\u0440\u0438\u0433\u0438\u043D\u0430\u043B\u044C\u043D\u044B\u0439 <a href="https://github.com/begoon/rk86-maximite/blob/master/monitor/monitor32.asm">\u041C\u043E\u043D\u0438\u0442\u043E\u0440 32\u041A\u0411</a>',
       description: "",
-      screenshots: []
+      screenshots: [],
+      start: 0,
+      end: 2047,
+      size: 2048,
+      entry: 0,
+      checkSum: 4565,
+      leadingE6: false
     },
     {
       name: "mon32x4.bin",
@@ -1490,7 +2941,13 @@ var init_catalog_data = __esm(() => {
       description: '\u041F\u0440\u0438\u0433\u043B\u0430\u0448\u0435\u043D\u0438\u0435 "P.C. MONITOR - READY".',
       screenshots: [
         "mon32x4.bin-1.png"
-      ]
+      ],
+      start: 0,
+      end: 4095,
+      size: 4096,
+      entry: 0,
+      checkSum: 39503,
+      leadingE6: false
     },
     {
       name: "mon_okoshki.bin",
@@ -1500,7 +2957,13 @@ var init_catalog_data = __esm(() => {
 \u0410\u0432\u0442\u043E\u0440: \u0420\u0443\u0441\u043B\u0430\u043D \u0410\u043B\u0438\u043A\u0431\u0435\u0440\u043E\u0432, 2021.`,
       screenshots: [
         "mon_okoshki.bin-1.png"
-      ]
+      ],
+      start: 63488,
+      end: 65535,
+      size: 2048,
+      entry: 63488,
+      checkSum: 48506,
+      leadingE6: false
     },
     {
       name: "okoshki-demo.rkr",
@@ -1508,7 +2971,13 @@ var init_catalog_data = __esm(() => {
       description: "\u0410\u0432\u0442\u043E\u0440: \u0420\u0443\u0441\u043B\u0430\u043D \u0410\u043B\u0438\u043A\u0431\u0435\u0440\u043E\u0432, 2021.",
       screenshots: [
         "okoshki-demo.rkr-1.png"
-      ]
+      ],
+      start: 0,
+      end: 3048,
+      size: 3049,
+      entry: 0,
+      checkSum: 20998,
+      leadingE6: false
     },
     {
       name: "psi_1v3.rkr",
@@ -1518,13 +2987,25 @@ var init_catalog_data = __esm(() => {
 \u0410\u0432\u0442\u043E\u0440: \u0420\u0443\u0441\u043B\u0430\u043D \u0410\u043B\u0438\u043A\u0431\u0435\u0440\u043E\u0432, 2021.`,
       screenshots: [
         "psi_1v3.rkr-1.png"
-      ]
+      ],
+      start: 0,
+      end: 1023,
+      size: 1024,
+      entry: 0,
+      checkSum: 6845,
+      leadingE6: false
     },
     {
       name: "rk8080pre.bin",
       title: '\u0422\u0435\u0441\u0442 "8080 Preliminary tests" \u043E\u0442 Ian Bartholomew',
       description: '\u0417\u0430\u043F\u0443\u0441\u043A\u0430\u0442\u044C "G100".',
-      screenshots: []
+      screenshots: [],
+      start: 0,
+      end: 1279,
+      size: 1280,
+      entry: 0,
+      checkSum: 59310,
+      leadingE6: false
     },
     {
       name: "rk86demo.bin",
@@ -1532,25 +3013,49 @@ var init_catalog_data = __esm(() => {
       description: "\u0410\u0432\u0442\u043E\u0440 \u0414\u0435\u043C\u0438\u043D \u0410\u043B\u0435\u043A\u0441\u0430\u043D\u0434\u0440, 2012.",
       screenshots: [
         "rk86demo.bin-1.png"
-      ]
+      ],
+      start: 0,
+      end: 18897,
+      size: 18898,
+      entry: 0,
+      checkSum: 3788,
+      leadingE6: false
     },
     {
       name: "rk86ex1.bin",
       title: '<a href="https://github.com/begoon/rk86-ex1/">\u0422\u0435\u0441\u0442 8080/8085 CPU Exerciser</a> \u0434\u043B\u044F \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A',
       description: '\u0417\u0430\u043F\u0443\u0441\u043A\u0430\u0442\u044C "G100". \u041F\u0440\u043E\u0441\u043C\u043E\u0442\u0440 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u043E\u0432: "G80".',
-      screenshots: []
+      screenshots: [],
+      start: 0,
+      end: 4790,
+      size: 4791,
+      entry: 0,
+      checkSum: 17802,
+      leadingE6: false
     },
     {
       name: "rk86test.bin",
       title: "\u0422\u0435\u0441\u0442 8080/8085 CPU DIAGNOSTIC VERSION 1.0",
       description: 'MICROCOSM ASSOCIATES, 1980. \u0417\u0430\u043F\u0443\u0441\u043A\u0430\u0442\u044C "G100".',
-      screenshots: []
+      screenshots: [],
+      start: 0,
+      end: 2048,
+      size: 2049,
+      entry: 0,
+      checkSum: 2086,
+      leadingE6: false
     },
     {
       name: "rk_font.bin",
       title: '"\u0420\u043E\u0434\u043D\u043E\u0439" \u0437\u043D\u0430\u043A\u043E\u0433\u0435\u043D\u0435\u0440\u0430\u0442\u043E\u0440/\u0448\u0440\u0438\u0444\u0442 \u0420\u041A',
       description: "",
-      screenshots: []
+      screenshots: [],
+      start: 0,
+      end: 2047,
+      size: 2048,
+      entry: 0,
+      checkSum: 56395,
+      leadingE6: false
     },
     {
       name: "screentest.bin",
@@ -1558,7 +3063,13 @@ var init_catalog_data = __esm(() => {
       description: "\u041F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0435\u0442 \u0441\u043B\u0443\u0447\u0430\u0439\u043D\u044B\u0435 \u0431\u0435\u0433\u0443\u0449\u0438\u0435 \u0441\u0438\u043C\u0432\u043E\u043B\u044B \u043F\u043E \u0432\u0441\u0435\u0439 \u044D\u043A\u0440\u0430\u043D\u043D\u043E\u0439 \u043E\u0431\u043B\u0430\u0441\u0442\u0438.",
       screenshots: [
         "screentest.bin-1.png"
-      ]
+      ],
+      start: 0,
+      end: 27,
+      size: 28,
+      entry: 0,
+      checkSum: 7700,
+      leadingE6: false
     },
     {
       name: "sokoban.bin",
@@ -1567,7 +3078,13 @@ var init_catalog_data = __esm(() => {
       screenshots: [
         "sokoban.bin-1.png",
         "sokoban.bin-2.png"
-      ]
+      ],
+      start: 0,
+      end: 5379,
+      size: 5380,
+      entry: 0,
+      checkSum: 26258,
+      leadingE6: false
     },
     {
       name: "viewport.rkr",
@@ -1583,7 +3100,13 @@ var init_catalog_data = __esm(() => {
         "viewport.rkr-1.png",
         "viewport.rkr-2.png",
         "viewport.rkr-3.png"
-      ]
+      ],
+      start: 0,
+      end: 1648,
+      size: 1649,
+      entry: 0,
+      checkSum: 56892,
+      leadingE6: false
     }
   ];
 });
@@ -2452,12 +3975,14 @@ function asm(source) {
 if (false) {}
 
 // src/lib/terminal/rk86_terminal.ts
+import { spawn } from "child_process";
 import { existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
+import { basename } from "path";
 // packages/rk86/package.json
 var package_default = {
   name: "rk86",
-  version: "2.0.19",
+  version: "2.0.20",
   description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
   bin: {
     rk86: "rk86.js"
@@ -4218,6 +5743,7 @@ class Tape {
 }
 
 // src/lib/terminal/rk86_terminal.ts
+var UPLOAD_SERVER = "https://rk86.ea.deno.net";
 var charMap = {
   0: " ",
   1: "\u2598",
@@ -4560,6 +6086,7 @@ function printHelp() {
   --snapshot <\u0444\u0430\u0439\u043B>        \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0441\u043D\u0438\u043C\u043E\u043A \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u044F (JSON) \u043F\u0440\u0438 \u0432\u044B\u0445\u043E\u0434\u0435
   --input <seq>            \u0438\u043D\u044A\u0435\u043A\u0446\u0438\u044F \u043A\u043B\u0430\u0432\u0438\u0448 (\u0447\u0435\u0440\u0435\u0437 \u0437\u0430\u043F\u044F\u0442\u0443\u044E): KeyA,Digit1,Enter,...
                            \u0442\u043E\u043A\u0435\u043D *N \u0437\u0430\u0434\u0430\u0451\u0442 \u043F\u0430\u0443\u0437\u0443 N \u043C\u0441 (\u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 *200)
+  --online                 \u043E\u0442\u043A\u0440\u044B\u0442\u044C \u0432 \u043E\u043D\u043B\u0430\u0439\u043D-\u044D\u043C\u0443\u043B\u044F\u0442\u043E\u0440\u0435 rk86.ru
 
 \u041F\u0440\u0438\u043C\u0435\u0440\u044B:
   bunx rk86                          \u0437\u0430\u043F\u0443\u0441\u043A \u043C\u043E\u043D\u0438\u0442\u043E\u0440\u0430
@@ -4606,6 +6133,39 @@ function arg(args, name, defaultValue, matcher, convertor) {
   args.splice(i, 2);
   return convert(value);
 }
+async function runOnline(file) {
+  if (!file) {
+    console.error("--online \u0442\u0440\u0435\u0431\u0443\u0435\u0442 \u0438\u043C\u044F \u0444\u0430\u0439\u043B\u0430");
+    process.exit(1);
+  }
+  if (!existsSync(file)) {
+    console.error(`\u0444\u0430\u0439\u043B \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D: ${file}`);
+    process.exit(1);
+  }
+  const data = await readFile(file);
+  const binary = Buffer.from(data).toString("base64");
+  const name = basename(file);
+  const response = await fetch(`${UPLOAD_SERVER}/load`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ binary, name })
+  });
+  if (!response.ok) {
+    console.error(`\u043E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438: HTTP ${response.status}`);
+    process.exit(1);
+  }
+  const { id } = await response.json();
+  const fileUrl = `${UPLOAD_SERVER}/file/${encodeURIComponent(name)}?${id}`;
+  const url = `https://rk86.ru/index.html?run=${encodeURIComponent(fileUrl)}`;
+  console.log(url);
+  const opener = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
+  const openerArgs = process.platform === "win32" ? ["", url] : [url];
+  spawn(opener, openerArgs, {
+    detached: true,
+    stdio: "ignore",
+    shell: process.platform === "win32"
+  }).unref();
+}
 async function main() {
   const args = process.argv.slice(2);
   if (flag(args, "-v") || flag(args, "--version")) {
@@ -4618,6 +6178,10 @@ async function main() {
   }
   if (flag(args, "-l") || flag(args, "--list")) {
     await listFiles();
+    process.exit(0);
+  }
+  if (flag(args, "--online")) {
+    await runOnline(args[0]);
     process.exit(0);
   }
   const loadOnly = flag(args, "-p");
