@@ -281,7 +281,12 @@
         >
             <img class="icon" src="i/keyboard.svg" alt="Клавиатура" />
         </button>
-        <button type="button" class="icon" data-text="Помощь" onclick={() => window.open("help.html", "_blank")}>
+        <button
+            type="button"
+            class="icon"
+            data-text="Помощь"
+            onclick={() => window.open("https://github.com/begoon/rk86-js/blob/master/info/HELP.md", "_blank")}
+        >
             <img class="icon" src="i/help.svg" alt="Помощь" />
         </button>
         <a href={resolve("/catalog")} class="icon" data-text="Каталог программ">
