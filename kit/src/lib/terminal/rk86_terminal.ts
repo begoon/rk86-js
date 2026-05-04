@@ -344,6 +344,31 @@ function setupKeyboard(keyboard: Keyboard) {
             process.exit(0);
         }
 
+        // Ctrl+letter (0x01..0x1A) → СС + KeyA..KeyZ. Terminals can't
+        // report Shift/Ctrl press/release independently like a browser,
+        // but raw stdin delivers Ctrl+X as the control byte X-0x40, so
+        // we synthesize ControlLeft + KeyX. Codes already claimed by
+        // the TTY (0x03 exit, 0x08 Backspace, 0x09 Tab, 0x0A/0x0D Enter)
+        // fall through to KEY_MAP below.
+        if (
+            data.length === 1 &&
+            data >= "\x01" &&
+            data <= "\x1a" &&
+            data !== "\x08" &&
+            data !== "\x09" &&
+            data !== "\x0a" &&
+            data !== "\x0d"
+        ) {
+            const code = `Key${String.fromCharCode(data.charCodeAt(0) + 0x40)}`;
+            keyboard.onkeydown("ControlLeft");
+            keyboard.onkeydown(code);
+            setTimeout(() => {
+                keyboard.onkeyup(code);
+                keyboard.onkeyup("ControlLeft");
+            }, 50);
+            return;
+        }
+
         const code = KEY_MAP[data] || KEY_MAP[data.toLowerCase()];
         if (code) {
             // Check for uppercase → send shift
@@ -464,7 +489,8 @@ function printHelp() {
   bunx rk86 -g 0x100 prog.bin        запуск с адреса 100h
 
 Управление:
-  Ctrl+C    выход`);
+  Ctrl+C       выход
+  Ctrl+<буква> СС + <буква> (например Ctrl+A = СС+A)`);
 }
 
 function htmlToAnsi(html: string): string {
