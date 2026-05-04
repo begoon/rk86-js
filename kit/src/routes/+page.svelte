@@ -8,8 +8,10 @@
     import { version } from "$lib/rk86_version";
     import { main as boot, type HostCallbacks } from "$lib/web/boot";
     import Debugger from "$lib/core/rk86_debugger";
+    import { rk86_snapshot, rk86_snapshot_restore } from "$lib/core/rk86_snapshot";
     import CatalogSelector from "./CatalogSelector.svelte";
     import Disassembler from "./Disassembler.svelte";
+    import FreezeSelector from "./FreezeSelector.svelte";
     import Keyboard from "./Keyboard.svelte";
     import Terminal from "./Terminal.svelte";
     import { ui } from "./state.svelte";
@@ -18,6 +20,56 @@
     let keyboardVisible = $state(false);
     let catalogDialog = $state<HTMLDialogElement>();
     let catalogSelector = $state<CatalogSelector>();
+
+    type Freeze = {
+        id: string;
+        createdAt: number;
+        fileName: string;
+        thumbnail: string;
+        snapshot: string;
+    };
+    const FREEZE_CAP = 20;
+    let freezes = $state<Freeze[]>([]);
+    let freezeDialog = $state<HTMLDialogElement>();
+    let freezeFlash = $state(false);
+    let freezeFlashTimeout: ReturnType<typeof setTimeout>;
+
+    function freezeNow() {
+        if (!machine || !canvas) return;
+        const snapshot = rk86_snapshot(machine, version);
+        const thumbnail = canvas.toDataURL("image/png");
+        const entry: Freeze = {
+            id:
+                typeof crypto !== "undefined" && "randomUUID" in crypto
+                    ? crypto.randomUUID()
+                    : `f-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            createdAt: Date.now(),
+            fileName: ui.selectedFileName,
+            thumbnail,
+            snapshot,
+        };
+        freezes = [entry, ...freezes].slice(0, FREEZE_CAP);
+        freezeFlash = true;
+        clearTimeout(freezeFlashTimeout);
+        freezeFlashTimeout = setTimeout(() => (freezeFlash = false), 400);
+    }
+
+    function openFreezeSelector() {
+        if (freezes.length === 0) return;
+        freezeDialog?.showModal();
+    }
+
+    function restoreFreeze(id: string) {
+        const freeze = freezes.find((f) => f.id === id);
+        if (!freeze || !machine) return;
+        rk86_snapshot_restore(JSON.parse(freeze.snapshot), machine);
+        freezeDialog?.close();
+    }
+
+    function deleteFreeze(id: string) {
+        freezes = freezes.filter((f) => f.id !== id);
+        if (freezes.length === 0) freezeDialog?.close();
+    }
 
     function openCatalog() {
         catalogDialog?.showModal();
@@ -126,6 +178,8 @@
         u: () => uploadInput?.click(),
         g: () => machine?.runLoadedFile(),
         w: () => machine?.ui.emulator_snapshot(),
+        z: freezeNow,
+        x: openFreezeSelector,
     };
 
     function onKeyDown(e: KeyboardEvent) {
@@ -148,12 +202,14 @@
             return;
         }
         if (catalogDialog?.open) return;
+        if (freezeDialog?.open) return;
         if (debuggerVisible && !canvasFocused) return;
         emulatorKeyDown?.(e.code);
     }
 
     function onKeyUp(e: KeyboardEvent) {
         if (catalogDialog?.open) return;
+        if (freezeDialog?.open) return;
         if (debuggerVisible && !canvasFocused) return;
         emulatorKeyUp?.(e.code);
     }
@@ -408,6 +464,24 @@
             >
                 <img class="icon" src="i/snapshot.svg" alt="Сохранить полное состояние" />
             </button>
+            <button
+                type="button"
+                class="icon"
+                class:flashing={freezeFlash}
+                data-text="Заморозить состояние ({freezes.length}/{FREEZE_CAP})"
+                onclick={freezeNow}
+            >
+                <img class="icon" src="i/freeze.svg" alt="Заморозить состояние" />
+            </button>
+            <button
+                type="button"
+                class="icon"
+                disabled={freezes.length === 0}
+                data-text={freezes.length === 0 ? "Нет замороженных состояний" : `Восстановить состояние (${freezes.length})`}
+                onclick={openFreezeSelector}
+            >
+                <img class="icon" src="i/restore.svg" alt="Восстановить состояние" />
+            </button>
             <button type="button" class="icon" data-text="Включить/выключить звук" onclick={toggleSound}>
                 {#if soundEnabled}
                     <img class="icon" src="i/sound.svg" alt="Включить звук" />
@@ -560,6 +634,8 @@
             <div><mark>s</mark> звук</div>
             <div><mark>f</mark> полноэкранный режим</div>
             <div><mark>w</mark> сохранить состояние эмулятора</div>
+            <div><mark>z</mark> заморозить состояние</div>
+            <div><mark>x</mark> восстановить состояние</div>
             <div><mark>b</mark> помощь по клавиатуре</div>
         </div>
     </div>
@@ -588,6 +664,22 @@
             machine?.loadCatalogFile(name);
         }}
         onclose={() => catalogDialog?.close()}
+    />
+</dialog>
+
+<dialog
+    id="freeze-dialog"
+    bind:this={freezeDialog}
+    onclick={(e) => {
+        if (e.target === e.currentTarget) freezeDialog?.close();
+    }}
+    onclose={() => (document.activeElement as HTMLElement)?.blur()}
+>
+    <FreezeSelector
+        {freezes}
+        onselect={restoreFreeze}
+        ondelete={deleteFreeze}
+        onclose={() => freezeDialog?.close()}
     />
 </dialog>
 
@@ -625,6 +717,15 @@
         padding: 2px;
         outline: 2px solid white;
         border-radius: 8px;
+    }
+    button.flashing {
+        outline: 2px solid #4cf;
+        border-radius: 8px;
+        padding: 2px;
+    }
+    button:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
     }
     button {
         font-family: monospace;
@@ -722,10 +823,12 @@
         border-radius: 8px;
     }
     #shortcuts::backdrop,
-    #catalog-dialog::backdrop {
+    #catalog-dialog::backdrop,
+    #freeze-dialog::backdrop {
         background-color: rgba(0, 0, 0, 0.5);
     }
-    #catalog-dialog {
+    #catalog-dialog,
+    #freeze-dialog {
         position: fixed;
         top: 50%;
         left: 50%;

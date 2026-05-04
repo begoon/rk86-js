@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-05-04
+
+### Freeze / restore (in-memory snapshots)
+
+- New toolbar buttons: **«Заморозить состояние»** (snowflake) and
+  **«Восстановить состояние»** (clock-rewind). Freezes are kept in-memory
+  for the page session — up to 20, FIFO eviction of the oldest. No
+  persistence across reloads (use the existing «Сохранить полное состояние»
+  button or per-row download for a file).
+- Each freeze stores a full `rk86_snapshot(...)` JSON plus a thumbnail
+  captured via `canvas.toDataURL("image/png")` at freeze time.
+- Restore selector is a modal list (newest first) showing thumbnail,
+  absolute time, relative time, and the filename loaded at freeze time
+  (or "(нет файла)" if none). Per-row actions: download (↓) and
+  delete (✕).
+- Selector keys: `↑`/`↓` navigate, `Enter` applies the freeze,
+  `S` downloads the selected freeze as
+  `<filename>-YYYYMMDD-hhmmss.json` (or `rk86-snapshot-…` if no file
+  was loaded), `D` deletes, `Esc` closes.
+- Cmd/Ctrl+K shortcuts: `Z` = freeze, `X` = open restore selector.
+
 ## 2026-04-20
 
 ### Assembler
