@@ -1263,12 +1263,12 @@ var init_catalog_data = __esm(() => {
       leadingE6: true
     },
     {
-      name: "MESHANINA.rk",
+      name: "MESHANINA.RK",
       title: "\u0418\u0433\u0440\u0430 \xAB\u041C\u0435\u0448\u0430\u043D\u0438\u043D\u0430\xBB, \u0432\u0435\u0440\u0441\u0438\u044F 1.1",
       description: `\u041B\u042D\u041C\u0417, 1989. \u041F\u0435\u0440\u0435\u0440\u0430\u0431\u043E\u0442\u043A\u0430 \u0430\u043D\u0433\u043B\u0438\u0439\u0441\u043A\u043E\u0433\u043E \u0432\u0430\u0440\u0438\u0430\u043D\u0442\u0430.
 \u0418\u0433\u0440\u0430 \u043D\u0430 \u0440\u0430\u0437\u0432\u0438\u0442\u0438\u0435 \u0438\u043D\u0442\u0443\u0438\u0446\u0438\u0438 \u0438 \u043D\u0430\u0432\u044B\u043A\u043E\u0432 \u0440\u0430\u0431\u043E\u0442\u044B \u0441 \u043A\u043B\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u043E\u0439: \u043A\u043E\u043C\u043F\u044C\u044E\u0442\u0435\u0440 \u0432\u044B\u0431\u0438\u0440\u0430\u0435\u0442 \u0441\u043B\u043E\u0432\u043E \u0438\u0437 3\u20147 \u0431\u0443\u043A\u0432 \u0438 \u043F\u0440\u043E\u0438\u0437\u0432\u043E\u043B\u044C\u043D\u043E \u043F\u0435\u0440\u0435\u0441\u0442\u0430\u0432\u043B\u044F\u0435\u0442 \u0432 \u043D\u0451\u043C \u0431\u0443\u043A\u0432\u044B \u2014 \u043D\u0443\u0436\u043D\u043E \u0443\u0433\u0430\u0434\u0430\u0442\u044C.`,
       screenshots: [
-        "MESHANINA.rk-1.png"
+        "MESHANINA.RK-1.png"
       ],
       start: 256,
       end: 3344,
@@ -3982,7 +3982,7 @@ import { basename } from "path";
 // packages/rk86/package.json
 var package_default = {
   name: "rk86",
-  version: "2.0.20",
+  version: "2.0.21",
   description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
   bin: {
     rk86: "rk86.js"
@@ -6034,6 +6034,17 @@ function setupKeyboard(keyboard) {
       process.stdout.write("\x1B[2J\x1B[H");
       process.exit(0);
     }
+    if (data.length === 1 && data >= "\x01" && data <= "\x1A" && data !== "\b" && data !== "\t" && data !== `
+` && data !== "\r") {
+      const code2 = `Key${String.fromCharCode(data.charCodeAt(0) + 64)}`;
+      keyboard.onkeydown("ControlLeft");
+      keyboard.onkeydown(code2);
+      setTimeout(() => {
+        keyboard.onkeyup(code2);
+        keyboard.onkeyup("ControlLeft");
+      }, 50);
+      return;
+    }
     const code = KEY_MAP[data] || KEY_MAP[data.toLowerCase()];
     if (code) {
       if (data.length === 1 && data >= "A" && data <= "Z") {
@@ -6100,7 +6111,8 @@ function printHelp() {
   bunx rk86 -g 0x100 prog.bin        \u0437\u0430\u043F\u0443\u0441\u043A \u0441 \u0430\u0434\u0440\u0435\u0441\u0430 100h
 
 \u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435:
-  Ctrl+C    \u0432\u044B\u0445\u043E\u0434`);
+  Ctrl+C       \u0432\u044B\u0445\u043E\u0434
+  Ctrl+<\u0431\u0443\u043A\u0432\u0430> \u0421\u0421 + <\u0431\u0443\u043A\u0432\u0430> (\u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 Ctrl+A = \u0421\u0421+A)`);
 }
 function htmlToAnsi(html) {
   return html.replace(/<a\s+href="([^"]*)"[^>]*>(.*?)<\/a>/g, (_m, url, text) => `\x1B]8;;${url}\x1B\\${text}\x1B]8;;\x1B\\`).replace(/<[^>]*>/g, "").replace(/\n+/g, " ").trim();
