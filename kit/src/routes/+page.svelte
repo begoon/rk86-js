@@ -659,7 +659,12 @@
 >
     <CatalogSelector
         bind:this={catalogSelector}
-        onselect={(name) => {
+        onrun={async (name) => {
+            catalogDialog?.close();
+            await machine?.loadCatalogFile(name);
+            setTimeout(() => machine?.runLoadedFile(), 500);
+        }}
+        onload={(name) => {
             catalogDialog?.close();
             machine?.loadCatalogFile(name);
         }}
