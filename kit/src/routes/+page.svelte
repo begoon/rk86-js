@@ -250,7 +250,7 @@
     let mainElement = $state<HTMLElement>();
     $effect(() => {
         if (mainElement) {
-            mainElement.querySelectorAll("button.icon, a.icon").forEach((el) => {
+            mainElement.querySelectorAll("#header button, #header a").forEach((el) => {
                 (el as HTMLElement).tabIndex = -1;
             });
         }
@@ -311,7 +311,15 @@
         if (button) hintText = "";
     }}
 >
-    <div id="header" class={fullscreen ? "hidden" : ""}>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div
+        id="header"
+        class={fullscreen ? "hidden" : ""}
+        onmousedown={(e) => {
+            const focusable = (e.target as HTMLElement).closest("button, a");
+            if (focusable) e.preventDefault();
+        }}
+    >
         <button class="icon" data-text="Сигнал RESET" onclick={() => machine?.reset()}>
             <img class="icon" src="i/reset.svg" alt="Сигнал RESET" />
         </button>
