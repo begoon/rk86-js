@@ -803,37 +803,34 @@ function dumpScreen(machine: Machine): string {
     let addr = screen.video_memory_base;
     let frameStopped = false;
     for (let y = 0; y < screen.height; y++) {
-        // i8275 transparent field-attribute mode (RK86 default):
-        //   $00-$7F normal char → consume one cell
-        //   $80-$BF field attribute → latch color, NO cell consumed
+        // i8275 visible field-attribute mode (per spec, common RK86 mode):
+        //   $00-$7F normal char → glyph
+        //   $80-$BF field attribute → blank cell, latches color (terminal
+        //                             is monochrome so color is dropped)
         //   $C0-$EF char attribute → blank cell
         //   $F0-$FF special control → end of row / end of screen
-        // Terminal output is monochrome — colors dropped, only positions matter.
-        let chars: string[] = [];
+        let line = "";
         let rowStopped = frameStopped;
-        for (let srcX = 0; srcX < screen.width; srcX++) {
+        for (let x = 0; x < screen.width; x++) {
             const raw = memory.read_raw(addr++);
-            if (rowStopped) continue;
-            if (raw >= 0xf0) {
-                rowStopped = true;
+            if (rowStopped || raw >= 0xc0) {
+                line += ".";
+                if (raw >= 0xf0) rowStopped = true;
                 if (raw >= 0xf8) frameStopped = true;
                 continue;
             }
-            if (raw >= 0xc0) {
-                chars.push(".");
+            if (raw >= 0x80) {
+                line += ".";
                 continue;
             }
-            if (raw >= 0x80) continue; // field attribute → no cell
             const byte = raw & 0x7f;
             if (byte === 0x00 || byte === 0x09 || byte === 0x0a || byte === 0x0d) {
-                chars.push(".");
+                line += ".";
             } else {
-                chars.push(rk86char(byte));
+                line += rk86char(byte);
             }
         }
-        // Pad row with blanks to screen width.
-        while (chars.length < screen.width) chars.push(".");
-        lines.push(chars.join(""));
+        lines.push(line);
     }
     return lines.join("\r\n") + "\r\n";
 }

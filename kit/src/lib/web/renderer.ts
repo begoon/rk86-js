@@ -8,21 +8,33 @@ const CHAR_HEIGHT = 8;
 const CHAR_HEIGHT_GAP = 2;
 const CURSOR_HEIGHT = 1;
 
-// Tolkalin (Радиолюбитель 04/1992) RGB mapping for i8275 field-attribute
-// pins on RK86 color mod: GPA0=Red, GPA1=Green, HLGT=Blue. Color index =
-// (byte >> 1) & 0x07 from a field-attribute byte ($80-$BF). Index 7 (white)
-// is the default when no field attribute has been latched yet on a row.
+// RGB mapping for i8275 field-attribute pins on RK86 color mod, matching
+// Emu80's RCM_COLOR1 (the de-facto reference for RK86 colorized programs).
+// Wiring: GPA0 → Green, GPA1 → Blue, HLGT → Red. With color_index =
+// (byte >> 1) & 0x07 (bits 1-3 of the field-attribute byte), the bit
+// positions land in this palette layout:
+//   color_index 0 (no attr) — falls back to light gray (Emu80 default)
+//   color_index 1 (G0=1)            → green
+//   color_index 2 (G1=1)            → blue
+//   color_index 3 (G0+G1)           → cyan
+//   color_index 4 (H=1)             → red
+//   color_index 5 (H+G0)            → yellow
+//   color_index 6 (H+G1)            → magenta
+//   color_index 7 (H+G0+G1)         → white
+// (Spec at info/rk86_i8275_color_spec.md describes Tolkalin's R/G/B
+// wiring, but Emu80 ships a different rotation by default and most
+// modern colorized RK programs are tuned for it.)
 const COLORS = [
-    "#000000", // 0  black
-    "#ff0000", // 1  red
-    "#00ff00", // 2  green
-    "#ffff00", // 3  yellow
-    "#0000ff", // 4  blue
-    "#ff00ff", // 5  magenta
-    "#00ffff", // 6  cyan
+    "#c0c0c0", // 0  light gray (fallback when no attr latched)
+    "#00ff00", // 1  green
+    "#0000ff", // 2  blue
+    "#00ffff", // 3  cyan
+    "#ff0000", // 4  red
+    "#ffff00", // 5  yellow
+    "#ff00ff", // 6  magenta
     "#ffffff", // 7  white
 ];
-const DEFAULT_COLOR = 7;
+const DEFAULT_COLOR = 0;
 
 export class CanvasRenderer implements Renderer {
     private machine!: Machine;
@@ -96,70 +108,50 @@ export class CanvasRenderer implements Renderer {
             this.cachedVideoBase = screen.video_memory_base;
         }
 
-        // Draw characters using i8275 transparent field-attribute mode
-        // (RK86 monitor's default). Byte classification:
-        //   $00-$7F  normal character → consume one display cell
-        //   $80-$BF  field attribute  → latch new color/highlight/blink,
-        //                              **does NOT consume a display cell**
+        // Draw characters using i8275 visible field-attribute mode (the
+        // common RK86 mode per the spec). Byte classification:
+        //   $00-$7F  normal character → glyph in current color
+        //   $80-$BF  field attribute  → latch color/highlight/blink for
+        //                              following cells, this cell renders
+        //                              as a blank in the new color
         //   $C0-$EF  character attribute → blank (RK86 doesn't generate)
         //   $F0-$FF  special control → end of row / end of screen
-        // In transparent mode the chip skips a display cell when it sees
-        // an attribute byte. The visible cells advance only on chars; the
-        // attribute byte changes color of all following cells in the row.
-        // Field attribute is reset to the default (white) at start of each
-        // row. Programs that put attr+char pairs in vmem (e.g. tree2025.rk)
-        // rely on this — without it the whole row gets stretched as each
-        // attr byte takes a blank cell. See info/rk86_i8275_color_spec.md.
+        // Field attribute resets to the default (white) at start of each
+        // row. Visible mode preserves character positions: each source
+        // byte takes exactly one display cell, so vertical lines and
+        // fixed-column layouts (boulder.rkr etc.) render straight. See
+        // info/rk86_i8275_color_spec.md for the full spec.
         let addr = screen.video_memory_base;
         let frameStopped = false;
         for (let y = 0; y < screen.height; ++y) {
             let rowStopped = frameStopped;
             let color = DEFAULT_COLOR;
-            let dstX = 0;
-            const baseI = y * screen.width;
-            for (let srcX = 0; srcX < screen.width; ++srcX) {
+            for (let x = 0; x < screen.width; ++x) {
+                const i = addr - screen.video_memory_base;
                 const raw = memory.read(addr);
-                addr += 1;
-                if (rowStopped) continue;
-                if (raw >= 0xf0) {
+
+                let ch: number;
+                if (rowStopped) {
+                    ch = 0;
+                } else if (raw >= 0xf0) {
+                    ch = 0;
                     rowStopped = true;
                     if (raw >= 0xf8) frameStopped = true;
-                    continue;
-                }
-                if (raw >= 0xc0) {
-                    // Char attribute — render as blank in current color.
-                    if (dstX < screen.width) {
-                        const cacheKey = (color << 8);
-                        if (this.cache[baseI + dstX] !== cacheKey) {
-                            this.drawChar(dstX, y, 0, color);
-                            this.cache[baseI + dstX] = cacheKey;
-                        }
-                        dstX++;
-                    }
-                    continue;
-                }
-                if (raw >= 0x80) {
-                    // Field attribute — latch color, don't consume a cell.
+                } else if (raw >= 0xc0) {
+                    ch = 0;
+                } else if (raw >= 0x80) {
                     color = (raw >> 1) & 0x07;
-                    continue;
+                    ch = 0;
+                } else {
+                    ch = raw;
                 }
-                // Normal character — render at current dst cell.
-                if (dstX < screen.width) {
-                    const cacheKey = raw | (color << 8);
-                    if (this.cache[baseI + dstX] !== cacheKey) {
-                        this.drawChar(dstX, y, raw, color);
-                        this.cache[baseI + dstX] = cacheKey;
-                    }
-                    dstX++;
+
+                const cacheKey = ch | (color << 8);
+                if (this.cache[i] !== cacheKey) {
+                    this.drawChar(x, y, ch, color);
+                    this.cache[i] = cacheKey;
                 }
-            }
-            // Blank cells past the last char/attr/EOR consumed.
-            while (dstX < screen.width) {
-                if (this.cache[baseI + dstX] !== (color << 8)) {
-                    this.drawChar(dstX, y, 0, color);
-                    this.cache[baseI + dstX] = (color << 8);
-                }
-                dstX++;
+                addr += 1;
             }
         }
 

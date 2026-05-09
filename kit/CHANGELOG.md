@@ -2,6 +2,77 @@
 
 ## 2026-05-09
 
+### i8275: цветовая палитра — переход на Emu80 RCM_COLOR1 (де-факто стандарт)
+
+Обнаружилось, что наш цветовой mapping (Tolkalin per spec — `GPA0→R,
+GPA1→G, HLGT→B`) не совпадает с тем, что выводит **Emu80 в режиме
+RCM_COLOR1** (де-факто референс для colorized RK86-программ). Emu80
+использует **3-way ротацию**: `GPA0→Green, GPA1→Blue, HLGT→Red`.
+Большинство цветных RK-программ (dizzy75, etc.) тестировались
+именно под Emu80, и наш Tolkalin-маппинг показывал «не те» цвета.
+
+Найдено в исходнике Emu80 (`src/Rk86.cpp:Rk86Renderer::getCurFgColor`):
+
+```cpp
+case RCM_COLOR1:
+    res = (gpa1 ? 0x0000FF : 0)   // GPA1 → Blue
+        | (gpa0 ? 0x00FF00 : 0)   // GPA0 → Green
+        | (hglt ? 0xFF0000 : 0);  // HLGT → Red
+```
+
+Реализация в эмуляторе обновлена под Emu80-mapping. С `color_index =
+(byte >> 1) & 0x07` палитра теперь:
+
+| color_index | Бит-сигнал | Цвет        |
+|-------------|------------|-------------|
+| 0           | (none)     | light gray (fallback) |
+| 1           | G0 only    | green       |
+| 2           | G1 only    | blue        |
+| 3           | G0+G1      | cyan        |
+| 4           | H only     | red         |
+| 5           | H+G0       | yellow      |
+| 6           | H+G1       | magenta     |
+| 7           | H+G0+G1    | white       |
+
+Default color (когда attr ещё не установлен в строке) — index 0
+(light gray), как у Emu80 (для cell без attr поля все биты 0,
+формула даёт 0, fallback к 0xC0C0C0).
+
+`info/RK86.md` обновлён с новой таблицей пинов/палитры и пометкой
+о Tolkalin-разводке (всё ещё описана в `info/rk86_i8275_color_spec.md`
+как оригинальная схема).
+
+### i8275: возврат к visible field-attribute mode (фиксированное позиционирование)
+
+Я откатил предыдущий переход на transparent mode — он ломал
+программы вроде `boulder.rkr`, в которых вертикальные линии
+строятся из символов на фиксированных колонках, и атрибуты не
+должны сдвигать содержимое строки. В transparent mode атрибут-байт
+не занимает клетки, и chars сдвигались влево на N (где N = число
+attrs до них в строке) — отсюда «curved» вертикальные линии.
+
+Реальное железо в transparent mode заполняет «дыру» от атрибута
+байтом из FIFO (16-байтовый внутренний буфер i8275, пополняемый
+дополнительными DMA-burst'ами). Без моделирования FIFO наш naive
+transparent даёт сдвиг.
+
+Spec из `info/rk86_i8275_color_spec.md` явно рекомендует:
+
+> if you only care about RK86 you can usually ignore this mode —
+> most colorized RK programs use visible mode
+
+Так что vis mode — наш default. Поведение:
+
+- `$00-$7F` → глиф в текущем цвете
+- `$80-$BF` → ячейка пустая, цвет защёлкнут на оставшуюся строку
+- `$C0-$EF` → ячейка пустая
+- `$F0-$FF` → end of row / end of frame
+
+`tree2025.rk` в visible mode визуально «расширен вправо» вместо
+симметрии — это технически корректное поведение по спеке (атрибуты
+занимают клетки), но эстетически неприятное. Если когда-нибудь
+понадобится точная transparent-mode эмуляция, нужен FIFO.
+
 ### i8275: переход на transparent field-attribute mode (правильное позиционирование)
 
 Эмулятор использовал **visible mode** (F=0 в спеке) — атрибут-байт

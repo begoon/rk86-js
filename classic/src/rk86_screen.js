@@ -50,14 +50,19 @@ function Screen(font_image, ui, memory) {
   this.font = new Image();
   this.font.src = "rk86_font.bmp";
 
-  // Tolkalin (Радиолюбитель 04/1992) RGB mapping for i8275 field-attribute
-  // pins on RK86 color mod: GPA0=Red, GPA1=Green, HLGT=Blue. Color index
-  // = (byte >> 1) & 0x07 from a field-attribute byte ($80-$BF).
+  // RGB mapping for i8275 field-attribute pins on RK86 color mod,
+  // matching Emu80's RCM_COLOR1 (de-facto reference for RK86 colorized
+  // programs). Wiring: GPA0 → Green, GPA1 → Blue, HLGT → Red. With
+  // color_index = (byte >> 1) & 0x07 the palette layout is:
+  //   0 light gray (no-attr fallback)  4 red (H)
+  //   1 green (G0)                     5 yellow (H+G0)
+  //   2 blue (G1)                      6 magenta (H+G1)
+  //   3 cyan (G0+G1)                   7 white (H+G0+G1)
   var COLORS = [
-    "#000000", "#ff0000", "#00ff00", "#ffff00",
-    "#0000ff", "#ff00ff", "#00ffff", "#ffffff",
+    "#c0c0c0", "#00ff00", "#0000ff", "#00ffff",
+    "#ff0000", "#ffff00", "#ff00ff", "#ffffff",
   ];
-  var DEFAULT_COLOR = 7;
+  var DEFAULT_COLOR = 0;
   this.fontByColor = [];
   this.font.onload = function () {
     for (var c = 0; c < 8; c++) {
@@ -195,58 +200,38 @@ function Screen(font_image, ui, memory) {
   }
 
   this.draw_screen = function () {
-    var addr = this.video_memory_base;
+    var i = this.video_memory_base;
     var frameStopped = false;
-    // i8275 transparent field-attribute mode (RK86 default):
-    //   $00-$7F normal char → consume one display cell
-    //   $80-$BF field attribute → latch color, NO cell consumed
-    //   $C0-$EF char attribute → blank
-    //   $F0-$FF special control → end of row / end of screen
+    // i8275 visible field-attribute mode (per spec, common RK86 mode):
+    //   $00-$7F normal char, $80-$BF field attr (blank cell + color),
+    //   $C0-$EF char attr (blank), $F0-$FF special (end of row/screen).
     for (var y = 0; y < this.height; ++y) {
       var rowStopped = frameStopped;
       var color = DEFAULT_COLOR;
-      var dstX = 0;
-      var baseI = y * this.width;
-      for (var srcX = 0; srcX < this.width; ++srcX) {
-        var raw = this.memory.read(addr);
-        addr += 1;
-        if (rowStopped) continue;
-        if (raw >= 0xf0) {
+      for (var x = 0; x < this.width; ++x) {
+        var cache_i = i - this.video_memory_base;
+        var raw = this.memory.read(i);
+        var ch;
+        if (rowStopped) {
+          ch = 0;
+        } else if (raw >= 0xf0) {
+          ch = 0;
           rowStopped = true;
           if (raw >= 0xf8) frameStopped = true;
-          continue;
-        }
-        if (raw >= 0xc0) {
-          if (dstX < this.width) {
-            var ck = (color << 8);
-            if (this.cache[baseI + dstX] != ck) {
-              this.draw_char(dstX, y, 0, color);
-              this.cache[baseI + dstX] = ck;
-            }
-            dstX++;
-          }
-          continue;
-        }
-        if (raw >= 0x80) {
+        } else if (raw >= 0xc0) {
+          ch = 0;
+        } else if (raw >= 0x80) {
           color = (raw >> 1) & 0x07;
-          continue;
+          ch = 0;
+        } else {
+          ch = raw;
         }
-        if (dstX < this.width) {
-          var ck2 = raw | (color << 8);
-          if (this.cache[baseI + dstX] != ck2) {
-            this.draw_char(dstX, y, raw, color);
-            this.cache[baseI + dstX] = ck2;
-          }
-          dstX++;
+        var cacheKey = ch | (color << 8);
+        if (this.cache[cache_i] != cacheKey) {
+          this.draw_char(x, y, ch, color);
+          this.cache[cache_i] = cacheKey;
         }
-      }
-      while (dstX < this.width) {
-        var ck3 = (color << 8);
-        if (this.cache[baseI + dstX] != ck3) {
-          this.draw_char(dstX, y, 0, color);
-          this.cache[baseI + dstX] = ck3;
-        }
-        dstX++;
+        i += 1;
       }
     }
     self = this;
