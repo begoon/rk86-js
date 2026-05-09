@@ -4083,7 +4083,7 @@ import { basename } from "path";
 // packages/rk86/package.json
 var package_default = {
   name: "rk86",
-  version: "2.0.22",
+  version: "2.0.23",
   description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
   bin: {
     rk86: "rk86.js"
@@ -5319,9 +5319,11 @@ class Memory {
     const addr = address & 65535;
     this.last_access_address = addr;
     this.last_access_operation = "read";
-    if (addr === 32770)
+    const ppi_reg = addr & 57347;
+    const vg75_reg = addr & 57345;
+    if (ppi_reg === 32770)
       return this.machine.keyboard.modifiers;
-    if (addr === 32769) {
+    if (ppi_reg === 32769) {
       const keyboard_state = this.machine.keyboard.state;
       let ch = 255;
       const kbd_scanline = ~this.buf[32768];
@@ -5330,14 +5332,14 @@ class Memory {
           ch &= keyboard_state[i];
       return ch;
     }
-    if (addr === 49153) {
+    if (vg75_reg === 49153) {
       const ticks = this.machine.runner.total_ticks;
       const FRAME = 35600;
       const VRTC_ON = 3560;
       const vrtc = ticks % FRAME >= FRAME - VRTC_ON ? 32 : 0;
       return vrtc | (this.machine.screen.light_pen_active ? 16 : 0);
     }
-    if (addr === 49152) {
+    if (vg75_reg === 49152) {
       if (this.vg75_c001_60_cmd === 1) {
         this.vg75_c001_60_cmd = 2;
         return this.machine.screen.light_pen_x;
@@ -5360,11 +5362,12 @@ class Memory {
     const byte = value8 & 255;
     this.last_access_address = addr;
     this.last_access_operation = "write";
-    if (addr >= 63488)
-      return;
-    this.buf[addr] = byte;
-    const peripheral_reg = addr & 61439;
-    if (peripheral_reg === 32771) {
+    if (addr < 63488)
+      this.buf[addr] = byte;
+    const ppi_reg = addr & 57347;
+    const vg75_reg = addr & 57345;
+    const vt57_reg = addr & 57359;
+    if (ppi_reg === 32771) {
       if (byte & 128) {} else {
         const bit = byte >> 1 & 3;
         const value = byte & 1;
@@ -5373,20 +5376,20 @@ class Memory {
       }
       return;
     }
-    if (peripheral_reg === 49153 && byte === 39)
+    if (vg75_reg === 49153 && byte === 39)
       return;
-    if (peripheral_reg === 49153 && byte === 224)
+    if (vg75_reg === 49153 && byte === 224)
       return;
-    if (peripheral_reg === 49153 && byte === 128) {
+    if (vg75_reg === 49153 && byte === 128) {
       this.vg75_c001_80_cmd = 1;
       return;
     }
-    if (peripheral_reg === 49152 && this.vg75_c001_80_cmd === 1) {
+    if (vg75_reg === 49152 && this.vg75_c001_80_cmd === 1) {
       this.vg75_c001_80_cmd += 1;
       this.cursor_x_buf = byte + 1;
       return;
     }
-    if (peripheral_reg === 49152 && this.vg75_c001_80_cmd === 2) {
+    if (vg75_reg === 49152 && this.vg75_c001_80_cmd === 2) {
       this.cursor_y_buf = byte + 1;
       this.machine.screen.set_cursor(this.cursor_x_buf - 1, this.cursor_y_buf - 1);
       this.video_screen_cursor_x = this.cursor_x_buf;
@@ -5394,30 +5397,30 @@ class Memory {
       this.vg75_c001_80_cmd = 0;
       return;
     }
-    if (peripheral_reg === 49153 && byte === 96) {
+    if (vg75_reg === 49153 && byte === 96) {
       if (this.machine.screen.light_pen_active)
         this.vg75_c001_60_cmd = 1;
       return;
     }
-    if (peripheral_reg === 49153 && byte === 0) {
+    if (vg75_reg === 49153 && byte === 0) {
       this.vg75_c001_00_cmd = 1;
       return;
     }
-    if (peripheral_reg === 49152 && this.vg75_c001_00_cmd === 1) {
+    if (vg75_reg === 49152 && this.vg75_c001_00_cmd === 1) {
       this.video_screen_size_x_buf = (byte & 127) + 1;
       this.vg75_c001_00_cmd += 1;
       return;
     }
-    if (peripheral_reg === 49152 && this.vg75_c001_00_cmd === 2) {
+    if (vg75_reg === 49152 && this.vg75_c001_00_cmd === 2) {
       this.video_screen_size_y_buf = (byte & 63) + 1;
       this.vg75_c001_00_cmd += 1;
       return;
     }
-    if (peripheral_reg === 49152 && this.vg75_c001_00_cmd === 3) {
+    if (vg75_reg === 49152 && this.vg75_c001_00_cmd === 3) {
       this.vg75_c001_00_cmd += 1;
       return;
     }
-    if (peripheral_reg === 49152 && this.vg75_c001_00_cmd === 4) {
+    if (vg75_reg === 49152 && this.vg75_c001_00_cmd === 4) {
       this.vg75_c001_00_cmd = 0;
       if (this.video_screen_size_x_buf && this.video_screen_size_y_buf) {
         this.video_screen_size_x = this.video_screen_size_x_buf;
@@ -5426,28 +5429,28 @@ class Memory {
       }
       return;
     }
-    if (peripheral_reg === 57352 && byte === 128) {
+    if (vt57_reg === 57352 && byte === 128) {
       this.ik57_e008_80_cmd = 1;
       this.ik57_ff = 0;
       this.tape_8002_as_output = 1;
       return;
     }
-    if (peripheral_reg === 57348 && this.ik57_e008_80_cmd === 1) {
+    if (vt57_reg === 57348 && this.ik57_e008_80_cmd === 1) {
       this.video_memory_base_buf = byte;
       this.ik57_e008_80_cmd += 1;
       return;
     }
-    if (peripheral_reg === 57348 && this.ik57_e008_80_cmd === 2) {
+    if (vt57_reg === 57348 && this.ik57_e008_80_cmd === 2) {
       this.video_memory_base_buf |= byte << 8;
       this.ik57_e008_80_cmd += 1;
       return;
     }
-    if (peripheral_reg === 57349 && this.ik57_e008_80_cmd === 3) {
+    if (vt57_reg === 57349 && this.ik57_e008_80_cmd === 3) {
       this.video_memory_size_buf = byte;
       this.ik57_e008_80_cmd += 1;
       return;
     }
-    if (peripheral_reg === 57349 && this.ik57_e008_80_cmd === 4) {
+    if (vt57_reg === 57349 && this.ik57_e008_80_cmd === 4) {
       this.video_memory_size_buf = ((this.video_memory_size_buf | byte << 8) & 16383) + 1;
       this.ik57_e008_80_cmd = 0;
       this.video_memory_base = this.video_memory_base_buf;
@@ -5455,11 +5458,11 @@ class Memory {
       this.machine.screen.set_video_memory(this.video_memory_base);
       return;
     }
-    if (peripheral_reg === 57352 && byte === 164) {
+    if (vt57_reg === 57352 && byte === 164) {
       this.tape_8002_as_output = 0;
       return;
     }
-    if (peripheral_reg === 57348 && this.ik57_e008_80_cmd === 0) {
+    if (vt57_reg === 57348 && this.ik57_e008_80_cmd === 0) {
       if (this.ik57_ff === 0) {
         this.video_memory_base_buf = this.video_memory_base & 65280 | byte;
         this.ik57_ff = 1;
@@ -5471,7 +5474,7 @@ class Memory {
       }
       return;
     }
-    if (peripheral_reg === 57349 && this.ik57_e008_80_cmd === 0) {
+    if (vt57_reg === 57349 && this.ik57_e008_80_cmd === 0) {
       if (this.ik57_ff === 0) {
         this.video_memory_size_buf = byte;
         this.ik57_ff = 1;
@@ -5482,7 +5485,7 @@ class Memory {
       }
       return;
     }
-    if (addr === 32770) {
+    if (ppi_reg === 32770) {
       if (this.tape_8002_as_output) {
         this.tape_write_bit(byte & 1);
       }

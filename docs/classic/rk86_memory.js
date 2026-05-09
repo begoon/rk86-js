@@ -176,9 +176,17 @@ function Memory(keyboard) {
     this.last_access_address = addr;
     this.last_access_operation = "read";
 
-    if (addr == 0x8002) return this.keyboard.modifiers;
+    // RK86 chip-select decoder (К555ИД7) uses A13..A15 only; chips see
+    // only the low address bits they need (others are mirrored). Use
+    // per-peripheral masks so all hardware mirrors hit the right handler:
+    //   PPI (8000-9FFF, A000-BFFF): A0..A1 → mask 0xE003
+    //   VG75 (C000-DFFF):           A0     → mask 0xE001
+    var ppi_reg = addr & 0xe003;
+    var vg75_reg = addr & 0xe001;
 
-    if (addr == 0x8001) {
+    if (ppi_reg == 0x8002) return this.keyboard.modifiers;
+
+    if (ppi_reg == 0x8001) {
       var keyboard_state = this.keyboard.state;
       var ch = 0xff;
       var kbd_scanline = ~this.buf[0x8000];
@@ -187,7 +195,7 @@ function Memory(keyboard) {
       return ch;
     }
 
-    if (addr == 0xc001) {
+    if (vg75_reg == 0xc001) {
       var ticks = this.runner.total_ticks;
       var FRAME = 35600;
       var VRTC_ON = 3560;
@@ -195,7 +203,7 @@ function Memory(keyboard) {
       return vrtc | (this.screen.light_pen_active ? 0x10 : 0x00);
     }
 
-    if (addr == 0xc000) {
+    if (vg75_reg == 0xc000) {
       if (this.vg75_c001_60_cmd == 1) {
         this.vg75_c001_60_cmd = 2;
         return this.screen.light_pen_x;
@@ -221,13 +229,20 @@ function Memory(keyboard) {
     this.last_access_address = addr;
     this.last_access_operation = "write";
 
-    if (addr >= 0xf800) return;
+    // RAM write — protect monitor ROM at 0xF800-0xFFFF.
+    if (addr < 0xf800) this.buf[addr] = byte;
 
-    this.buf[addr] = byte;
+    // Peripheral chip-select uses only A13..A15 (К555ИД7), and each chip
+    // sees only as many low address bits as it has registers. Use per-
+    // peripheral masks so all hardware mirrors hit the right handler:
+    //   PPI (8000-9FFF, A000-BFFF): A0..A1 → mask 0xE003
+    //   VG75 (C000-DFFF):           A0     → mask 0xE001
+    //   VT57 (E000-FFFF, write):    A0..A3 → mask 0xE00F (covers F-mirrors)
+    var ppi_reg = addr & 0xe003;
+    var vg75_reg = addr & 0xe001;
+    var vt57_reg = addr & 0xe00f;
 
-    var peripheral_reg = addr & 0xefff;
-
-    if (peripheral_reg == 0x8003) {
+    if (ppi_reg == 0x8003) {
       if (byte & 0x80) {
         const mode = byte & 0x7f;
         // console.log('VV55: write(8003, %02X) mode set %08b'.format(
@@ -246,31 +261,31 @@ function Memory(keyboard) {
       return;
     }
 
-    if (peripheral_reg == 0xc001 && byte == 0x27) {
+    if (vg75_reg == 0xc001 && byte == 0x27) {
       // console.log('VG75: write(C001, 27) start display [001SSSBB]=%08b'.format(byte));
       return;
     }
 
-    if (peripheral_reg == 0xc001 && byte == 0xE0) {
+    if (vg75_reg == 0xc001 && byte == 0xE0) {
       // console.log('VG75: write(C001, E0) preset counter');
       return;
     }
 
     // The cursor control sequence.
-    if (peripheral_reg == 0xc001 && byte == 0x80) {
+    if (vg75_reg == 0xc001 && byte == 0x80) {
       // console.log('VG75: write(C001, 80) set cursor');
       this.vg75_c001_80_cmd = 1;
       return;
     }
 
-    if (peripheral_reg == 0xc000 && this.vg75_c001_80_cmd == 1) {
+    if (vg75_reg == 0xc000 && this.vg75_c001_80_cmd == 1) {
       // console.log('VG75: write(C001, %02X) cursor x'.format(byte));
       this.vg75_c001_80_cmd += 1;
       this.cursor_x_buf = byte + 1;
       return;
     }
 
-    if (peripheral_reg == 0xc000 && this.vg75_c001_80_cmd == 2) {
+    if (vg75_reg == 0xc000 && this.vg75_c001_80_cmd == 2) {
       // console.log('VG75: write(C001, %02X) cursor y'.format(byte));
       this.cursor_y_buf = byte + 1;
       screen.set_cursor(this.cursor_x_buf - 1, this.cursor_y_buf - 1);
@@ -281,45 +296,45 @@ function Memory(keyboard) {
     }
 
     // The light pen position sequence.
-    if (peripheral_reg == 0xc001 && byte == 0x60) {
+    if (vg75_reg == 0xc001 && byte == 0x60) {
       if (this.screen.light_pen_active) this.vg75_c001_60_cmd = 1;
       return;
     }
 
-    if (peripheral_reg == 0xc000 && this.vg75_c001_80_cmd == 1) {
+    if (vg75_reg == 0xc000 && this.vg75_c001_80_cmd == 1) {
       this.vg75_c001_80_cmd += 1;
       this.cursor_x_buf = byte + 1;
       return;
     }
 
     // The screen format command sequence.
-    if (peripheral_reg == 0xc001 && byte == 0) {
+    if (vg75_reg == 0xc001 && byte == 0) {
       // console.log('VG75: write(C001, 00) reset'.format(byte));
       this.vg75_c001_00_cmd = 1;
       return;
     }
 
-    if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 1) {
+    if (vg75_reg == 0xc000 && this.vg75_c001_00_cmd == 1) {
       // console.log('VG75: write(C001, %02X) [SHHHHHHH]=%08b'.format(byte, byte));
       this.video_screen_size_x_buf = (byte & 0x7f) + 1;
       this.vg75_c001_00_cmd += 1;
       return;
     }
 
-    if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 2) {
+    if (vg75_reg == 0xc000 && this.vg75_c001_00_cmd == 2) {
       // console.log('VG75: write(C001, %02X) [VVRRRRRR]=%08b'.format(byte, byte));
       this.video_screen_size_y_buf = (byte & 0x3f) + 1;
       this.vg75_c001_00_cmd += 1;
       return;
     }
 
-    if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 3) {
+    if (vg75_reg == 0xc000 && this.vg75_c001_00_cmd == 3) {
       // console.log('VG75: write(C001, %02X) [UUUULLLL]=%08b'.format(byte, byte));
       this.vg75_c001_00_cmd += 1;
       return;
     }
 
-    if (peripheral_reg == 0xc000 && this.vg75_c001_00_cmd == 4) {
+    if (vg75_reg == 0xc000 && this.vg75_c001_00_cmd == 4) {
       // console.log('VG75: write(C001, %02X) [MZCCZZZZ]=%08b'.format(byte, byte));
       this.vg75_c001_00_cmd = 0;
       // console.log('VG75: screen size loaded: x=%d, y=%d'.format(
@@ -337,7 +352,7 @@ function Memory(keyboard) {
     }
 
     // The screen area parameters command sequence.
-    if (peripheral_reg == 0xe008 && byte == 0x80) {
+    if (vt57_reg == 0xe008 && byte == 0x80) {
       // console.log('IK57: write(E008, 80) disable/reset DMA %08b'.format(byte));
       this.ik57_e008_80_cmd = 1;
       this.ik57_ff = 0;
@@ -345,28 +360,28 @@ function Memory(keyboard) {
       return;
     }
 
-    if (peripheral_reg == 0xe004 && this.ik57_e008_80_cmd == 1) {
+    if (vt57_reg == 0xe004 && this.ik57_e008_80_cmd == 1) {
       // console.log('IK57: write(E004, %02X) video memory start low'.format(byte));
       this.video_memory_base_buf = byte;
       this.ik57_e008_80_cmd += 1;
       return;
     }
 
-    if (peripheral_reg == 0xe004 && this.ik57_e008_80_cmd == 2) {
+    if (vt57_reg == 0xe004 && this.ik57_e008_80_cmd == 2) {
       // console.log('IK57: write(E004, %02X) video memory start high'.format(byte));
       this.video_memory_base_buf |= byte << 8;
       this.ik57_e008_80_cmd += 1;
       return;
     }
 
-    if (peripheral_reg == 0xe005 && this.ik57_e008_80_cmd == 3) {
+    if (vt57_reg == 0xe005 && this.ik57_e008_80_cmd == 3) {
       // console.log('IK57: write(E004, %02X) video memory size low'.format(byte));
       this.video_memory_size_buf = byte;
       this.ik57_e008_80_cmd += 1;
       return;
     }
 
-    if (peripheral_reg == 0xe005 && this.ik57_e008_80_cmd == 4) {
+    if (vt57_reg == 0xe005 && this.ik57_e008_80_cmd == 4) {
       // console.log('IK57: write(E004, %02X) video memory size high'.format(byte));
       this.video_memory_size_buf =
         ((this.video_memory_size_buf | (byte << 8)) & 0x3fff) + 1;
@@ -383,13 +398,13 @@ function Memory(keyboard) {
 
     // Settings for video memory boundaries and the screen format
     // only take an effect after the DMA command 0xA4 (start the channel).
-    if (peripheral_reg == 0xe008 && byte == 0xa4) {
+    if (vt57_reg == 0xe008 && byte == 0xa4) {
       // console.log('IK57: write(E008, A4) enable DMA %08b'.format(byte));
       this.tape_8002_as_output = 0;
       return;
     }
 
-    if (peripheral_reg == 0xe004 && this.ik57_e008_80_cmd == 0) {
+    if (vt57_reg == 0xe004 && this.ik57_e008_80_cmd == 0) {
       if (this.ik57_ff == 0) {
         this.video_memory_base_buf = (this.video_memory_base & 0xff00) | byte;
         this.ik57_ff = 1;
@@ -402,7 +417,7 @@ function Memory(keyboard) {
       return;
     }
 
-    if (peripheral_reg == 0xe005 && this.ik57_e008_80_cmd == 0) {
+    if (vt57_reg == 0xe005 && this.ik57_e008_80_cmd == 0) {
       if (this.ik57_ff == 0) {
         this.video_memory_size_buf = byte;
         this.ik57_ff = 1;
