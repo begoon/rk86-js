@@ -807,16 +807,23 @@ function dumpScreen(machine: Machine): string {
         let rowStopped = frameStopped;
         for (let x = 0; x < screen.width; x++) {
             const raw = memory.read_raw(addr++);
-            // Bytes 0xF0..0xFF are i8275 special control codes (End of Row /
-            // End of Frame) — they don't render as glyphs and truncate the
-            // row (or the rest of the frame for 0xF8..0xFF).
-            if (rowStopped || raw >= 0xf0) {
+            // i8275 byte classification (see info/rk86_i8275_color_spec.md):
+            //   $00-$7F normal char, $80-$BF field attribute (color/blank),
+            //   $C0-$EF char attribute (graphics, RK86 unused),
+            //   $F0-$FF special control (end of row/screen).
+            // Terminal output is monochrome — color attribute is dropped,
+            // attribute and special-control cells render as blank.
+            if (rowStopped || raw >= 0xc0) {
                 line += ".";
                 if (raw >= 0xf0) rowStopped = true;
                 if (raw >= 0xf8) frameStopped = true;
                 continue;
             }
-            const byte = raw & 0x7f; // strip inverse bit
+            if (raw >= 0x80) {
+                line += "."; // field attribute → blank
+                continue;
+            }
+            const byte = raw & 0x7f;
             if (byte === 0x00 || byte === 0x09 || byte === 0x0a || byte === 0x0d) {
                 line += ".";
             } else {
