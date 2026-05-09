@@ -195,39 +195,58 @@ function Screen(font_image, ui, memory) {
   }
 
   this.draw_screen = function () {
-    var i = this.video_memory_base;
+    var addr = this.video_memory_base;
     var frameStopped = false;
-    // i8275 byte classification (see info/rk86_i8275_color_spec.md):
-    //   $00-$7F normal char, $80-$BF field attribute (color/blank),
-    //   $C0-$EF char attribute (graphics, RK86 unused),
-    //   $F0-$FF special control (end of row/screen).
+    // i8275 transparent field-attribute mode (RK86 default):
+    //   $00-$7F normal char → consume one display cell
+    //   $80-$BF field attribute → latch color, NO cell consumed
+    //   $C0-$EF char attribute → blank
+    //   $F0-$FF special control → end of row / end of screen
     for (var y = 0; y < this.height; ++y) {
       var rowStopped = frameStopped;
       var color = DEFAULT_COLOR;
-      for (var x = 0; x < this.width; ++x) {
-        var cache_i = i - this.video_memory_base;
-        var raw = this.memory.read(i);
-        var ch;
-        if (rowStopped) {
-          ch = 0;
-        } else if (raw >= 0xf0) {
-          ch = 0;
+      var dstX = 0;
+      var baseI = y * this.width;
+      for (var srcX = 0; srcX < this.width; ++srcX) {
+        var raw = this.memory.read(addr);
+        addr += 1;
+        if (rowStopped) continue;
+        if (raw >= 0xf0) {
           rowStopped = true;
           if (raw >= 0xf8) frameStopped = true;
-        } else if (raw >= 0xc0) {
-          ch = 0;
-        } else if (raw >= 0x80) {
+          continue;
+        }
+        if (raw >= 0xc0) {
+          if (dstX < this.width) {
+            var ck = (color << 8);
+            if (this.cache[baseI + dstX] != ck) {
+              this.draw_char(dstX, y, 0, color);
+              this.cache[baseI + dstX] = ck;
+            }
+            dstX++;
+          }
+          continue;
+        }
+        if (raw >= 0x80) {
           color = (raw >> 1) & 0x07;
-          ch = 0;
-        } else {
-          ch = raw;
+          continue;
         }
-        var cacheKey = ch | (color << 8);
-        if (this.cache[cache_i] != cacheKey) {
-          this.draw_char(x, y, ch, color);
-          this.cache[cache_i] = cacheKey;
+        if (dstX < this.width) {
+          var ck2 = raw | (color << 8);
+          if (this.cache[baseI + dstX] != ck2) {
+            this.draw_char(dstX, y, raw, color);
+            this.cache[baseI + dstX] = ck2;
+          }
+          dstX++;
         }
-        i += 1;
+      }
+      while (dstX < this.width) {
+        var ck3 = (color << 8);
+        if (this.cache[baseI + dstX] != ck3) {
+          this.draw_char(dstX, y, 0, color);
+          this.cache[baseI + dstX] = ck3;
+        }
+        dstX++;
       }
     }
     self = this;
