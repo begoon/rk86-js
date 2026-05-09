@@ -4083,7 +4083,7 @@ import { basename } from "path";
 // packages/rk86/package.json
 var package_default = {
   name: "rk86",
-  version: "2.0.23",
+  version: "2.0.24",
   description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
   bin: {
     rk86: "rk86.js"
@@ -6512,12 +6512,16 @@ function dumpScreen(machine) {
     let rowStopped = frameStopped;
     for (let x = 0;x < screen.width; x++) {
       const raw = memory.read_raw(addr++);
-      if (rowStopped || raw >= 240) {
+      if (rowStopped || raw >= 192) {
         line += ".";
         if (raw >= 240)
           rowStopped = true;
         if (raw >= 248)
           frameStopped = true;
+        continue;
+      }
+      if (raw >= 128) {
+        line += ".";
         continue;
       }
       const byte = raw & 127;
