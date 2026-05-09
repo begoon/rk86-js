@@ -176,9 +176,15 @@ function Memory(keyboard) {
     this.last_access_address = addr;
     this.last_access_operation = "read";
 
-    if (addr == 0x8002) return this.keyboard.modifiers;
+    // RK86 chip-select decoder (К555ИД7) uses A13..A15 only — A12 is
+    // don't-care, so each peripheral region is mirrored across its 8K
+    // span: 0x8000-0x9FFF, 0xA000-0xBFFF, 0xC000-0xDFFF, 0xE000-0xEFFF.
+    // Mask out A12 to match the existing write-side convention.
+    var peripheral_reg = addr & 0xefff;
 
-    if (addr == 0x8001) {
+    if (peripheral_reg == 0x8002) return this.keyboard.modifiers;
+
+    if (peripheral_reg == 0x8001) {
       var keyboard_state = this.keyboard.state;
       var ch = 0xff;
       var kbd_scanline = ~this.buf[0x8000];
@@ -187,7 +193,7 @@ function Memory(keyboard) {
       return ch;
     }
 
-    if (addr == 0xc001) {
+    if (peripheral_reg == 0xc001) {
       var ticks = this.runner.total_ticks;
       var FRAME = 35600;
       var VRTC_ON = 3560;
@@ -195,7 +201,7 @@ function Memory(keyboard) {
       return vrtc | (this.screen.light_pen_active ? 0x10 : 0x00);
     }
 
-    if (addr == 0xc000) {
+    if (peripheral_reg == 0xc000) {
       if (this.vg75_c001_60_cmd == 1) {
         this.vg75_c001_60_cmd = 2;
         return this.screen.light_pen_x;
