@@ -43,6 +43,7 @@ function Memory(keyboard) {
       cursor_y_buf: this.cursor_y_buf,
       vg75_c001_60_cmd: this.vg75_c001_60_cmd,
       ik57_e008_80_cmd: this.ik57_e008_80_cmd,
+      ik57_ff: this.ik57_ff,
       tape_8002_as_output: this.tape_8002_as_output,
       video_memory_base_buf: h16(this.video_memory_base_buf),
       video_memory_size_buf: h16(this.video_memory_size_buf),
@@ -68,6 +69,7 @@ function Memory(keyboard) {
     this.cursor_y_buf = h(snapshot.cursor_y_buf);
     this.vg75_c001_60_cmd = h(snapshot.vg75_c001_60_cmd);
     this.ik57_e008_80_cmd = h(snapshot.ik57_e008_80_cmd);
+    this.ik57_ff = snapshot.ik57_ff != null ? h(snapshot.ik57_ff) : 0;
     this.tape_8002_as_output = h(snapshot.tape_8002_as_output);
     this.video_memory_base_buf = h(snapshot.video_memory_base_buf);
     this.video_memory_size_buf = h(snapshot.video_memory_size_buf);
@@ -126,6 +128,7 @@ function Memory(keyboard) {
   this.video_screen_size_y_buf = 0;
 
   this.ik57_e008_80_cmd = 0;
+  this.ik57_ff = 0;
 
   this.vg75_c001_80_cmd = 0;
 
@@ -185,7 +188,11 @@ function Memory(keyboard) {
     }
 
     if (addr == 0xc001) {
-      return 0x20 | (this.screen.light_pen_active ? 0x10 : 0x00);
+      var ticks = this.runner.total_ticks;
+      var FRAME = 35600;
+      var VRTC_ON = 3560;
+      var vrtc = ticks % FRAME >= FRAME - VRTC_ON ? 0x20 : 0x00;
+      return vrtc | (this.screen.light_pen_active ? 0x10 : 0x00);
     }
 
     if (addr == 0xc000) {
@@ -333,6 +340,7 @@ function Memory(keyboard) {
     if (peripheral_reg == 0xe008 && byte == 0x80) {
       // console.log('IK57: write(E008, 80) disable/reset DMA %08b'.format(byte));
       this.ik57_e008_80_cmd = 1;
+      this.ik57_ff = 0;
       this.tape_8002_as_output = 1;
       return;
     }
@@ -378,6 +386,31 @@ function Memory(keyboard) {
     if (peripheral_reg == 0xe008 && byte == 0xa4) {
       // console.log('IK57: write(E008, A4) enable DMA %08b'.format(byte));
       this.tape_8002_as_output = 0;
+      return;
+    }
+
+    if (peripheral_reg == 0xe004 && this.ik57_e008_80_cmd == 0) {
+      if (this.ik57_ff == 0) {
+        this.video_memory_base_buf = (this.video_memory_base & 0xff00) | byte;
+        this.ik57_ff = 1;
+      } else {
+        this.video_memory_base = (this.video_memory_base_buf & 0x00ff) | (byte << 8);
+        this.video_memory_base_buf = this.video_memory_base;
+        screen.set_video_memory(this.video_memory_base, this.video_memory_size);
+        this.ik57_ff = 0;
+      }
+      return;
+    }
+
+    if (peripheral_reg == 0xe005 && this.ik57_e008_80_cmd == 0) {
+      if (this.ik57_ff == 0) {
+        this.video_memory_size_buf = byte;
+        this.ik57_ff = 1;
+      } else {
+        this.video_memory_size = (((this.video_memory_size_buf | (byte << 8)) & 0x3fff) + 1);
+        this.video_memory_size_buf = this.video_memory_size;
+        this.ik57_ff = 0;
+      }
       return;
     }
 

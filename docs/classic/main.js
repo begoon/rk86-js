@@ -48,6 +48,7 @@ function main() {
 
   memory.tape_write_bit = tape.write_bit;
   memory.update_ruslat = ui.update_ruslat;
+  memory.runner = runner;
 
   document.getElementById("loading").style.display = "none";
   document.getElementById("main_panel").style.display = "inline-block";

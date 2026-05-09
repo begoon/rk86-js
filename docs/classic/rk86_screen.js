@@ -162,10 +162,18 @@ function Screen(font_image, ui, memory) {
 
   this.draw_screen = function () {
     var i = this.video_memory_base;
+    var frameStopped = false;
     for (var y = 0; y < this.height; ++y) {
+      var rowStopped = frameStopped;
       for (var x = 0; x < this.width; ++x) {
         var cache_i = i - this.video_memory_base;
-        var ch = this.memory.read(i);
+        var raw = this.memory.read(i);
+        // Bytes 0xF0..0xFF are i8275 special control codes (End of Row /
+        // End of Frame) — they don't render as glyphs and truncate the
+        // row (or the rest of the frame for 0xF8..0xFF).
+        var ch = (rowStopped || raw >= 0xf0) ? 0 : raw;
+        if (raw >= 0xf0) rowStopped = true;
+        if (raw >= 0xf8) frameStopped = true;
         if (this.cache[cache_i] != ch) {
           this.draw_char(x, y, ch);
           this.cache[cache_i] = ch;

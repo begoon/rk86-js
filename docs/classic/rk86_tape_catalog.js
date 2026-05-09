@@ -212,6 +212,9 @@ function tape_catalog() {
     "rk_font.bin",
     "screentest.bin",
     "sokoban.bin",
+    "squash.rkr",
+    "trex.rk",
     "viewport.rkr",
+    "weird.rkr",
   ];
 }
