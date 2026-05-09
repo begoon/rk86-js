@@ -185,7 +185,11 @@ function Memory(keyboard) {
     }
 
     if (addr == 0xc001) {
-      return 0x20 | (this.screen.light_pen_active ? 0x10 : 0x00);
+      var ticks = this.runner.total_ticks;
+      var FRAME = 35600;
+      var VRTC_ON = 3560;
+      var vrtc = ticks % FRAME >= FRAME - VRTC_ON ? 0x20 : 0x00;
+      return vrtc | (this.screen.light_pen_active ? 0x10 : 0x00);
     }
 
     if (addr == 0xc000) {

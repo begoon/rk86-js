@@ -169,7 +169,11 @@ export class Memory {
         }
 
         if (addr === 0xc001) {
-            return 0x20 | (this.machine.screen.light_pen_active ? 0x10 : 0x00);
+            const ticks = this.machine.runner.total_ticks;
+            const FRAME = 35600;
+            const VRTC_ON = 3560;
+            const vrtc = ticks % FRAME >= FRAME - VRTC_ON ? 0x20 : 0x00;
+            return vrtc | (this.machine.screen.light_pen_active ? 0x10 : 0x00);
         }
 
         if (addr === 0xc000) {
