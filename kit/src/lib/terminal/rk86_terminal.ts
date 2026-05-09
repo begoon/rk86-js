@@ -801,10 +801,22 @@ function dumpScreen(machine: Machine): string {
     const { memory, screen } = machine;
     const lines: string[] = [];
     let addr = screen.video_memory_base;
+    let frameStopped = false;
     for (let y = 0; y < screen.height; y++) {
         let line = "";
+        let rowStopped = frameStopped;
         for (let x = 0; x < screen.width; x++) {
-            const byte = memory.read_raw(addr++) & 0x7f; // strip inverse bit
+            const raw = memory.read_raw(addr++);
+            // Bytes 0xF0..0xFF are i8275 special control codes (End of Row /
+            // End of Frame) — they don't render as glyphs and truncate the
+            // row (or the rest of the frame for 0xF8..0xFF).
+            if (rowStopped || raw >= 0xf0) {
+                line += ".";
+                if (raw >= 0xf0) rowStopped = true;
+                if (raw >= 0xf8) frameStopped = true;
+                continue;
+            }
+            const byte = raw & 0x7f; // strip inverse bit
             if (byte === 0x00 || byte === 0x09 || byte === 0x0a || byte === 0x0d) {
                 line += ".";
             } else {

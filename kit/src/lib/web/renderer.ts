@@ -58,12 +58,19 @@ export class CanvasRenderer implements Renderer {
             this.cachedVideoBase = screen.video_memory_base;
         }
 
-        // Draw characters.
+        // Draw characters. Bytes 0xF0..0xFF are i8275 special control codes
+        // (End of Row / End of Frame) — they don't render as glyphs and
+        // truncate the row (or the rest of the frame for 0xF8..0xFF).
         let addr = screen.video_memory_base;
+        let frameStopped = false;
         for (let y = 0; y < screen.height; ++y) {
+            let rowStopped = frameStopped;
             for (let x = 0; x < screen.width; ++x) {
                 const i = addr - screen.video_memory_base;
-                const ch = memory.read(addr);
+                const raw = memory.read(addr);
+                const ch = rowStopped || raw >= 0xf0 ? 0 : raw;
+                if (raw >= 0xf0) rowStopped = true;
+                if (raw >= 0xf8) frameStopped = true;
                 if (this.cache[i] !== ch) {
                     this.drawChar(x, y, ch);
                     this.cache[i] = ch;
