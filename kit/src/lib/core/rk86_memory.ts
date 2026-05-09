@@ -12,6 +12,7 @@ interface MemorySnapshot {
     cursor_y_buf: number;
     vg75_c001_60_cmd: number;
     ik57_e008_80_cmd: number;
+    ik57_ff?: number;
     tape_8002_as_output: number;
     video_memory_base_buf: string;
     video_memory_size_buf: string;
@@ -36,6 +37,7 @@ export class Memory {
     video_screen_size_x_buf: number = 0;
     video_screen_size_y_buf: number = 0;
     ik57_e008_80_cmd: number = 0;
+    ik57_ff: number = 0;
     vg75_c001_80_cmd: number = 0;
     cursor_x_buf: number = 0;
     cursor_y_buf: number = 0;
@@ -66,6 +68,7 @@ export class Memory {
         this.video_screen_size_x_buf = 0;
         this.video_screen_size_y_buf = 0;
         this.ik57_e008_80_cmd = 0;
+        this.ik57_ff = 0;
         this.vg75_c001_80_cmd = 0;
         this.cursor_x_buf = 0;
         this.cursor_y_buf = 0;
@@ -100,6 +103,7 @@ export class Memory {
             cursor_y_buf: this.cursor_y_buf,
             vg75_c001_60_cmd: this.vg75_c001_60_cmd,
             ik57_e008_80_cmd: this.ik57_e008_80_cmd,
+            ik57_ff: this.ik57_ff,
             tape_8002_as_output: this.tape_8002_as_output,
             video_memory_base_buf: h16(this.video_memory_base_buf),
             video_memory_size_buf: h16(this.video_memory_size_buf),
@@ -125,6 +129,7 @@ export class Memory {
         this.cursor_y_buf = snapshot.cursor_y_buf;
         this.vg75_c001_60_cmd = snapshot.vg75_c001_60_cmd;
         this.ik57_e008_80_cmd = snapshot.ik57_e008_80_cmd;
+        this.ik57_ff = snapshot.ik57_ff ?? 0;
         this.tape_8002_as_output = snapshot.tape_8002_as_output;
         this.video_memory_base_buf = h(snapshot.video_memory_base_buf);
         this.video_memory_size_buf = h(snapshot.video_memory_size_buf);
@@ -281,6 +286,7 @@ export class Memory {
 
         if (peripheral_reg === 0xe008 && byte === 0x80) {
             this.ik57_e008_80_cmd = 1;
+            this.ik57_ff = 0;
             this.tape_8002_as_output = 1;
             return;
         }
@@ -314,6 +320,31 @@ export class Memory {
 
         if (peripheral_reg === 0xe008 && byte === 0xa4) {
             this.tape_8002_as_output = 0;
+            return;
+        }
+
+        if (peripheral_reg === 0xe004 && this.ik57_e008_80_cmd === 0) {
+            if (this.ik57_ff === 0) {
+                this.video_memory_base_buf = (this.video_memory_base & 0xff00) | byte;
+                this.ik57_ff = 1;
+            } else {
+                this.video_memory_base = (this.video_memory_base_buf & 0x00ff) | (byte << 8);
+                this.video_memory_base_buf = this.video_memory_base;
+                this.machine.screen.set_video_memory(this.video_memory_base);
+                this.ik57_ff = 0;
+            }
+            return;
+        }
+
+        if (peripheral_reg === 0xe005 && this.ik57_e008_80_cmd === 0) {
+            if (this.ik57_ff === 0) {
+                this.video_memory_size_buf = byte;
+                this.ik57_ff = 1;
+            } else {
+                this.video_memory_size = (((this.video_memory_size_buf | (byte << 8)) & 0x3fff) + 1);
+                this.video_memory_size_buf = this.video_memory_size;
+                this.ik57_ff = 0;
+            }
             return;
         }
 

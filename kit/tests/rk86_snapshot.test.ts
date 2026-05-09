@@ -124,7 +124,7 @@ import { type Machine } from "../src/lib/core/rk86_machine.js";
 import EXPECTED_SNAPSHOT from "./test_snapshot.json" with { type: "json" };
 
 test("export", () => {
-    expect.assertions(4172);
+    expect.assertions(4173);
 
     Date.prototype.toISOString = () => "created";
 

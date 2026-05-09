@@ -56,6 +56,7 @@
         "cursor_y_buf": 5,
         "vg75_c001_60_cmd": 0,
         "ik57_e008_80_cmd": 0,
+        "ik57_ff": 0,
         "tape_8002_as_output": 0,
         "video_memory_base_buf": "0x76D0",
         "video_memory_size_buf": "0x0924",
