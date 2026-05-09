@@ -163,15 +163,18 @@ export class Memory {
         this.last_access_address = addr;
         this.last_access_operation = "read";
 
-        // RK86 chip-select decoder (К555ИД7) uses A13..A15 only — A12 is
-        // don't-care, so each peripheral region is mirrored across its 8K
-        // span: 0x8000-0x9FFF, 0xA000-0xBFFF, 0xC000-0xDFFF, 0xE000-0xEFFF.
-        // Mask out A12 to match the existing write-side convention.
-        const peripheral_reg = addr & 0xefff;
+        // RK86 chip-select decoder (К555ИД7) uses A13..A15 only; chips see
+        // only the low address bits they need (others are mirrored). Use
+        // per-peripheral masks so all hardware mirrors hit the right
+        // handler:
+        //   PPI (8000-9FFF, A000-BFFF): A0..A1 used → mask 0xE003
+        //   VG75 (C000-DFFF):           A0    used → mask 0xE001
+        const ppi_reg = addr & 0xe003;
+        const vg75_reg = addr & 0xe001;
 
-        if (peripheral_reg === 0x8002) return this.machine.keyboard.modifiers;
+        if (ppi_reg === 0x8002) return this.machine.keyboard.modifiers;
 
-        if (peripheral_reg === 0x8001) {
+        if (ppi_reg === 0x8001) {
             const keyboard_state = this.machine.keyboard.state;
             let ch = 0xff;
             const kbd_scanline = ~this.buf[0x8000];
@@ -179,7 +182,7 @@ export class Memory {
             return ch;
         }
 
-        if (peripheral_reg === 0xc001) {
+        if (vg75_reg === 0xc001) {
             const ticks = this.machine.runner.total_ticks;
             const FRAME = 35600;
             const VRTC_ON = 3560;
@@ -187,7 +190,7 @@ export class Memory {
             return vrtc | (this.machine.screen.light_pen_active ? 0x10 : 0x00);
         }
 
-        if (peripheral_reg === 0xc000) {
+        if (vg75_reg === 0xc000) {
             if (this.vg75_c001_60_cmd === 1) {
                 this.vg75_c001_60_cmd = 2;
                 return this.machine.screen.light_pen_x;
@@ -214,12 +217,23 @@ export class Memory {
         this.last_access_address = addr;
         this.last_access_operation = "write";
 
-        if (addr >= 0xf800) return;
-        this.buf[addr] = byte;
+        // RAM write — protect monitor ROM at 0xF800-0xFFFF.
+        if (addr < 0xf800) this.buf[addr] = byte;
 
-        const peripheral_reg = addr & 0xefff;
+        // Peripheral chip-select uses only A13..A15 (К555ИД7 decoder), and
+        // each chip exposes only as many of the low address bits as it has
+        // registers. Use per-peripheral masks so all hardware mirrors hit
+        // the right handler:
+        //   PPI (8000-9FFF, A000-BFFF): A0..A1 used     → mask 0xE003
+        //   VG75 (C000-DFFF):           A0    used      → mask 0xE001
+        //   VT57 (E000-FFFF, write):    A0..A3 used     → mask 0xE00F
+        // (For VT57 this also covers F-range mirrors that some programs use,
+        //  e.g. F808 ≡ E008. Reads from F800-FFFF still fall through to ROM.)
+        const ppi_reg  = addr & 0xe003;
+        const vg75_reg = addr & 0xe001;
+        const vt57_reg = addr & 0xe00f;
 
-        if (peripheral_reg === 0x8003) {
+        if (ppi_reg === 0x8003) {
             if (byte & 0x80) {
                 // Mode set
             } else {
@@ -230,21 +244,21 @@ export class Memory {
             return;
         }
 
-        if (peripheral_reg === 0xc001 && byte === 0x27) return;
-        if (peripheral_reg === 0xc001 && byte === 0xe0) return;
+        if (vg75_reg === 0xc001 && byte === 0x27) return;
+        if (vg75_reg === 0xc001 && byte === 0xe0) return;
 
-        if (peripheral_reg === 0xc001 && byte === 0x80) {
+        if (vg75_reg === 0xc001 && byte === 0x80) {
             this.vg75_c001_80_cmd = 1;
             return;
         }
 
-        if (peripheral_reg === 0xc000 && this.vg75_c001_80_cmd === 1) {
+        if (vg75_reg === 0xc000 && this.vg75_c001_80_cmd === 1) {
             this.vg75_c001_80_cmd += 1;
             this.cursor_x_buf = byte + 1;
             return;
         }
 
-        if (peripheral_reg === 0xc000 && this.vg75_c001_80_cmd === 2) {
+        if (vg75_reg === 0xc000 && this.vg75_c001_80_cmd === 2) {
             this.cursor_y_buf = byte + 1;
             this.machine.screen.set_cursor(this.cursor_x_buf - 1, this.cursor_y_buf - 1);
             this.video_screen_cursor_x = this.cursor_x_buf;
@@ -253,34 +267,34 @@ export class Memory {
             return;
         }
 
-        if (peripheral_reg === 0xc001 && byte === 0x60) {
+        if (vg75_reg === 0xc001 && byte === 0x60) {
             if (this.machine.screen.light_pen_active) this.vg75_c001_60_cmd = 1;
             return;
         }
 
-        if (peripheral_reg === 0xc001 && byte === 0x00) {
+        if (vg75_reg === 0xc001 && byte === 0x00) {
             this.vg75_c001_00_cmd = 1;
             return;
         }
 
-        if (peripheral_reg === 0xc000 && this.vg75_c001_00_cmd === 1) {
+        if (vg75_reg === 0xc000 && this.vg75_c001_00_cmd === 1) {
             this.video_screen_size_x_buf = (byte & 0x7f) + 1;
             this.vg75_c001_00_cmd += 1;
             return;
         }
 
-        if (peripheral_reg === 0xc000 && this.vg75_c001_00_cmd === 2) {
+        if (vg75_reg === 0xc000 && this.vg75_c001_00_cmd === 2) {
             this.video_screen_size_y_buf = (byte & 0x3f) + 1;
             this.vg75_c001_00_cmd += 1;
             return;
         }
 
-        if (peripheral_reg === 0xc000 && this.vg75_c001_00_cmd === 3) {
+        if (vg75_reg === 0xc000 && this.vg75_c001_00_cmd === 3) {
             this.vg75_c001_00_cmd += 1;
             return;
         }
 
-        if (peripheral_reg === 0xc000 && this.vg75_c001_00_cmd === 4) {
+        if (vg75_reg === 0xc000 && this.vg75_c001_00_cmd === 4) {
             this.vg75_c001_00_cmd = 0;
             if (this.video_screen_size_x_buf && this.video_screen_size_y_buf) {
                 this.video_screen_size_x = this.video_screen_size_x_buf;
@@ -290,32 +304,32 @@ export class Memory {
             return;
         }
 
-        if (peripheral_reg === 0xe008 && byte === 0x80) {
+        if (vt57_reg === 0xe008 && byte === 0x80) {
             this.ik57_e008_80_cmd = 1;
             this.ik57_ff = 0;
             this.tape_8002_as_output = 1;
             return;
         }
 
-        if (peripheral_reg === 0xe004 && this.ik57_e008_80_cmd === 1) {
+        if (vt57_reg === 0xe004 && this.ik57_e008_80_cmd === 1) {
             this.video_memory_base_buf = byte;
             this.ik57_e008_80_cmd += 1;
             return;
         }
 
-        if (peripheral_reg === 0xe004 && this.ik57_e008_80_cmd === 2) {
+        if (vt57_reg === 0xe004 && this.ik57_e008_80_cmd === 2) {
             this.video_memory_base_buf |= byte << 8;
             this.ik57_e008_80_cmd += 1;
             return;
         }
 
-        if (peripheral_reg === 0xe005 && this.ik57_e008_80_cmd === 3) {
+        if (vt57_reg === 0xe005 && this.ik57_e008_80_cmd === 3) {
             this.video_memory_size_buf = byte;
             this.ik57_e008_80_cmd += 1;
             return;
         }
 
-        if (peripheral_reg === 0xe005 && this.ik57_e008_80_cmd === 4) {
+        if (vt57_reg === 0xe005 && this.ik57_e008_80_cmd === 4) {
             this.video_memory_size_buf = ((this.video_memory_size_buf | (byte << 8)) & 0x3fff) + 1;
             this.ik57_e008_80_cmd = 0;
             this.video_memory_base = this.video_memory_base_buf;
@@ -324,12 +338,12 @@ export class Memory {
             return;
         }
 
-        if (peripheral_reg === 0xe008 && byte === 0xa4) {
+        if (vt57_reg === 0xe008 && byte === 0xa4) {
             this.tape_8002_as_output = 0;
             return;
         }
 
-        if (peripheral_reg === 0xe004 && this.ik57_e008_80_cmd === 0) {
+        if (vt57_reg === 0xe004 && this.ik57_e008_80_cmd === 0) {
             if (this.ik57_ff === 0) {
                 this.video_memory_base_buf = (this.video_memory_base & 0xff00) | byte;
                 this.ik57_ff = 1;
@@ -342,7 +356,7 @@ export class Memory {
             return;
         }
 
-        if (peripheral_reg === 0xe005 && this.ik57_e008_80_cmd === 0) {
+        if (vt57_reg === 0xe005 && this.ik57_e008_80_cmd === 0) {
             if (this.ik57_ff === 0) {
                 this.video_memory_size_buf = byte;
                 this.ik57_ff = 1;
@@ -354,7 +368,7 @@ export class Memory {
             return;
         }
 
-        if (addr === 0x8002) {
+        if (ppi_reg === 0x8002) {
             if (this.tape_8002_as_output) {
                 this.tape_write_bit(byte & 0x01);
             }
