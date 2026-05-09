@@ -2885,6 +2885,20 @@ var init_catalog_data = __esm(() => {
       leadingE6: false
     },
     {
+      name: "cpudetect.rk",
+      title: "\u041E\u043F\u0440\u0435\u0434\u0435\u043B\u0435\u043D\u0438\u0435 \u0442\u0438\u043F\u0430 \u043F\u0440\u043E\u0446\u0435\u0441\u0441\u043E\u0440\u0430 (8080/Z80)",
+      description: "",
+      screenshots: [
+        "cpudetect.rk-1.png"
+      ],
+      start: 0,
+      end: 75,
+      size: 76,
+      entry: 0,
+      checkSum: 41813,
+      leadingE6: false
+    },
+    {
       name: "cputest.bin",
       title: "\u0422\u0435\u0441\u0442 CPU TEST DIAGNOSTICS II V1.2",
       description: 'SUPERSOFT ASSOCIATES, 1981. \u0417\u0430\u043F\u0443\u0441\u043A\u0430\u0442\u044C "G100".',
@@ -2894,6 +2908,20 @@ var init_catalog_data = __esm(() => {
       size: 19456,
       entry: 0,
       checkSum: 65444,
+      leadingE6: false
+    },
+    {
+      name: "dizzy75.rkr",
+      title: "\u0418\u0433\u0440\u0430 Dizzy",
+      description: "",
+      screenshots: [
+        "dizzy75.rkr-1.png"
+      ],
+      start: 0,
+      end: 30207,
+      size: 30208,
+      entry: 0,
+      checkSum: 21118,
       leadingE6: false
     },
     {
@@ -2966,6 +2994,20 @@ var init_catalog_data = __esm(() => {
       leadingE6: false
     },
     {
+      name: "monkey.rk",
+      title: "\u041A\u0430\u0440\u0442\u0438\u043D\u043A\u0430 \xAB\u041E\u0431\u0435\u0437\u044C\u044F\u043D\u043A\u0430\xBB",
+      description: "",
+      screenshots: [
+        "monkey.rk-1.png"
+      ],
+      start: 0,
+      end: 1334,
+      size: 1335,
+      entry: 0,
+      checkSum: 55511,
+      leadingE6: false
+    },
+    {
       name: "okoshki-demo.rkr",
       title: "\u0414\u0435\u043C\u043E\u043D\u0441\u0442\u0440\u0430\u0446\u0438\u044F \u0434\u043B\u044F \u041C\u043E\u043D\u0438\u0442\u043E\u0440\u0430 \xABmon_okoshki.bin\xBB",
       description: "\u0410\u0432\u0442\u043E\u0440: \u0420\u0443\u0441\u043B\u0430\u043D \u0410\u043B\u0438\u043A\u0431\u0435\u0440\u043E\u0432, 2021.",
@@ -2993,6 +3035,20 @@ var init_catalog_data = __esm(() => {
       size: 1024,
       entry: 0,
       checkSum: 6845,
+      leadingE6: false
+    },
+    {
+      name: "radio-86.rk",
+      title: "\u0417\u0430\u0441\u0442\u0430\u0432\u043A\u0430 \xAB\u0420\u0430\u0434\u0438\u043E-86\u0420\u041A\xBB",
+      description: "",
+      screenshots: [
+        "radio-86.rk-1.png"
+      ],
+      start: 0,
+      end: 547,
+      size: 548,
+      entry: 0,
+      checkSum: 16294,
       leadingE6: false
     },
     {
@@ -3087,6 +3143,37 @@ var init_catalog_data = __esm(() => {
       leadingE6: false
     },
     {
+      name: "squash.rkr",
+      title: "\u0418\u0433\u0440\u0430 Squash (\u0441\u043A\u0432\u043E\u0448)",
+      description: "\u0410\u0432\u0442\u043E\u0440: \u0414\u043C\u0438\u0442\u0440\u0438\u0439 \u0418\u0432\u0430\u043D\u043E\u0432, 2024.",
+      screenshots: [
+        "squash.rkr-1.png",
+        "squash.rkr-2.png"
+      ],
+      start: 0,
+      end: 7906,
+      size: 7907,
+      entry: 0,
+      checkSum: 12710,
+      leadingE6: false
+    },
+    {
+      name: "trex.rk",
+      title: "\u0418\u0433\u0440\u0430 T-Rex (\u0422\u0438\u0440\u0430\u043D\u043D\u043E\u0437\u0430\u0432\u0440)",
+      description: "",
+      screenshots: [
+        "trex.rk-1.png",
+        "trex.rk-2.png",
+        "trex.rk-3.png"
+      ],
+      start: 0,
+      end: 13511,
+      size: 13512,
+      entry: 0,
+      checkSum: 58261,
+      leadingE6: false
+    },
+    {
       name: "viewport.rkr",
       title: "\u0414\u0435\u043C\u043E\u043D\u0441\u0442\u0440\u0430\u0446\u0438\u044F \u0434\u043B\u044F \u041C\u043E\u043D\u0438\u0442\u043E\u0440\u0430 \xABmon_okoshki.bin\xBB",
       description: `\u0422\u043E\u0447\u043A\u0438 \u0432\u0445\u043E\u0434\u0430: G0/G1/G3/G3/G4.
@@ -3106,6 +3193,20 @@ var init_catalog_data = __esm(() => {
       size: 1649,
       entry: 0,
       checkSum: 56892,
+      leadingE6: false
+    },
+    {
+      name: "weird.rkr",
+      title: "\u041F\u0440\u0435\u0434\u0441\u043A\u0430\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u0438\u0446\u0430 \u2014 \u0433\u0430\u0434\u0430\u043B\u043A\u0430 \u0441 \u043F\u0440\u0435\u0434\u0441\u043A\u0430\u0437\u0430\u043D\u0438\u044F\u043C\u0438.",
+      description: "",
+      screenshots: [
+        "weird.rkr-1.png"
+      ],
+      start: 0,
+      end: 10677,
+      size: 10678,
+      entry: 0,
+      checkSum: 16541,
       leadingE6: false
     }
   ];
@@ -3982,7 +4083,7 @@ import { basename } from "path";
 // packages/rk86/package.json
 var package_default = {
   name: "rk86",
-  version: "2.0.21",
+  version: "2.0.22",
   description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
   bin: {
     rk86: "rk86.js"
@@ -5104,6 +5205,7 @@ class Memory {
   video_screen_size_x_buf = 0;
   video_screen_size_y_buf = 0;
   ik57_e008_80_cmd = 0;
+  ik57_ff = 0;
   vg75_c001_80_cmd = 0;
   cursor_x_buf = 0;
   cursor_y_buf = 0;
@@ -5130,6 +5232,7 @@ class Memory {
     this.video_screen_size_x_buf = 0;
     this.video_screen_size_y_buf = 0;
     this.ik57_e008_80_cmd = 0;
+    this.ik57_ff = 0;
     this.vg75_c001_80_cmd = 0;
     this.cursor_x_buf = 0;
     this.cursor_y_buf = 0;
@@ -5162,6 +5265,7 @@ class Memory {
       cursor_y_buf: this.cursor_y_buf,
       vg75_c001_60_cmd: this.vg75_c001_60_cmd,
       ik57_e008_80_cmd: this.ik57_e008_80_cmd,
+      ik57_ff: this.ik57_ff,
       tape_8002_as_output: this.tape_8002_as_output,
       video_memory_base_buf: h16(this.video_memory_base_buf),
       video_memory_size_buf: h16(this.video_memory_size_buf),
@@ -5186,6 +5290,7 @@ class Memory {
     this.cursor_y_buf = snapshot.cursor_y_buf;
     this.vg75_c001_60_cmd = snapshot.vg75_c001_60_cmd;
     this.ik57_e008_80_cmd = snapshot.ik57_e008_80_cmd;
+    this.ik57_ff = snapshot.ik57_ff ?? 0;
     this.tape_8002_as_output = snapshot.tape_8002_as_output;
     this.video_memory_base_buf = h(snapshot.video_memory_base_buf);
     this.video_memory_size_buf = h(snapshot.video_memory_size_buf);
@@ -5226,7 +5331,11 @@ class Memory {
       return ch;
     }
     if (addr === 49153) {
-      return 32 | (this.machine.screen.light_pen_active ? 16 : 0);
+      const ticks = this.machine.runner.total_ticks;
+      const FRAME = 35600;
+      const VRTC_ON = 3560;
+      const vrtc = ticks % FRAME >= FRAME - VRTC_ON ? 32 : 0;
+      return vrtc | (this.machine.screen.light_pen_active ? 16 : 0);
     }
     if (addr === 49152) {
       if (this.vg75_c001_60_cmd === 1) {
@@ -5319,6 +5428,7 @@ class Memory {
     }
     if (peripheral_reg === 57352 && byte === 128) {
       this.ik57_e008_80_cmd = 1;
+      this.ik57_ff = 0;
       this.tape_8002_as_output = 1;
       return;
     }
@@ -5347,6 +5457,29 @@ class Memory {
     }
     if (peripheral_reg === 57352 && byte === 164) {
       this.tape_8002_as_output = 0;
+      return;
+    }
+    if (peripheral_reg === 57348 && this.ik57_e008_80_cmd === 0) {
+      if (this.ik57_ff === 0) {
+        this.video_memory_base_buf = this.video_memory_base & 65280 | byte;
+        this.ik57_ff = 1;
+      } else {
+        this.video_memory_base = this.video_memory_base_buf & 255 | byte << 8;
+        this.video_memory_base_buf = this.video_memory_base;
+        this.machine.screen.set_video_memory(this.video_memory_base);
+        this.ik57_ff = 0;
+      }
+      return;
+    }
+    if (peripheral_reg === 57349 && this.ik57_e008_80_cmd === 0) {
+      if (this.ik57_ff === 0) {
+        this.video_memory_size_buf = byte;
+        this.ik57_ff = 1;
+      } else {
+        this.video_memory_size = ((this.video_memory_size_buf | byte << 8) & 16383) + 1;
+        this.video_memory_size_buf = this.video_memory_size;
+        this.ik57_ff = 0;
+      }
       return;
     }
     if (addr === 32770) {
@@ -6370,10 +6503,21 @@ function dumpScreen(machine) {
   const { memory, screen } = machine;
   const lines = [];
   let addr = screen.video_memory_base;
+  let frameStopped = false;
   for (let y = 0;y < screen.height; y++) {
     let line = "";
+    let rowStopped = frameStopped;
     for (let x = 0;x < screen.width; x++) {
-      const byte = memory.read_raw(addr++) & 127;
+      const raw = memory.read_raw(addr++);
+      if (rowStopped || raw >= 240) {
+        line += ".";
+        if (raw >= 240)
+          rowStopped = true;
+        if (raw >= 248)
+          frameStopped = true;
+        continue;
+      }
+      const byte = raw & 127;
       if (byte === 0 || byte === 9 || byte === 10 || byte === 13) {
         line += ".";
       } else {
