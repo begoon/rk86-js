@@ -2871,6 +2871,22 @@ var init_catalog_data = __esm(() => {
       leadingE6: false
     },
     {
+      name: "boulder.rkr",
+      title: "\u0418\u0433\u0440\u0430 Boulder Dash",
+      description: "",
+      screenshots: [
+        "boulder.rkr-1.png",
+        "boulder.rkr-2.png",
+        "boulder.rkr-3.png"
+      ],
+      start: 0,
+      end: 16129,
+      size: 16130,
+      entry: 0,
+      checkSum: 4539,
+      leadingE6: false
+    },
+    {
       name: "chars.bin",
       title: "\u041F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u043F\u0435\u0447\u0430\u0442\u0430\u0435\u0442 \u0442\u0430\u0431\u043B\u0438\u0446\u0443 \u0441\u0438\u043C\u0432\u043E\u043B\u043E\u0432 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A",
       description: '\u0410\u0432\u0442\u043E\u0440 \u0414\u0435\u043C\u0438\u043D \u0410\u043B\u0435\u043A\u0441\u0430\u043D\u0434\u0440, 2012 (<a href="https://github.com/begoon/rk86-maximite/blob/master/programs/chars/chars.asm">\u0438\u0441\u0445\u043E\u0434\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442</a>).',
@@ -2952,15 +2968,15 @@ var init_catalog_data = __esm(() => {
       leadingE6: false
     },
     {
-      name: "mon32-trans.bin",
-      title: "\u041C\u043E\u043D\u0438\u0442\u043E\u0440 32\u041A\u0411 \u0441 \u0432\u043A\u043B\u044E\u0447\u0451\u043D\u043D\u044B\u043C transparent field-attribute mode (i8275 reset byte 4 = 0x93). \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442\u0441\u044F \u0434\u043B\u044F \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C, \u0440\u0430\u0441\u0441\u0447\u0438\u0442\u0430\u043D\u043D\u044B\u0445 \u043D\u0430 \u044D\u0442\u043E\u0442 \u0440\u0435\u0436\u0438\u043C (`tree2025.rk`). \u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437 URL-\u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440 `?monitor=mon32-trans.bin`.",
+      name: "mon32-color.bin",
+      title: "\u041C\u043E\u043D\u0438\u0442\u043E\u0440 32\u041A\u0411 \u0441 visible field-attribute mode (i8275 reset byte 4 = 0xD3 \u0432\u043C\u0435\u0441\u0442\u043E vanilla 0x93). \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442\u0441\u044F \u0434\u043B\u044F \u0446\u0432\u0435\u0442\u043D\u044B\u0445 \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C \u0434\u043B\u044F \u0420\u041A, \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u0440\u0430\u0441\u0441\u0447\u0438\u0442\u0430\u043D\u044B \u043D\u0430 \u044D\u0442\u043E\u0442 \u0440\u0435\u0436\u0438\u043C. \u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437 URL-\u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440 `?monitor=mon32-color.bin` (web) \u0438\u043B\u0438 `-m static/files/mon32-color.bin` (terminal).",
       description: "",
       screenshots: [],
       start: 0,
       end: 2047,
       size: 2048,
       entry: 0,
-      checkSum: 4565,
+      checkSum: 21013,
       leadingE6: false
     },
     {
@@ -2972,7 +2988,7 @@ var init_catalog_data = __esm(() => {
       end: 2047,
       size: 2048,
       entry: 0,
-      checkSum: 21013,
+      checkSum: 4565,
       leadingE6: false
     },
     {
@@ -3034,6 +3050,22 @@ var init_catalog_data = __esm(() => {
       leadingE6: false
     },
     {
+      name: "piton.rkr",
+      title: "\u0418\u0433\u0440\u0430 \u041F\u0438\u0442\u043E\u043D",
+      description: "",
+      screenshots: [
+        "piton.rkr-1.png",
+        "piton.rkr-2.png",
+        "piton.rkr-3.png"
+      ],
+      start: 0,
+      end: 22143,
+      size: 22144,
+      entry: 0,
+      checkSum: 10676,
+      leadingE6: false
+    },
+    {
       name: "psi_1v3.rkr",
       title: '<a href="./psi_1v3.rkr/psi_1v3.txt">\u0423\u0442\u0438\u043B\u0438\u0442\u0430 \u0434\u043B\u044F \u043E\u043F\u044B\u0442\u043E\u0432 \u0441 \u0412\u041375/\u0412\u042257</a>',
       description: `\u041E\u0442\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435 \u0446\u0438\u043A\u043B\u0430 \u0440\u0435\u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u0438 \u041F\u0414\u041F \u043D\u0430 \u0437\u0430\u0434\u0430\u043D\u043D\u044B\u0439 \u043F\u0435\u0440\u0438\u043E\u0434 \u0434\u043B\u044F \u0430\u043D\u0430\u043B\u0438\u0437\u0430 \u0438 \u0432\u044B\u044F\u0432\u043B\u0435\u043D\u0438\u044F \u043D\u0435\u0431\u043B\u0430\u0433\u043E\u043D\u0430\u0434\u0451\u0436\u043D\u044B\u0445 \u043C\u0438\u043A\u0440\u043E\u0441\u0445\u0435\u043C \u041E\u0417\u0423.
@@ -3061,6 +3093,21 @@ var init_catalog_data = __esm(() => {
       size: 548,
       entry: 0,
       checkSum: 16294,
+      leadingE6: false
+    },
+    {
+      name: "rise.rkr",
+      title: "\u0418\u0433\u0440\u0430 Rise",
+      description: "",
+      screenshots: [
+        "rise.rkr-1.png",
+        "rise.rkr-2.png"
+      ],
+      start: 0,
+      end: 9649,
+      size: 9650,
+      entry: 0,
+      checkSum: 54320,
       leadingE6: false
     },
     {
@@ -3167,6 +3214,20 @@ var init_catalog_data = __esm(() => {
       size: 7907,
       entry: 0,
       checkSum: 12710,
+      leadingE6: false
+    },
+    {
+      name: "tree2025.rk",
+      title: "\u041D\u043E\u0432\u043E\u0433\u043E\u0434\u043D\u044F\u044F \u0451\u043B\u043A\u0430 2025.",
+      description: "\u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442 transparent field-attribute mode i8275 \u2014 \u043A\u043E\u0440\u0440\u0435\u043A\u0442\u043D\u043E\n\u043E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0435\u0442\u0441\u044F \u0441 \u0434\u0435\u0444\u043E\u043B\u0442\u043D\u044B\u043C `mon32.bin`.",
+      screenshots: [
+        "tree2025.rk-1.png"
+      ],
+      start: 0,
+      end: 615,
+      size: 616,
+      entry: 0,
+      checkSum: 48507,
       leadingE6: false
     },
     {
@@ -4095,7 +4156,7 @@ import { basename } from "path";
 // packages/rk86/package.json
 var package_default = {
   name: "rk86",
-  version: "2.0.25",
+  version: "2.0.26",
   description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
   bin: {
     rk86: "rk86.js"
