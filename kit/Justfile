@@ -48,7 +48,7 @@ release-experimental: release-alpha release-beta
 #
 
 terminal-run *args='':
-    bun src/lib/terminal/rk86_terminal.ts {{ args }} --exit-address rrr0
+    bun src/lib/terminal/rk86_terminal.ts {{ args }}
 
 terminal-build:
     bun build src/lib/terminal/rk86_terminal.ts --outfile ./rk86.ts --target=bun

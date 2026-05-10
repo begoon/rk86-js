@@ -222,20 +222,37 @@ class TerminalRenderer implements Renderer {
         const reset = "\x1b[0m";
         const w = screen.width;
 
+        // i8275 visible field-attribute mode (terminal is monochrome, so
+        // the latched color is dropped and FA cells render as a blank).
+        // Without this, FA bytes would render as garbage glyphs via the
+        // 0x80-0xFF inverse-video mirror.
         let output = "\x1b[H"; // cursor home
         output += `${dim}┌${"─".repeat(w)}┐${reset}\n`;
 
         let addr = screen.video_memory_base;
+        let frameStopped = false;
         for (let y = 0; y < screen.height; y++) {
             let line = `${dim}│${reset}`;
+            let rowStopped = frameStopped;
             for (let x = 0; x < w; x++) {
-                const ch = rk86char(memory.read(addr));
+                const raw = memory.read(addr++);
+                let ch: string;
+                if (rowStopped) {
+                    ch = " ";
+                } else if (raw >= 0xf0) {
+                    ch = " ";
+                    rowStopped = true;
+                    if (raw >= 0xf8) frameStopped = true;
+                } else if (raw >= 0x80) {
+                    ch = " ";
+                } else {
+                    ch = rk86char(raw);
+                }
                 if (x === screen.cursor_x && y === screen.cursor_y) {
                     line += `\x1b[4m${ch}${reset}`;
                 } else {
                     line += ch;
                 }
-                addr++;
             }
             line += `${dim}│${reset}`;
             output += line + "\n";

@@ -15,51 +15,57 @@ Each byte fetched from screen RAM falls into exactly one of four categories, dec
 
 This classification is exactly what MAME does: `(data & 0xc0) == 0x80` → field attribute; `data >= 0xf0` → special control; `data >= 0xc0` → character attribute; else → normal character.
 
-## 2. Field Attribute byte: `1 0 0 B H G R U`
+## 2. Field Attribute byte: `1 0 U R GG GG B H`
 
-This is the one that matters for the RK86 color mod. Bit layout (MSB→LSB):
+This is the one that matters for the RK86 color mod. Bit layout (MSB→LSB),
+matching the Intel 8275 datasheet and Emu80's `Crt8275.cpp`:
 
 ```
 bit 7  6  5  4  3  2  1  0
-    1  0  0  B  H  GG GG U     ← my naming (BHGRU is conventional)
-       │     │  │  │  │  └── U   = Underline (LTEN at underline scanline)
-       │     │  │  └──┴───── GG  = 2 bits → drive GPA1, GPA0 pins
-       │     │  └─────────── H   = Highlight (drives HLGT pin)
-       │     └────────────── B   = Blink (32-frame blink, drives VSP)
-       └──────────────────── reserved (must be 0)
+    1  0  U  R  GG GG B  H
+          │  │  │  │  │  └── H  = Highlight (drives HLGT pin)
+          │  │  └──┴──┴───── GG = drives GPA1 (bit 3), GPA0 (bit 2)
+          │  │     B  ────── B  = Blink (32-frame blink, drives VSP)
+          │  └─────────────── R  = Reverse (drives RVV pin)
+          └────────────────── U  = Underline (LTEN at underline scanline)
 ```
 
-The four attribute bits the chip latches and emits on its pins for **all subsequent character cells** until a new field attribute byte appears (or end-of-row, depending on programming):
+The attribute bits the chip latches and emits on its pins for **all subsequent character cells** until a new field attribute byte appears (or end-of-row, depending on programming):
 
-- **U** (bit 0) → LTEN output, gated to underline scanline only
-- **GPA0** (bit 1) → GPA0 pin
-- **GPA1** (bit 2) → GPA1 pin
-- **H** (bit 3) → HLGT pin (intensity)
-- **B** (bit 4) → blink (chip toggles VSP at 1/32 frame rate when set)
+- **H** (bit 0) → HLGT pin (intensity)
+- **B** (bit 1) → blink (chip toggles VSP at 1/32 frame rate when set)
+- **GPA0** (bit 2) → GPA0 pin
+- **GPA1** (bit 3) → GPA1 pin
+- **R** (bit 4) → RVV pin (reverse video)
+- **U** (bit 5) → LTEN output, gated to underline scanline only
 
-Bits 5–7 are fixed `100` to identify this as a field attribute.
-
-In MAME's source those are named `FAC_U`, `FAC_GG` (a 2-bit mask covering GPA0/GPA1), `FAC_H`, `FAC_B`. The handler does literally `m_field_attr = data & (FAC_H | FAC_B | FAC_GG | FAC_R | FAC_U)` — it just stores the low 5 bits and emits them as pin states.
+Bits 6–7 are fixed `10` to identify this as a field attribute.
 
 ### How RK86 color mods wire those pins
 
-Standard mapping for the **Tolkalin scheme** (Радиолюбитель 04/1992) and Akimenko variant — both use the same byte format, the wiring on the analog side differs slightly:
+The Emu80 RCM_COLOR1 mapping (matches what most modern colorized RK
+programs target):
 
 | Attribute pin | RK86 color wire |
 |---|---|
-| GPA0 | Red |
-| GPA1 | Green |
-| HLGT | Blue |
+| GPA0 (bit 2) | Green |
+| GPA1 (bit 3) | Blue |
+| HLGT (bit 0) | Red |
 | LTEN | (intensity / unused depending on mod) |
 
 So for an emulator, the byte's GG and H bits give you the 3-bit RGB color (8 colors) directly:
 
 ```
-color_index = (B<<2) | (G<<1) | R
-            = ((byte >> 3) & 1)<<2 | ((byte >> 2) & 1)<<1 | ((byte >> 1) & 1)
+R = (byte >> 0) & 1   // HLGT
+G = (byte >> 2) & 1   // GPA0
+B = (byte >> 3) & 1   // GPA1
+color_index = (R << 2) | (B << 1) | G
+            = ((byte & 0x01) << 2) | ((byte & 0x0c) >> 2)
 ```
 
-The Apogee БК-01Ц uses the same byte format but **GPA0 and GPA1 are swapped** at the wiring level, so 7 of 8 colors come out different — that's the Tolkalin/Apogee software incompatibility.
+The Tolkalin scheme (Радиолюбитель 04/1992) and Apogee БК-01Ц wire the
+same three pins differently (e.g. GPA0↔GPA1 swap on Apogee), so 7 of 8
+colors come out different across schemes.
 
 ## 3. Field-attribute display modes (visible vs transparent)
 
@@ -134,11 +140,12 @@ for cell in dma_row_buffer:
 
     elif top2 == 0x80:
         # Field attribute $80-$BF: latch new attribute, blank this cell
-        field_attr.U  = (cell >> 0) & 1
-        field_attr.G0 = (cell >> 1) & 1   # → Red wire on Tolkalin RK86
-        field_attr.G1 = (cell >> 2) & 1   # → Green
-        field_attr.H  = (cell >> 3) & 1   # → Blue
-        field_attr.B  = (cell >> 4) & 1
+        field_attr.H  = (cell >> 0) & 1   # → Red wire (Emu80 RCM_COLOR1)
+        field_attr.B  = (cell >> 1) & 1
+        field_attr.G0 = (cell >> 2) & 1   # → Green
+        field_attr.G1 = (cell >> 3) & 1   # → Blue
+        field_attr.R  = (cell >> 4) & 1   # reverse video
+        field_attr.U  = (cell >> 5) & 1   # underline
         # In visible mode: this cell shows blank (with NEW color applied or OLD —
         # see note below). In transparent mode: pull char from FIFO instead.
         draw_blank_cell()
@@ -160,7 +167,9 @@ for cell in dma_row_buffer:
 
 ### Subtle point: when does the new color "take effect"?
 
-There's a real ambiguity in the i8275 about whether the attribute byte's own cell shows the *old* color or the *new* color. The Apogee BK-01Ц adds a 155ИР1 latch that delays the attribute by one cell, which shifts color regions one cell to the right relative to characters. The pure Tolkalin scheme has no such latch — the new attribute applies starting from the *next* cell, and the attribute cell itself is blank in the previous color. Most existing RK colorized games are tuned to the Tolkalin behavior, so emulate that as the default.
+There's a real ambiguity in the i8275 about whether the attribute byte's own cell shows the *old* color or the *new* color. Emu80's RCM_COLOR1 (the reference here) goes further and applies the new attribute **one cell early**: cell N is rendered using the latch state of cell N+1, so the color boundary appears one cell to the *left* of the FA byte. Most existing RK colorized games are tuned to that behavior — without it, color regions look "asymmetrical to the right". The last cell of a row uses its own latched attrs (the lookup falls back to N when there is no N+1).
+
+The pure Tolkalin scheme without that offset has the new attribute apply starting from the FA cell itself; the Apogee BK-01Ц 155ИР1 latch shifts the other direction (one cell right).
 
 ## 7. Practical references
 

@@ -10,20 +10,27 @@ const CURSOR_HEIGHT = 1;
 
 // RGB mapping for i8275 field-attribute pins on RK86 color mod, matching
 // Emu80's RCM_COLOR1 (the de-facto reference for RK86 colorized programs).
-// Wiring: GPA0 → Green, GPA1 → Blue, HLGT → Red. With color_index =
-// (byte >> 1) & 0x07 (bits 1-3 of the field-attribute byte), the bit
-// positions land in this palette layout:
-//   color_index 0 (no attr) — falls back to light gray (Emu80 default)
-//   color_index 1 (G0=1)            → green
-//   color_index 2 (G1=1)            → blue
-//   color_index 3 (G0+G1)           → cyan
-//   color_index 4 (H=1)             → red
-//   color_index 5 (H+G0)            → yellow
-//   color_index 6 (H+G1)            → magenta
-//   color_index 7 (H+G0+G1)         → white
-// (Spec at info/rk86_i8275_color_spec.md describes Tolkalin's R/G/B
-// wiring, but Emu80 ships a different rotation by default and most
-// modern colorized RK programs are tuned for it.)
+// Wiring: GPA0 → Green, GPA1 → Blue, HLGT → Red.
+//
+// Field-attribute byte bits (Intel 8275 datasheet, confirmed against
+// Emu80's Crt8275.cpp):
+//   D7 D6 = 1 0  (FA marker)
+//   D5    = U    (Underline)
+//   D4    = R    (Reverse)
+//   D3    = GPA1 → Blue
+//   D2    = GPA0 → Green
+//   D1    = B    (Blink)
+//   D0    = H    → Red
+//
+// color_index packed as (R << 2) | (B << 1) | G:
+//   0 (no attr) — falls back to light gray (Emu80 default)
+//   1 (G=1)             → green
+//   2 (B=1)             → blue
+//   3 (G+B)             → cyan
+//   4 (R=1)             → red
+//   5 (R+G)             → yellow
+//   6 (R+B)             → magenta
+//   7 (R+G+B)           → white
 const COLORS = [
     "#c0c0c0", // 0  light gray (fallback when no attr latched)
     "#00ff00", // 1  green
@@ -116,11 +123,13 @@ export class CanvasRenderer implements Renderer {
         //                              as a blank in the new color
         //   $C0-$EF  character attribute → blank (RK86 doesn't generate)
         //   $F0-$FF  special control → end of row / end of screen
-        // Field attribute resets to the default (white) at start of each
-        // row. Visible mode preserves character positions: each source
-        // byte takes exactly one display cell, so vertical lines and
-        // fixed-column layouts (boulder.rkr etc.) render straight. See
-        // info/rk86_i8275_color_spec.md for the full spec.
+        // Field attribute resets to the default at start of each row.
+        //
+        // One-cell offset: Emu80 RCM_COLOR1 displays cell N with the
+        // latched attrs of cell N+1, so the new color appears one cell
+        // BEFORE the FA byte. Most colorized RK programs are tuned for
+        // this (without it, color regions look "asymmetrical to the
+        // right"). The last cell of a row uses its own latched attrs.
         let addr = screen.video_memory_base;
         let frameStopped = false;
         for (let y = 0; y < screen.height; ++y) {
@@ -140,15 +149,23 @@ export class CanvasRenderer implements Renderer {
                 } else if (raw >= 0xc0) {
                     ch = 0;
                 } else if (raw >= 0x80) {
-                    color = (raw >> 1) & 0x07;
+                    color = ((raw & 0x01) << 2) | ((raw & 0x0c) >> 2);
                     ch = 0;
                 } else {
                     ch = raw;
                 }
 
-                const cacheKey = ch | (color << 8);
+                let displayColor = color;
+                if (x + 1 < screen.width && !rowStopped) {
+                    const nextRaw = memory.read(addr + 1);
+                    if (nextRaw >= 0x80 && nextRaw < 0xc0) {
+                        displayColor = ((nextRaw & 0x01) << 2) | ((nextRaw & 0x0c) >> 2);
+                    }
+                }
+
+                const cacheKey = ch | (displayColor << 8);
                 if (this.cache[i] !== cacheKey) {
-                    this.drawChar(x, y, ch, color);
+                    this.drawChar(x, y, ch, displayColor);
                     this.cache[i] = cacheKey;
                 }
                 addr += 1;
