@@ -10,6 +10,7 @@ loop:
   xra l
   xra e
   xra c
+  ani 7fh
   stax d
   inx h
   inx d
