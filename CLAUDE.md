@@ -247,6 +247,27 @@ on every build/dev.
   drives extension-based parser selection; defaults to `inline.bin`.
   URL values are `decodeURIComponent`-ed before decoding; URL-safe
   base64 (`-_`) is normalized to standard (`+/`).
+- URL `?monitor=<filename>` selects which monitor ROM to load at
+  boot (default `mon32.bin`). Two ROMs ship in `static/files/`:
+  - `mon32.bin` — vanilla, byte 0x2DC = `0x93` (i8275 SCN4 transparent
+    field-attribute mode). Default. Right for programs authored with
+    `[FA][char][FA][char]…` layout (e.g. `tree2025.rk`).
+  - `mon32-color.bin` — patched, byte 0x2DC = `0xD3` (visible mode).
+    Alternate for the colorized RK86 corpus (dizzy75, squash,
+    boulder, rise, piton). Web: `?monitor=mon32-color.bin`.
+    Terminal: `-m static/files/mon32-color.bin`.
+- i8275 F-bit (SCN4 byte 4 bit 6) captured by `memory.ts` → set on
+  `screen.transparent_attr`. `renderer.ts` and `TerminalRenderer.update()`
+  branch between visible (1 src byte/cell, FA blanks the cell) and
+  transparent (FA byte + next byte → 16-char FIFO, FA cell shows
+  the FIFO byte) paths. F1/F2 stops DMA. Latched FA state (color +
+  blink) persists across rows, resets only at frame start (VRTC).
+  Color uses 86rk's inverted palette — bit set DISABLES the wired
+  colour; default attr (no bits) is white, all bits is black.
+- Drag-n-drop on the canvas (`onDrop` in `+page.svelte`) auto-runs:
+  load via `uploadFile`, then `setTimeout(runLoadedFile, 500)` to
+  inject the monitor G-command. Load-only paths: toolbar upload
+  button, catalog "Загрузить", `?load=` URL.
 
 ### classic-specific
 
