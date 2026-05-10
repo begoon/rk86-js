@@ -50,6 +50,39 @@ function Screen(font_image, ui, memory) {
   this.font = new Image();
   this.font.src = "rk86_font.bmp";
 
+  // RGB mapping for i8275 field-attribute pins on RK86 color mod,
+  // matching Emu80's RCM_COLOR1 (de-facto reference for RK86 colorized
+  // programs). Wiring: GPA0 → Green, GPA1 → Blue, HLGT → Red. With
+  // color_index = (byte >> 1) & 0x07 the palette layout is:
+  //   0 light gray (no-attr fallback)  4 red (H)
+  //   1 green (G0)                     5 yellow (H+G0)
+  //   2 blue (G1)                      6 magenta (H+G1)
+  //   3 cyan (G0+G1)                   7 white (H+G0+G1)
+  var COLORS = [
+    "#c0c0c0", "#00ff00", "#0000ff", "#00ffff",
+    "#ff0000", "#ffff00", "#ff00ff", "#ffffff",
+  ];
+  var DEFAULT_COLOR = 0;
+  this.fontByColor = [];
+  this.font.onload = function () {
+    for (var c = 0; c < 8; c++) {
+      var off = document.createElement("canvas");
+      off.width = self.font.width;
+      off.height = self.font.height;
+      var offCtx = off.getContext("2d");
+      offCtx.drawImage(self.font, 0, 0);
+      // Font is a 1-bit BMP (white glyph on black, no alpha). Use
+      // "multiply" to tint white pixels to the desired color while
+      // leaving black pixels black: white×color = color, black×color = black.
+      offCtx.globalCompositeOperation = "multiply";
+      offCtx.fillStyle = COLORS[c];
+      offCtx.fillRect(0, 0, off.width, off.height);
+      self.fontByColor[c] = off;
+    }
+    self.init_cache(self.width * self.height);
+  };
+  var self = this;
+
   this.light_pen_x = 0;
   this.light_pen_y = 0;
   this.light_pen_active = 0;
@@ -97,12 +130,18 @@ function Screen(font_image, ui, memory) {
     for (var i = 0; i < sz; ++i) this.cache[i] = true;
   }
 
-  this.draw_char = function (x, y, ch) {
-    this.ctx.drawImage(this.font,
+  this.draw_char = function (x, y, ch, color) {
+    color = color === undefined ? DEFAULT_COLOR : color;
+    var dstX = x * char_width * this.scale_x;
+    var dstY = y * (char_height + char_height_gap) * this.scale_y;
+    var dstW = char_width * this.scale_x;
+    var dstH = char_height * this.scale_y;
+    this.ctx.fillStyle = "#000000";
+    this.ctx.fillRect(dstX, dstY, dstW, dstH);
+    var fontSrc = this.fontByColor[color] || this.font;
+    this.ctx.drawImage(fontSrc,
       2, char_height * ch, char_width, char_height,
-      x * char_width * this.scale_x, y * (char_height + char_height_gap) * this.scale_y,
-      char_width * this.scale_x, char_height * this.scale_y
-    );
+      dstX, dstY, dstW, dstH);
   }
 
   this.draw_cursor = function (x, y, visible) {
@@ -163,20 +202,34 @@ function Screen(font_image, ui, memory) {
   this.draw_screen = function () {
     var i = this.video_memory_base;
     var frameStopped = false;
+    // i8275 visible field-attribute mode (per spec, common RK86 mode):
+    //   $00-$7F normal char, $80-$BF field attr (blank cell + color),
+    //   $C0-$EF char attr (blank), $F0-$FF special (end of row/screen).
     for (var y = 0; y < this.height; ++y) {
       var rowStopped = frameStopped;
+      var color = DEFAULT_COLOR;
       for (var x = 0; x < this.width; ++x) {
         var cache_i = i - this.video_memory_base;
         var raw = this.memory.read(i);
-        // Bytes 0xF0..0xFF are i8275 special control codes (End of Row /
-        // End of Frame) — they don't render as glyphs and truncate the
-        // row (or the rest of the frame for 0xF8..0xFF).
-        var ch = (rowStopped || raw >= 0xf0) ? 0 : raw;
-        if (raw >= 0xf0) rowStopped = true;
-        if (raw >= 0xf8) frameStopped = true;
-        if (this.cache[cache_i] != ch) {
-          this.draw_char(x, y, ch);
-          this.cache[cache_i] = ch;
+        var ch;
+        if (rowStopped) {
+          ch = 0;
+        } else if (raw >= 0xf0) {
+          ch = 0;
+          rowStopped = true;
+          if (raw >= 0xf8) frameStopped = true;
+        } else if (raw >= 0xc0) {
+          ch = 0;
+        } else if (raw >= 0x80) {
+          color = (raw >> 1) & 0x07;
+          ch = 0;
+        } else {
+          ch = raw;
+        }
+        var cacheKey = ch | (color << 8);
+        if (this.cache[cache_i] != cacheKey) {
+          this.draw_char(x, y, ch, color);
+          this.cache[cache_i] = cacheKey;
         }
         i += 1;
       }

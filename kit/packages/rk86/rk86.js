@@ -2952,6 +2952,18 @@ var init_catalog_data = __esm(() => {
       leadingE6: false
     },
     {
+      name: "mon32-trans.bin",
+      title: "\u041C\u043E\u043D\u0438\u0442\u043E\u0440 32\u041A\u0411 \u0441 \u0432\u043A\u043B\u044E\u0447\u0451\u043D\u043D\u044B\u043C transparent field-attribute mode (i8275 reset byte 4 = 0x93). \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442\u0441\u044F \u0434\u043B\u044F \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C, \u0440\u0430\u0441\u0441\u0447\u0438\u0442\u0430\u043D\u043D\u044B\u0445 \u043D\u0430 \u044D\u0442\u043E\u0442 \u0440\u0435\u0436\u0438\u043C (`tree2025.rk`). \u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437 URL-\u043F\u0430\u0440\u0430\u043C\u0435\u0442\u0440 `?monitor=mon32-trans.bin`.",
+      description: "",
+      screenshots: [],
+      start: 0,
+      end: 2047,
+      size: 2048,
+      entry: 0,
+      checkSum: 4565,
+      leadingE6: false
+    },
+    {
       name: "mon32.bin",
       title: '\u041E\u0440\u0438\u0433\u0438\u043D\u0430\u043B\u044C\u043D\u044B\u0439 <a href="https://github.com/begoon/rk86-maximite/blob/master/monitor/monitor32.asm">\u041C\u043E\u043D\u0438\u0442\u043E\u0440 32\u041A\u0411</a>',
       description: "",
@@ -2960,7 +2972,7 @@ var init_catalog_data = __esm(() => {
       end: 2047,
       size: 2048,
       entry: 0,
-      checkSum: 4565,
+      checkSum: 21013,
       leadingE6: false
     },
     {
@@ -4083,7 +4095,7 @@ import { basename } from "path";
 // packages/rk86/package.json
 var package_default = {
   name: "rk86",
-  version: "2.0.24",
+  version: "2.0.25",
   description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
   bin: {
     rk86: "rk86.js"
@@ -5427,6 +5439,7 @@ class Memory {
         this.video_screen_size_y = this.video_screen_size_y_buf;
         this.machine.screen.set_geometry(this.video_screen_size_x, this.video_screen_size_y);
       }
+      this.machine.screen.transparent_attr = (byte & 64) === 0;
       return;
     }
     if (vt57_reg === 57352 && byte === 128) {
@@ -5634,6 +5647,7 @@ class Screen {
   light_pen_active;
   video_memory_base = 0;
   video_memory_size = 0;
+  transparent_attr = false;
   ready = false;
   renderer;
   constructor(machine) {
@@ -6056,36 +6070,104 @@ class TerminalRenderer {
     const dim = "\x1B[2m";
     const reset = "\x1B[0m";
     const w = screen.width;
+    const ANSI_FG = ["37", "33", "35", "31", "36", "32", "34", "30"];
     let output = "\x1B[H";
     output += `${dim}\u250C${"\u2500".repeat(w)}\u2510${reset}
 `;
+    const transparent = screen.transparent_attr;
+    const blinkOff = Math.floor(Date.now() / 320) % 2 === 1;
+    const FA_PENDING = -1;
     let addr = screen.video_memory_base;
     let frameStopped = false;
+    let color = 0;
+    let blink = false;
     for (let y = 0;y < screen.height; y++) {
       let line = `${dim}\u2502${reset}`;
-      let rowStopped = frameStopped;
+      const cells = new Array(w);
+      if (transparent) {
+        const fifo = [];
+        let fifoFlag = false;
+        let cellCount = 0;
+        let rowStopped = frameStopped;
+        let bytesFetched = 0;
+        while (cellCount < w && !rowStopped) {
+          const raw = memory.read(addr + bytesFetched);
+          bytesFetched++;
+          if (fifoFlag) {
+            fifo.push(raw);
+            fifoFlag = false;
+            continue;
+          }
+          if (raw >= 240) {
+            cells[cellCount++] = { ch: 0, color, blink };
+            rowStopped = true;
+            if (raw >= 248)
+              frameStopped = true;
+          } else if (raw >= 192) {
+            cells[cellCount++] = { ch: 0, color, blink };
+          } else if (raw >= 128) {
+            color = (raw & 1) << 2 | (raw & 12) >> 2;
+            blink = (raw & 2) !== 0;
+            cells[cellCount++] = { ch: FA_PENDING, color, blink };
+            fifoFlag = true;
+          } else {
+            cells[cellCount++] = { ch: raw, color, blink };
+          }
+        }
+        while (cellCount < w)
+          cells[cellCount++] = { ch: 0, color, blink };
+        let fifoIdx = 0;
+        for (let x = 0;x < w; ++x) {
+          if (cells[x].ch === FA_PENDING) {
+            cells[x].ch = (fifo[fifoIdx] ?? 0) & 127;
+            fifoIdx++;
+          }
+        }
+        addr += bytesFetched;
+        if (addr - screen.video_memory_base < (y + 1) * w) {
+          addr = screen.video_memory_base + (y + 1) * w;
+        }
+      } else {
+        let rowStopped = frameStopped;
+        for (let x = 0;x < w; x++) {
+          const raw = memory.read(addr + x);
+          let ch;
+          if (rowStopped) {
+            ch = 0;
+          } else if (raw >= 240) {
+            ch = 0;
+            rowStopped = true;
+            if (raw >= 248)
+              frameStopped = true;
+          } else if (raw >= 192) {
+            ch = 0;
+          } else if (raw >= 128) {
+            color = (raw & 1) << 2 | (raw & 12) >> 2;
+            blink = (raw & 2) !== 0;
+            ch = 0;
+          } else {
+            ch = raw;
+          }
+          cells[x] = { ch, color, blink };
+        }
+        addr += w;
+      }
+      let prevColor = -1;
       for (let x = 0;x < w; x++) {
-        const raw = memory.read(addr++);
-        let ch;
-        if (rowStopped) {
-          ch = " ";
-        } else if (raw >= 240) {
-          ch = " ";
-          rowStopped = true;
-          if (raw >= 248)
-            frameStopped = true;
-        } else if (raw >= 128) {
-          ch = " ";
-        } else {
-          ch = rk86char(raw);
+        const cell = cells[x];
+        const ch = cell.blink && blinkOff ? 0 : cell.ch;
+        const glyph = rk86char(ch);
+        if (cell.color !== prevColor) {
+          line += `\x1B[${ANSI_FG[cell.color]}m`;
+          prevColor = cell.color;
         }
         if (x === screen.cursor_x && y === screen.cursor_y) {
-          line += `\x1B[4m${ch}${reset}`;
+          line += `\x1B[4m${glyph}\x1B[24m`;
         } else {
-          line += ch;
+          line += glyph;
         }
       }
-      line += `${dim}\u2502${reset}`;
+      line += `${reset}${dim}\u2502${reset}`;
       output += line + `
 `;
     }
@@ -6210,7 +6292,7 @@ function setupKeyboard(keyboard) {
     }
   });
 }
-var MON32_B64 = "wzb4w2P+w5j7w7r8w0b8w7r8wwH+w6X8wyL5w3L+w3v6w3/6w7b6w0n7wxb7w876" + "w1L/w1b/PooyA4Axz3bNzvohAHYRX3YOAM3t+SHPdiIcdiFa/80i+c3O+iH/dSIx" + "diEqHSIvdj7DMiZ2Mc92IWb/zSL5MgKAPTICoM3u+CFs+OUhM3Z+/ljK0//+VcoA" + "8PXNLPkqK3ZNRCopdusqJ3bx/kTKxfn+Q8rX+f5Gyu35/lPK9Pn+VMr/+f5Nyib6" + "/kfKP/r+ScqG+v5Pyi37/kzKCPr+Uspo+sMA8D4zvcrx+OUhnv/NIvnhK8Pz+CEz" + "dgYAzWP+/gjK3Pj+f8rc+MS5/Hf+Dcoa+f4uymz4Bv8+Ur3Krvojw/P4eBcRM3YG" + "AMl+p8jNufwjwyL5ISd2ES12DgDN7fkRNHbNWvkiJ3YiKXbYPv8yLXbNWvkiKXbY" + "zVr5Iit22MOu+iEAABoT/g3Kjvn+LMj+IMpd+dYw+q76/gr6gvn+Efqu+v4X8q76" + "1gdPKSkpKdqu+gnDXfk3yXy6wH27yc2k+c2Q+cKi+TMzySPJzXL+/gPAzc76w676" + "5SFs/80i+eHJfsXNpfw+IM25/MHJzXj7zbn5zZb5feYPysX5w8j5Cr7K5vnNePvN" + "ufkKzbr5A82W+cPX+XHNmfnD7fl5vsx4+82W+cP0+X4CA82Z+cP/+c14+363+hX6" + "/iDSF/o+Ls25/M2W+X3mD8oI+sML+s14+825+eXN7vjh0jv65c1a+X3hdyPDJvrN" + "kPnKWvrrIiN2fjIldjb3PsMyMAAhov8iMQAxGHbB0eHx+SoWdsMmdj6QMgOgIgGg" + "OgCgAgPNmfnDbfoqAnbJ5SoAdn7hyTotdrfKkfp7Mi92zbb6zXj76814++vFzRb7" + "YGnNePvRzZD5yOvNePs+P825/MNs+D7/zf/65Qnrzf364Qnr5c0K+z7/zf/64eUh" + "AcA2ACs2TTYdNpk2kyM2J35+5iDK4fohCOA2gC4ENtA2diw2IzZJLgg2pOHJPgjN" + "mPtHPgjNmPtPyT4IzZj7d82Z+cMK+wEAAH6BT/XNkPnKn/nxeI5HzZn5wxn7ebfK" + "NfsyMHblzRb74c14++vNePvr5WBpzXj74cUBAADNRvwF4+PCTfsO5s1G/M2Q++vN" + "kPvrzYb7IQAAzZD7DubNRvzhzZD7w876xc2w+XzNpfx9zbr5wclOzUb8zZn5w4b7" + "TM1G/E3DRvzlxdVXPoAyCOAhAAA5MQAAIg12DgA6AoAPDw8P5gFf8XnmfwdPJgAl" + "yjT88ToCgA8PDw/mAbvKv/uxTxU6L3bC3PvWEkfxBcLd+xQ6AoAPDw8P5gFferf" + "yC/x5/ubC//uvMi52wwn8/hnCt/s+/zIudhYJFcK3+yEE4DbQNnYjNiM2ST4nMgH" + "APuAyAcAuCDakKg12+ToudqnDofwqDXb5zc76erfyrvrNpPnDnPvlxdX1PoAyCOAh" + "AAA5MQAAFgjxeQdPPgGpMgKAOjB2R/EFwmb8PgCpMgKAFTowdsJ6/NYOR/EFwnv8" + "FBXCWPz5IQTgNtA2diM2IzZJPicyAcA+4DIBwC4INqTx0cHhyfUPDw8Pza788eYP" + "/gr6t/zGB8YwT/XF1eXNAf4hhf3lKgJ26yoAdjoEdj367vzKZf3ic/151iBPDfrp/" + "MXNuf3Bw938rzIEdsl55n9P/h/Ko/3+DMqy/f4NyvP9/grKR/3+CMrW/f4Yyrn9/h" + "nK4v3+GsrF/f4byp79/gfCOP0B8AV4+z3CKP148z3CLv0Nwif9yXHNuf16/gPAe/" + "4IwM3i/Xr+G8LF/eXVIcJ3ERB4AZ4HGncjEwt5sMJY/dHhyXn+WcLp/M2y/T4C" + "w+r8edYgTw0+BPrq/MXNxf3Bw3f9IgB26yICdj6AMgHAfTIAwHwyAMDh0cHxyT4B" + "w+r8IfR/ESUJr3crG3uywqn9EQgDIcJ3yXsjHP5HwB4IAcD/CXr+GwFOAMLT/RYC" + "AbD4FAnJeysd/gjAHkcBQAAJev4DAbL/wvD9FhwBUAcVCcl9k9L5/SVvHggBCAAJ" + "yToCgOaAyg7+OgV2t8DlKgl2zXL+vW/KKv4+ATILdiYVryIJduEyBXbJJcIh/jzK" + "Iv48ylH+xQEDUM0n/cE6C3Ym4D0yC3bKTP4mQD7/wyL+OgKA5oDKUf46BnYvMgZ2" + "wxr+zQH+t8pj/q8yBXY6CXbJOgKA5oDCff4+/smvMgCAMgKAOgZ25gH2BjIDgDoB" + "gDzCl/49yeUuASYHfQ9vLzIAgDoBgC+3wrP+JfKc/j7/4ckuIDoBgC+3yq/+LcK1" + "/i4ILQfSw/58ZW/+Acr6/trz/gcHB8YgtP5fwgb/PiDhyQkKDX8IGRgaDB8bAAEC" + "AwQFfCHq/sP+/nwh4v6Fb37+QOHY5W86AoBn5kDCGv99/kD6P//mH+HJOgZ2t8oq" + "/33+QPoq//Ygb3zmIMI//33+QPo7/33uIOHJfeYvb33+QOHw5W/mD/4MffpQ/+4Q" + "4ckqMXbJIjF2yR9yYWRpby04NnJrAA0KLS0+AA0KGBgYGAANCiBQQy0NCiBITC0N" + "CiBCQy0NCiBERS0NCiBTUC0NCiBBRi0ZGRkZGRkACCAIACIWdvXhIh524SsiFHYh" + "AAA5MR525dXFKhR2Mc92zXj76yojds2Q+cJs+DoldnfDbPghc//NIvkhFHYGBl4j" + "VsXl6814+83u+NL2/81a+dHV63Irc+HBBSPC3v/J//8=";
+var MON32_B64 = "wzb4w2P+w5j7w7r8w0b8w7r8wwH+w6X8wyL5w3L+w3v6w3/6w7b6w0n7wxb7" + "w876w1L/w1b/PooyA4Axz3bNzvohAHYRX3YOAM3t+SHPdiIcdiFa/80i+c3O" + "+iH/dSIxdiEqHSIvdj7DMiZ2Mc92IWb/zSL5MgKAPTICoM3u+CFs+OUhM3Z+" + "/ljK0//+VcoA8PXNLPkqK3ZNRCopdusqJ3bx/kTKxfn+Q8rX+f5Gyu35/lPK" + "9Pn+VMr/+f5Nyib6/kfKP/r+ScqG+v5Pyi37/kzKCPr+Uspo+sMA8D4zvcrx" + "+OUhnv/NIvnhK8Pz+CEzdgYAzWP+/gjK3Pj+f8rc+MS5/Hf+Dcoa+f4uymz4" + "Bv8+Ur3Krvojw/P4eBcRM3YGAMl+p8jNufwjwyL5ISd2ES12DgDN7fkRNHbN" + "WvkiJ3YiKXbYPv8yLXbNWvkiKXbYzVr5Iit22MOu+iEAABoT/g3Kjvn+LMj+" + "IMpd+dYw+q76/gr6gvn+Efqu+v4X8q761gdPKSkpKdqu+gnDXfk3yXy6wH27" + "yc2k+c2Q+cKi+TMzySPJzXL+/gPAzc76w6765SFs/80i+eHJfsXNpfw+IM25" + "/MHJzXj7zbn5zZb5feYPysX5w8j5Cr7K5vnNePvNufkKzbr5A82W+cPX+XHN" + "mfnD7fl5vsx4+82W+cP0+X4CA82Z+cP/+c14+363+hX6/iDSF/o+Ls25/M2W" + "+X3mD8oI+sML+s14+825+eXN7vjh0jv65c1a+X3hdyPDJvrNkPnKWvrrIiN2" + "fjIldjb3PsMyMAAhov8iMQAxGHbB0eHx+SoWdsMmdj6QMgOgIgGgOgCgAgPN" + "mfnDbfoqAnbJ5SoAdn7hyTotdrfKkfp7Mi92zbb6zXj76814++vFzRb7YGnN" + "ePvRzZD5yOvNePs+P825/MNs+D7/zf/65Qnrzf364Qnr5c0K+z7/zf/64eUh" + "AcA2ACs2TTYdNpk2kyM2J35+5iDK4fohCOA2gC4ENtA2diw2IzZJLgg2pOHJ" + "PgjNmPtHPgjNmPtPyT4IzZj7d82Z+cMK+wEAAH6BT/XNkPnKn/nxeI5HzZn5" + "wxn7ebfKNfsyMHblzRb74c14++vNePvr5WBpzXj74cUBAADNRvwF4+PCTfsO" + "5s1G/M2Q++vNkPvrzYb7IQAAzZD7DubNRvzhzZD7w876xc2w+XzNpfx9zbr5" + "wclOzUb8zZn5w4b7TM1G/E3DRvzlxdVXPoAyCOAhAAA5MQAAIg12DgA6AoAP" + "Dw8P5gFf8XnmfwdPJgAlyjT88ToCgA8PDw/mAbvKv/uxTxU6L3bC3PvWEkfx" + "BcLd+xQ6AoAPDw8P5gFferfyC/x5/ubC//uvMi52wwn8/hnCt/s+/zIudhYJ" + "FcK3+yEE4DbQNnYjNiM2ST4nMgHAPuAyAcAuCDakKg12+ToudqnDofwqDXb5" + "zc76erfyrvrNpPnDnPvlxdX1PoAyCOAhAAA5MQAAFgjxeQdPPgGpMgKAOjB2" + "R/EFwmb8PgCpMgKAFTowdsJ6/NYOR/EFwnv8FBXCWPz5IQTgNtA2diM2IzZJ" + "PicyAcA+4DIBwC4INqTx0cHhyfUPDw8Pza788eYP/gr6t/zGB8YwT/XF1eXN" + "Af4hhf3lKgJ26yoAdjoEdj367vzKZf3ic/151iBPDfrp/MXNuf3Bw938rzIE" + "dsl55n9P/h/Ko/3+DMqy/f4NyvP9/grKR/3+CMrW/f4Yyrn9/hnK4v3+GsrF" + "/f4byp79/gfCOP0B8AV4+z3CKP148z3CLv0Nwif9yXHNuf16/gPAe/4IwM3i" + "/Xr+G8LF/eXVIcJ3ERB4AZ4HGncjEwt5sMJY/dHhyXn+WcLp/M2y/T4Cw+r8" + "edYgTw0+BPrq/MXNxf3Bw3f9IgB26yICdj6AMgHAfTIAwHwyAMDh0cHxyT4B" + "w+r8IfR/ESUJr3crG3uywqn9EQgDIcJ3yXsjHP5HwB4IAcD/CXr+GwFOAMLT" + "/RYCAbD4FAnJeysd/gjAHkcBQAAJev4DAbL/wvD9FhwBUAcVCcl9k9L5/SVv" + "HggBCAAJyToCgOaAyg7+OgV2t8DlKgl2zXL+vW/KKv4+ATILdiYVryIJduEy" + "BXbJJcIh/jzKIv48ylH+xQEDUM0n/cE6C3Ym4D0yC3bKTP4mQD7/wyL+OgKA" + "5oDKUf46BnYvMgZ2wxr+zQH+t8pj/q8yBXY6CXbJOgKA5oDCff4+/smvMgCA" + "MgKAOgZ25gH2BjIDgDoBgDzCl/49yeUuASYHfQ9vLzIAgDoBgC+3wrP+JfKc" + "/j7/4ckuIDoBgC+3yq/+LcK1/i4ILQfSw/58ZW/+Acr6/trz/gcHB8YgtP5f" + "wgb/PiDhyQkKDX8IGRgaDB8bAAECAwQFfCHq/sP+/nwh4v6Fb37+QOHY5W86" + "AoBn5kDCGv99/kD6P//mH+HJOgZ2t8oq/33+QPoq//Ygb3zmIMI//33+QPo7" + "/33uIOHJfeYvb33+QOHw5W/mD/4MffpQ/+4Q4ckqMXbJIjF2yR9yYWRpby04" + "NnJrAA0KLS0+AA0KGBgYGAANCiBQQy0NCiBITC0NCiBCQy0NCiBERS0NCiBT" + "UC0NCiBBRi0ZGRkZGRkACCAIACIWdvXhIh524SsiFHYhAAA5MR525dXFKhR2" + "Mc92zXj76yojds2Q+cJs+DoldnfDbPghc//NIvkhFHYGBl4jVsXl6814+83u" + "+NL2/81a+dHV63Irc+HBBSPC3v/J//8=";
 function decodeMon32() {
   return Array.from(new Uint8Array(Uint8Array.from(atob(MON32_B64), (c) => c.charCodeAt(0))));
 }

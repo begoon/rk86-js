@@ -1,6 +1,6 @@
 {
     "name": "rk86",
-    "version": "2.0.24",
+    "version": "2.0.26",
     "description": "Эмулятор Радио-86РК (Intel 8080) для терминала",
     "bin": {
         "rk86": "rk86.js"
