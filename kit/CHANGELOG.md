@@ -67,7 +67,7 @@ Transparent-путь честно строит row-buffer + FIFO, читая д�
 - `kit/static/files/mon32.bin` — vanilla, byte 4 = `0x93`
   (transparent). **Дефолт** для и web, и terminal-эмулятора.
 - `kit/static/files/mon32-color.bin` — патченый, byte 4 = `0xD3`
-  (visible). Альтернатива для colorized RK86-корпуса.
+  (visible). Альтернатива для цветного РК.
   Web: `?monitor=mon32-color.bin`. Terminal: `-m
   static/files/mon32-color.bin`.
 
@@ -130,8 +130,6 @@ e2e-голдены не меняются.
 
 ### Документация
 
-Stand-alone `info/rk86_i8275_color_spec.md` удалён, его содержимое
-смержено в `info/RK86.md` под секцию **CRT controller**.
 RK86.md описывает: правильную bit-layout FA-байта, 86rk-палитру с
 индексами, оба chip mode и поведение нашего рендерера, latch
 carry-over rule, отсутствие offset, blink-механику, и оба ROM-а с
@@ -141,10 +139,8 @@ URL/CLI-переключателями.
 
 ### i8275: исправлена раскладка битов в field-attribute байте
 
-Описание раскладки в `info/rk86_i8275_color_spec.md` ссылалось на
-ошибочный порядок бит (`U` в bit 0, `H` в bit 3) — в реальности
 Intel 8275 datasheet (и реализации в Emu80 / MAME / 86rk.ru)
-кладут биты иначе:
+кладут биты следующих образом:
 
 ```
 bit 7  6  5  4  3  2  1  0
@@ -163,7 +159,7 @@ color_index = ((raw & 0x01) << 2)        // H → bit 2 of index
 ```
 
 Палитра (`COLORS[color_index]`) не менялась — изменился только
-способ извлечения индекса из байта. После фикса все colorized
+способ извлечения индекса из байта. После фикса все цветные
 программы (dizzy75, squash, boulder, rise, piton) рисуют цвета,
 совпадающие с Emu80 RCM_COLOR1 / 86rk.ru.
 
@@ -218,7 +214,7 @@ FIFO i8275 и DMA-burst заполнения — это нетривиально
 
 Обнаружилось, что наш цветовой mapping (Tolkalin per spec — `GPA0→R,
 GPA1→G, HLGT→B`) не совпадает с тем, что выводит **Emu80 в режиме
-RCM_COLOR1** (де-факто референс для colorized RK86-программ). Emu80
+RCM_COLOR1** (де-факто референс для цветных программ для РК). Emu80
 использует **3-way ротацию**: `GPA0→Green, GPA1→Blue, HLGT→Red`.
 Большинство цветных RK-программ (dizzy75, etc.) тестировались
 именно под Emu80, и наш Tolkalin-маппинг показывал «не те» цвета.
@@ -250,10 +246,6 @@ Default color (когда attr ещё не установлен в строке)
 (light gray), как у Emu80 (для cell без attr поля все биты 0,
 формула даёт 0, fallback к 0xC0C0C0).
 
-`info/RK86.md` обновлён с новой таблицей пинов/палитры и пометкой
-о Tolkalin-разводке (всё ещё описана в `info/rk86_i8275_color_spec.md`
-как оригинальная схема).
-
 ### i8275: возврат к visible field-attribute mode (фиксированное позиционирование)
 
 Я откатил предыдущий переход на transparent mode — он ломал
@@ -267,11 +259,6 @@ attrs до них в строке) — отсюда «curved» вертикал�
 байтом из FIFO (16-байтовый внутренний буфер i8275, пополняемый
 дополнительными DMA-burst'ами). Без моделирования FIFO наш naive
 transparent даёт сдвиг.
-
-Spec из `info/rk86_i8275_color_spec.md` явно рекомендует:
-
-> if you only care about RK86 you can usually ignore this mode —
-> most colorized RK programs use visible mode
 
 Так что vis mode — наш default. Поведение:
 
@@ -401,9 +388,6 @@ color_index = (byte >> 1) & 7   // 8-цветная RGB-палитра
 Терминальный `dumpScreen` остаётся монохромным — атрибуты и
 char-attribute ячейки отображаются как пустые, цвет игнорируется
 (в текстовом дампе всё равно нет смысла его показывать).
-
-Полная спецификация формата байтов — в
-`info/rk86_i8275_color_spec.md`.
 
 **Поведенческое следствие**: программы РК86, которые использовали
 байты `0x80+` как «инверсные глифы» (некоторые B/W-программы),
