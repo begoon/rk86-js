@@ -1800,6 +1800,21 @@ var init_catalog_data = __esm(() => {
       leadingE6: true
     },
     {
+      name: "RALLI.RK",
+      title: "\u0418\u0433\u0440\u0430 \u0420\u0430\u043B\u043B\u0438.",
+      description: "",
+      screenshots: [
+        "RALLI.RK-1.png",
+        "RALLI.RK-2.png"
+      ],
+      start: 0,
+      end: 4095,
+      size: 4096,
+      entry: 0,
+      checkSum: 16723,
+      leadingE6: false
+    },
+    {
       name: "RAMDOS.PKI",
       title: "RAMDOS V2.01, \u041F\u0443\u0441\u0442\u043E\u0439 \u0434\u0438\u0441\u043A",
       description: "00.09.88",
@@ -3180,10 +3195,10 @@ var init_catalog_data = __esm(() => {
         "screentest.bin-1.png"
       ],
       start: 0,
-      end: 27,
-      size: 28,
+      end: 29,
+      size: 30,
       entry: 0,
-      checkSum: 7700,
+      checkSum: 33913,
       leadingE6: false
     },
     {
@@ -4156,7 +4171,7 @@ import { basename } from "path";
 // packages/rk86/package.json
 var package_default = {
   name: "rk86",
-  version: "2.0.26",
+  version: "2.0.27",
   description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
   bin: {
     rk86: "rk86.js"
