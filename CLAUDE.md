@@ -123,7 +123,12 @@ kit/
                       index.html (prod served by real webserver)
 info/
   RK86.md           — full programmer's reference (memory map,
-                      peripherals, monitor, video, keyboard)
+                      peripherals, monitor, video, keyboard);
+                      Russian
+  HELP.md           — tutorial-style emulator manual (loading,
+                      file formats, snapshots, peripherals,
+                      local development); Russian. Linked from
+                      the toolbar "?" / GitHub Pages help page
   MIKROSHA.md       — Mikrosha notes
   SNAPSHOT.md       — JSON snapshot format
   asm/              — i8080 assembly examples
@@ -177,6 +182,15 @@ on every build/dev.
 - All text in UI is in Russian.
 - `info/` is the shared documentation directory at repo root (not
   duplicated inside classic/ or kit/).
+- Hex-dump file format: text files starting with the shebang
+  `#!rk86` (bytes `23 21 72 6B 38 36`) are parsed as hex dumps —
+  4-char offset prefix (informational), then space-separated hex
+  bytes; `#`-comments are ignored. Optional tags `!name=…`,
+  `!start=…`, `!entry=…` (in any comment line) override the file
+  name (drives extension-based parser dispatch), the load address
+  for raw `.bin`, and the entry point. Implemented in
+  `kit/src/lib/core/rk86_file_parser.ts` and
+  `classic/src/rk86_file_parser.js`. Documented in `info/HELP.md`.
 
 ### kit-specific
 
