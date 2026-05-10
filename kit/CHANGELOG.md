@@ -1,4 +1,4 @@
-# Changelog
+# Журнал изменений
 
 ## 2026-05-10 — i8275: полная цветовая модель + transparent F-mode
 
@@ -87,7 +87,7 @@ ROM, чип реинициализируется, F-bit пробрасывает
 объявлены до цикла по `y` и сбрасываются только в начале каждого
 вызова `update()`.
 
-### Blink animation
+### Анимация мигания (blink)
 
 Бит B (бит 1 FA-байта) теперь честно анимирует: каждые ~320 ms
 (≈1.5 Hz, как и i8275 на 50 Hz делает 32-кадровый цикл) blinking
@@ -96,7 +96,7 @@ ROM, чип реинициализируется, F-bit пробрасывает
 `update()`. Cache key включает символ, так что blinking ячейки
 автоматически перерисовываются.
 
-### Drop one-cell color offset (Emu80 RCM_COLOR1 specific)
+### Удаление одно-клеточного сдвига цвета (специфичного для Emu80 RCM_COLOR1)
 
 Предыдущий апдейт включал `m_hgltOffset`/`m_gpaOffset`-style сдвиг
 (клетка N отображалась с защёлкнутыми attrs клетки N+1). 86rk.ru
@@ -334,7 +334,7 @@ visible mode и видимые как мусор за пределами игр�
 Теперь они невидимы (cell не consumed), и игровое содержимое
 рисуется по правильным позициям.
 
-### i8275 byte classification + RGB color rendering (Tolkalin scheme)
+### i8275: классификация байтов + RGB-рендеринг цвета (схема Толкалина)
 
 VG75 (i8275) классифицирует каждый байт из видеопамяти по старшим
 битам — это и есть основа цветного режима РК86 по Толкалинской
@@ -691,165 +691,188 @@ runner'а).
 
 ## 2026-05-04
 
-### Freeze / restore (in-memory snapshots)
+### Заморозка / восстановление (in-memory снапшоты)
 
-- New toolbar buttons: **«Заморозить состояние»** (snowflake) and
-  **«Восстановить состояние»** (clock-rewind). Freezes are kept in-memory
-  for the page session — up to 20, FIFO eviction of the oldest. No
-  persistence across reloads (use the existing «Сохранить полное состояние»
-  button or per-row download for a file).
-- Each freeze stores a full `rk86_snapshot(...)` JSON plus a thumbnail
-  captured via `canvas.toDataURL("image/png")` at freeze time.
-- Restore selector is a modal list (newest first) showing thumbnail,
-  absolute time, relative time, and the filename loaded at freeze time
-  (or "(нет файла)" if none). Per-row actions: download (↓) and
-  delete (✕).
-- Selector keys: `↑`/`↓` navigate, `Enter` applies the freeze,
-  `S` downloads the selected freeze as
-  `<filename>-YYYYMMDD-hhmmss.json` (or `rk86-snapshot-…` if no file
-  was loaded), `D` deletes, `Esc` closes.
-- Cmd/Ctrl+K shortcuts: `Z` = freeze, `X` = open restore selector.
+- Новые кнопки тулбара: **«Заморозить состояние»** (снежинка) и
+  **«Восстановить состояние»** (часы со стрелкой назад). Заморозки
+  хранятся в памяти на время сессии страницы — до 20 штук, FIFO-
+  вытеснение самой старой. Без сохранения между перезагрузками
+  (для файла используйте существующую кнопку «Сохранить полное
+  состояние» или per-row download).
+- Каждая заморозка хранит полный `rk86_snapshot(...)` JSON плюс
+  thumbnail, снятый через `canvas.toDataURL("image/png")` в момент
+  заморозки.
+- Селектор восстановления — модальный список (свежие сверху) с
+  thumbnail'ом, абсолютным временем, относительным временем и именем
+  файла, загруженного в момент заморозки (или "(нет файла)", если
+  ничего не было). Действия по строке: скачать (↓) и удалить (✕).
+- Клавиши селектора: `↑`/`↓` — навигация, `Enter` — применить
+  заморозку, `S` — скачать выбранную заморозку как
+  `<filename>-YYYYMMDD-hhmmss.json` (или `rk86-snapshot-…`, если
+  файл не был загружен), `D` — удалить, `Esc` — закрыть.
+- Cmd/Ctrl+K-шорткаты: `Z` — заморозить, `X` — открыть селектор
+  восстановления.
 
 ## 2026-04-20
 
-### Assembler
+### Ассемблер
 
-- Replaced the in-page `static/i8080asm.html` iframe assembler with asm8's
-  standalone playground at `static/asm/`. The toolbar "Ассемблер" button now
-  opens `{base}/asm/` in a new tab. Dropped the `window.parent.machine`
-  cross-iframe contract and the `window.machine` / `UI.toggle_assembler`
-  exposures that supported it.
-- Bumped `asm8080` dep to `^1.0.21` (same package as `asm8`).
-- Playground "run"/"download" produces `.rk` files (not `.bin`): 4-byte big-
-  endian header (`start`, `end`) + compact payload covering `min(start)..
-  max(end)` (gaps zero-filled) + 3-byte trailer (`0xE6`, `rk86_check_sum`
-  big-endian). Programs assembled with `org 3000h` no longer carry 12 KB of
-  leading zeros.
-- Example `.asm` files live under `static/asm/examples/*.asm` and are
-  fetched by the playground at load time (one file per `const`, all 11
-  fetches kicked off in parallel, awaited per-example on use). Edit a file
-  and reload — no rebuild of `playground.js` needed.
-- New `?handoff=<uuid>` URL param on the emulator: data URLs in `?run=`
-  overflow browser URL limits (~8 KB, Chrome returns 431) for larger
-  programs. The playground writes the `.rk` as JSON `{ts, url}` to
-  `localStorage["asm8-handoff:<uuid>"]`, opens the emulator with that id,
-  and the emulator reads + deletes the key one-shot. Stale keys (>1 h) are
-  swept at the next write.
-- `?run=` / `?file=` / `?handoff=` autorun now routes through
-  `machine.runLoadedFile()` (monitor G-injection), unified with the toolbar
-  "Запустить программу" button. Fixes ALIAZ1-style keyboard-state bugs that
-  `cpu.jump(entry)` caused.
-- Vite dev middleware (in `vite.config.ts`) rewrites `/asm/` and `/asm` to
-  `/asm/index.html`; in production the static adapter's output is served
-  natively by the webserver and this is a no-op.
+- Заменён встроенный iframe-ассемблер `static/i8080asm.html` на
+  standalone playground asm8 по пути `static/asm/`. Кнопка тулбара
+  "Ассемблер" теперь открывает `{base}/asm/` в новой вкладке. Убран
+  cross-iframe контракт через `window.parent.machine`, а также
+  поддерживавшие его `window.machine` / `UI.toggle_assembler`.
+- Зависимость `asm8080` обновлена до `^1.0.21` (тот же пакет, что и
+  asm8).
+- Playground "run"/"download" теперь генерирует файлы `.rk` (а не
+  `.bin`): 4-байтовый big-endian заголовок (`start`, `end`) + компактный
+  payload, покрывающий `min(start)..max(end)` (пропуски заполняются
+  нулями) + 3-байтовый трейлер (`0xE6`, `rk86_check_sum` big-endian).
+  Программы, ассемблированные с `org 3000h`, больше не тащат 12 КБ
+  ведущих нулей.
+- Пример `.asm`-файлов лежит в `static/asm/examples/*.asm` и
+  подгружается playground'ом на старте (один файл на `const`, все 11
+  фетчей идут параллельно, await per-example в момент использования).
+  Правка файла и перезагрузка — без пересборки `playground.js`.
+- Новый URL-параметр `?handoff=<uuid>` у эмулятора: data URLs в
+  `?run=` упираются в браузерные лимиты на длину URL (~8 КБ, Chrome
+  возвращает 431) для крупных программ. Playground записывает `.rk`
+  как JSON `{ts, url}` в `localStorage["asm8-handoff:<uuid>"]`,
+  открывает эмулятор с этим id, эмулятор однократно читает + удаляет
+  ключ. Устаревшие ключи (>1 ч) подметаются при следующей записи.
+- Автозапуск через `?run=` / `?file=` / `?handoff=` теперь идёт через
+  `machine.runLoadedFile()` (monitor G-injection), унифицированно с
+  кнопкой тулбара "Запустить программу". Исправлены ALIAZ1-style баги
+  с состоянием клавиатуры, которые вызывал `cpu.jump(entry)`.
+- Vite dev middleware (в `vite.config.ts`) переписывает `/asm/` и
+  `/asm` в `/asm/index.html`; в production вывод static-адаптера
+  отдаётся самим веб-сервером и это no-op.
 
-### Naming / style conventions (CLAUDE.md)
+### Соглашения по именованию / стилю (CLAUDE.md)
 
-- `El` suffix → `Element`, `Btn` → `Button`, `res` → `result`; prefer
-  `let`/`const` over `var`. Applied throughout `static/asm/playground.js`
-  after the asm8 drop-in.
+- Суффикс `El` → `Element`, `Btn` → `Button`, `res` → `result`;
+  предпочтение `let`/`const` перед `var`. Применено повсеместно в
+  `static/asm/playground.js` после drop-in'а asm8.
 
-### Terminal emulator
+### Терминальный эмулятор
 
-- `--snapshot <файл>` — save the full JSON state snapshot on exit (same format
-  as the web emulator, round-trips through `rk86_snapshot_restore`).
-- `--input` now accepts `*N` pause tokens between keys, e.g.
-  `"KeyD,Enter,*500,KeyG,Enter"` inserts a 500 ms pause.
-- `--turbo` — run the emulator without the real-time throttle. E2e tests with
-  clear exit conditions (HLT / exit-address) finish ~100× faster while
-  producing bit-identical snapshots to non-turbo runs.
-- `-G <адрес>` — start a loaded program via the monitor's `G` command
-  (keyboard injection) instead of `cpu.jump`. Complement to `-g` (direct
-  jump) when the program expects a fresh monitor prompt.
+- `--snapshot <файл>` — сохранить полный JSON-снапшот состояния при
+  выходе (тот же формат, что у web-эмулятора, round-trip через
+  `rk86_snapshot_restore`).
+- `--input` теперь принимает `*N` pause-токены между клавишами,
+  например `"KeyD,Enter,*500,KeyG,Enter"` вставляет паузу 500 мс.
+- `--turbo` — запуск эмулятора без real-time-throttle. E2e-тесты с
+  явными условиями выхода (HLT / exit-address) завершаются ~в 100 раз
+  быстрее и при этом дают бит-в-бит идентичные снапшоты non-turbo-
+  запускам.
+- `-G <адрес>` — запуск загруженной программы через `G`-команду
+  монитора (keyboard injection) вместо `cpu.jump`. Дополнение к `-g`
+  (прямой jump), когда программа ожидает свежий prompt монитора.
 
-### Determinism
+### Детерминизм
 
-- `--input` key injection is now scheduled by **CPU ticks** rather than
-  wall-clock `setTimeout`. Every key event fires at a fixed emulated tick
-  regardless of host load, so `--snapshot` output is byte-stable across runs
-  and CI environments.
-- Cursor blink (`screen.cursor_state`) is CPU-tick-driven (was wall-clock
-  `setTimeout`). At real-time speed it still blinks every ~0.5 s wall; under
-  turbo / CPU starvation it stays in sync with emulated time.
-- `armed` option removed from `runner.execute()` — it was guarding the
-  terminate-address check during monitor boot, but stock mon32 never executes
-  HLT and never reaches `0xFFFE` during its init path.
+- Инъекция клавиш `--input` теперь планируется по **CPU-тикам**, а
+  не wall-clock `setTimeout`. Каждое key-событие срабатывает на
+  фиксированном эмулируемом тике независимо от загрузки хоста, так
+  что вывод `--snapshot` побайтно стабилен между запусками и CI-
+  окружениями.
+- Мигание курсора (`screen.cursor_state`) тоже CPU-tick-driven (было
+  wall-clock `setTimeout`). На real-time-скорости курсор всё так же
+  мигает каждые ~0.5 с по wall-clock; в turbo / при CPU-нехватке он
+  синхронен с эмулируемым временем.
+- Опция `armed` удалена из `runner.execute()` — она охраняла проверку
+  terminate-address во время загрузки монитора, но стоковый mon32
+  никогда не выполняет HLT и никогда не доходит до `0xFFFE` во время
+  init-пути.
 
 ### Web UI
 
-- "Запустить программу" (Run) button now injects `G<addr><Enter>` through the
-  monitor instead of `cpu.jump(entry)`. Fixes keyboard-state inconsistencies
-  in programs that rely on the monitor being at a clean prompt (e.g.
-  ALIAZ1).
+- Кнопка "Запустить программу" (Run) теперь инъектирует
+  `G<addr><Enter>` через монитор вместо `cpu.jump(entry)`. Исправляет
+  несогласованности состояния клавиатуры в программах, рассчитывающих
+  на чистый prompt монитора (например, ALIAZ1).
 
-### Engine
+### Движок
 
-- `Machine.log: (...args: unknown[]) => void` — injectable logger replacing
-  hard-coded `console.log` in `Screen`, `Runner`, `Debugger`. Silences
-  "установлен размер экрана…" spam in tests; web/terminal/component builders
-  set it to `console.log`.
-- `runner.execute()` gained `on_batch_complete?: () => void` (fires at the
-  end of each `TICK_PER_MS`-tick batch, ~10 ms of emulated time) and
-  `turbo?: boolean`. Both are used by the terminal to drive deterministic
-  tick-scheduled input and fast e2e tests.
+- `Machine.log: (...args: unknown[]) => void` — инъектируемый логгер,
+  заменяющий захардкоженные `console.log` в `Screen`, `Runner`,
+  `Debugger`. Глушит спам "установлен размер экрана…" в тестах; web/
+  terminal/component-сборщики выставляют его в `console.log`.
+- `runner.execute()` получил `on_batch_complete?: () => void`
+  (срабатывает в конце каждого `TICK_PER_MS`-tick батча, ~10 мс
+  эмулируемого времени) и `turbo?: boolean`. Оба используются
+  терминалом для детерминированной tick-scheduled инъекции ввода и
+  быстрых e2e-тестов.
 
-### Tests
+### Тесты
 
-- New golden tests in `tests/rk86_terminal_e2e.test.ts` for the D-dump /
-  G-exit flow and the M-command / HLT flow — compare the full JSON snapshot
-  **and** the screen dump against committed goldens in `tests/data/`.
-- Diff helper reports mismatches as `path/to/golden.json:LINE` with
-  `expected:`/`actual:` pairs (clickable in modern terminals / IDEs). Both
-  sides are re-serialised via `JSON.parse → JSON.stringify(…, null, 4)` so
-  formatter-inlined arrays in the committed golden can't misalign the diff.
-- `tests/data/*.json` added to `.prettierignore` so committed goldens stay
-  in the canonical form the diff's line numbers refer to.
-- Full suite: 166 tests pass; e2e file ~8.5 s (was ~15 s).
+- Новые golden-тесты в `tests/rk86_terminal_e2e.test.ts` для D-dump /
+  G-exit flow и M-команды / HLT flow — сравнивают полный JSON-снапшот
+  **и** дамп экрана с закоммиченными goldens в `tests/data/`.
+- Diff-хелпер отчитывается о несовпадениях в формате
+  `path/to/golden.json:LINE` с парами `expected:`/`actual:` (кликабельно
+  в современных терминалах / IDE). Обе стороны пересериализуются через
+  `JSON.parse → JSON.stringify(…, null, 4)`, чтобы formatter-inlined
+  массивы в закоммиченном golden не сбивали выравнивание diff'а.
+- `tests/data/*.json` добавлены в `.prettierignore`, чтобы
+  закоммиченные goldens оставались в канонической форме, на номера
+  строк которой ссылается diff.
+- Полный suite: 166 тестов проходят; e2e-файл ~8.5 с (было ~15 с).
 
 ## 2026-04-18
 
-### Terminal emulator: headless mode + e2e testing
+### Терминальный эмулятор: headless-режим + e2e-тестирование
 
-Added a headless mode to `src/lib/terminal/rk86_terminal.ts` so the emulator can
-be driven and inspected by automated tests without a TTY.
+В `src/lib/terminal/rk86_terminal.ts` добавлен headless-режим, чтобы
+эмулятором можно было управлять и инспектировать его из автотестов
+без TTY.
 
-New CLI flags:
+Новые CLI-флаги:
 
-- `--headless` — suppress all screen rendering and stdin setup (no ANSI output,
-  no raw-mode keyboard)
-- `--timeout <sec>` — exit after N seconds
-- `--memory <file>` — on exit, dump a byte range of emulator memory to a
-  binary file
-- `--memory-from <addr>` — start of the dump range (default `0x0000`)
-- `--memory-to <addr>` — end of the dump range, inclusive (default `0xFFFF`)
-- `--screen <file>` — on exit, save the 78×30 screen as a text file (30 lines,
-  `\r\n` terminators). Bytes `\0`, `\t`, `\n`, `\r` are replaced with `.` to
-  avoid misdisplay; other `<0x20` bytes render as RK-86 pseudo-graphics
-- `--input <seq>` — comma-separated list of WebKit key codes (e.g.
-  `KeyD,Digit0,Comma,KeyF,KeyF,Enter`) injected one at a time after the
-  emulator settles (same mechanism as snapshot keyboard injection)
+- `--headless` — отключает всю отрисовку экрана и stdin-настройку
+  (никакого ANSI-вывода, никакой raw-mode-клавиатуры)
+- `--timeout <sec>` — выйти через N секунд
+- `--memory <file>` — при выходе сохранить байтовый диапазон памяти
+  эмулятора в бинарный файл
+- `--memory-from <addr>` — начало диапазона дампа (по умолчанию
+  `0x0000`)
+- `--memory-to <addr>` — конец диапазона дампа, включительно (по
+  умолчанию `0xFFFF`)
+- `--screen <file>` — при выходе сохранить экран 78×30 как текстовый
+  файл (30 строк, терминаторы `\r\n`). Байты `\0`, `\t`, `\n`, `\r`
+  заменяются на `.`, чтобы избежать misdisplay; прочие байты `<0x20`
+  рендерятся как РК-86 псевдографика
+- `--input <seq>` — список WebKit-кодов клавиш через запятую
+  (например, `KeyD,Digit0,Comma,KeyF,KeyF,Enter`), инъектируются по
+  одной после того, как эмулятор устаканится (тот же механизм, что
+  и snapshot keyboard injection)
 
-All exit paths (`--exit-halt`, `--exit-address`, `--timeout`, `SIGINT`) funnel
-through a single `doExit()` that flushes the screen/memory files before
-`process.exit`.
+Все пути выхода (`--exit-halt`, `--exit-address`, `--timeout`,
+`SIGINT`) сходятся в единый `doExit()`, который сбрасывает screen/
+memory-файлы перед `process.exit`.
 
-### Tests
+### Тесты
 
-Added `tests/rk86_terminal_e2e.test.ts` — 4 e2e tests that spawn the terminal
-binary in `--headless` mode and assert on the resulting `--screen` / `--memory`
-files:
+Добавлен `tests/rk86_terminal_e2e.test.ts` — 4 e2e-теста, спаунящих
+терминальный бинарник в режиме `--headless` и проверяющих
+получившиеся файлы `--screen` / `--memory`:
 
-- timeout + screen dump format (31 lines × 78 cols, contains `РАДИО-86РК`)
-- memory dump byte-exact range (monitor ROM at `F800` starts with `C3`)
-- monitor `D 0,FF` command produces a hex grid on screen
-- monitor `M` writes HLT at `0000`, `G 0` runs, `--exit-halt` fires within 8s
+- формат timeout + screen dump (31 строка × 78 колонок, содержит
+  `РАДИО-86РК`)
+- байт-в-байт точный диапазон memory dump (monitor ROM на `F800`
+  начинается с `C3`)
+- команда монитора `D 0,FF` рисует hex-сетку на экране
+- монитор `M` пишет HLT на `0000`, `G 0` запускает, `--exit-halt`
+  срабатывает за 8 с
 
-Full suite: 164 tests pass.
+Полный suite: 164 теста проходят.
 
-### Documentation
+### Документация: терминал и headless-режим
 
-- `packages/rk86/README.md` — expanded invocation examples, full options list,
-  new "Безголовый режим (headless) и автотесты" section with two worked
-  examples (monitor `D` dump and `M`/`G` write-HLT-and-run)
-- `CLAUDE.md` — terminal emulator line mentions headless-mode flags;
-  `tests/rk86_terminal_e2e.test.ts` added to the test inventory
+- `packages/rk86/README.md` — расширены примеры вызова, полный список
+  опций, новая секция "Безголовый режим (headless) и автотесты" с
+  двумя проработанными примерами (монитор `D` dump и `M`/`G` write-
+  HLT-and-run)
+- `CLAUDE.md` — строка про терминальный эмулятор упоминает headless-
+  mode-флаги; `tests/rk86_terminal_e2e.test.ts` добавлен в
+  test-инвентарь
