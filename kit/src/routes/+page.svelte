@@ -287,7 +287,12 @@
         dragDepth = 0;
         dragActive = false;
         const file = e.dataTransfer.files?.[0];
-        if (file) await machine?.uploadFile(file);
+        if (!file) return;
+        await machine?.uploadFile(file);
+        // Mirror catalog `onrun`: load, brief delay, then inject the
+        // monitor G command so the dropped program starts the same way
+        // as Catalog → Запустить.
+        setTimeout(() => machine?.runLoadedFile(), 500);
     }
 </script>
 
