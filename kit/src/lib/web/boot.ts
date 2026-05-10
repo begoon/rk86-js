@@ -407,13 +407,14 @@ export async function main(host: HostCallbacks) {
         parseAndPlaceFile(machine, simulate_keyboard, cleanName, content);
     }
 
-    const monitor = await load_catalog_file("mon32.bin");
+    const monitorName = (window.location.href.match(/monitor=([^&]+)/) || [, "mon32.bin"])[1];
+    const monitor = await load_catalog_file(monitorName);
     if (!monitor) {
-        alert("ошибка загрузки монитора mon32.bin");
+        alert(`ошибка загрузки монитора ${monitorName}`);
         return;
     }
     machine.memory.load_file(monitor);
-    console.log("монитор загружен в память");
+    console.log(`монитор загружен в память: ${monitorName}`);
 
     machine.screen.start(new CanvasRenderer());
     console.log("экран запущен");

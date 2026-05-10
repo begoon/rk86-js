@@ -301,6 +301,10 @@ export class Memory {
                 this.video_screen_size_y = this.video_screen_size_y_buf;
                 this.machine.screen.set_geometry(this.video_screen_size_x, this.video_screen_size_y);
             }
+            // Byte 4 bit 6 = F (Field Attribute mode). 0 = transparent
+            // (FA byte's cell shows a FIFO char), 1 = visible (FA cell is
+            // blanked). Per Intel 8275 datasheet / MAME / Emu80 / 86rk.
+            this.machine.screen.transparent_attr = (byte & 0x40) === 0;
             return;
         }
 

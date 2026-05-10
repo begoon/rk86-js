@@ -222,39 +222,122 @@ class TerminalRenderer implements Renderer {
         const reset = "\x1b[0m";
         const w = screen.width;
 
-        // i8275 visible field-attribute mode (terminal is monochrome, so
-        // the latched color is dropped and FA cells render as a blank).
-        // Without this, FA bytes would render as garbage glyphs via the
-        // 0x80-0xFF inverse-video mirror.
+        // Mirror the web renderer's i8275 logic so the terminal output
+        // matches the canvas exactly (chip mode, FIFO, blink, latch
+        // persistence). 86rk's inverted color scheme maps onto the 8
+        // ANSI base colors directly, so we can render in color too —
+        // the only thing dropped vs. canvas is sub-frame blink animation
+        // (we sample blink phase once per update() call from wall clock).
+        //
+        // ANSI mapping (86rk inverted palette):
+        //   index → (H,G1,G0) → fg | sgr
+        //     0   = (0,0,0)   white   37
+        //     1   = (0,0,1)   yellow  33
+        //     2   = (0,1,0)   magenta 35
+        //     3   = (0,1,1)   red     31
+        //     4   = (1,0,0)   cyan    36
+        //     5   = (1,0,1)   green   32
+        //     6   = (1,1,0)   blue    34
+        //     7   = (1,1,1)   black   30
+        const ANSI_FG = ["37", "33", "35", "31", "36", "32", "34", "30"];
+
         let output = "\x1b[H"; // cursor home
         output += `${dim}┌${"─".repeat(w)}┐${reset}\n`;
 
+        const transparent = screen.transparent_attr;
+        const blinkOff = Math.floor(Date.now() / 320) % 2 === 1;
+        const FA_PENDING = -1;
         let addr = screen.video_memory_base;
         let frameStopped = false;
+        let color = 0; // index 0 = white in 86rk palette
+        let blink = false;
+
         for (let y = 0; y < screen.height; y++) {
             let line = `${dim}│${reset}`;
-            let rowStopped = frameStopped;
+            const cells: { ch: number; color: number; blink: boolean }[] = new Array(w);
+
+            if (transparent) {
+                const fifo: number[] = [];
+                let fifoFlag = false;
+                let cellCount = 0;
+                let rowStopped = frameStopped;
+                let bytesFetched = 0;
+                while (cellCount < w && !rowStopped) {
+                    const raw = memory.read(addr + bytesFetched);
+                    bytesFetched++;
+                    if (fifoFlag) {
+                        fifo.push(raw);
+                        fifoFlag = false;
+                        continue;
+                    }
+                    if (raw >= 0xf0) {
+                        cells[cellCount++] = { ch: 0, color, blink };
+                        rowStopped = true;
+                        if (raw >= 0xf8) frameStopped = true;
+                    } else if (raw >= 0xc0) {
+                        cells[cellCount++] = { ch: 0, color, blink };
+                    } else if (raw >= 0x80) {
+                        color = ((raw & 0x01) << 2) | ((raw & 0x0c) >> 2);
+                        blink = (raw & 0x02) !== 0;
+                        cells[cellCount++] = { ch: FA_PENDING, color, blink };
+                        fifoFlag = true;
+                    } else {
+                        cells[cellCount++] = { ch: raw, color, blink };
+                    }
+                }
+                while (cellCount < w) cells[cellCount++] = { ch: 0, color, blink };
+                let fifoIdx = 0;
+                for (let x = 0; x < w; ++x) {
+                    if (cells[x].ch === FA_PENDING) {
+                        cells[x].ch = (fifo[fifoIdx] ?? 0) & 0x7f;
+                        fifoIdx++;
+                    }
+                }
+                addr += bytesFetched;
+                if (addr - screen.video_memory_base < (y + 1) * w) {
+                    addr = screen.video_memory_base + (y + 1) * w;
+                }
+            } else {
+                let rowStopped = frameStopped;
+                for (let x = 0; x < w; x++) {
+                    const raw = memory.read(addr + x);
+                    let ch: number;
+                    if (rowStopped) {
+                        ch = 0;
+                    } else if (raw >= 0xf0) {
+                        ch = 0;
+                        rowStopped = true;
+                        if (raw >= 0xf8) frameStopped = true;
+                    } else if (raw >= 0xc0) {
+                        ch = 0;
+                    } else if (raw >= 0x80) {
+                        color = ((raw & 0x01) << 2) | ((raw & 0x0c) >> 2);
+                        blink = (raw & 0x02) !== 0;
+                        ch = 0;
+                    } else {
+                        ch = raw;
+                    }
+                    cells[x] = { ch, color, blink };
+                }
+                addr += w;
+            }
+
+            let prevColor = -1;
             for (let x = 0; x < w; x++) {
-                const raw = memory.read(addr++);
-                let ch: string;
-                if (rowStopped) {
-                    ch = " ";
-                } else if (raw >= 0xf0) {
-                    ch = " ";
-                    rowStopped = true;
-                    if (raw >= 0xf8) frameStopped = true;
-                } else if (raw >= 0x80) {
-                    ch = " ";
-                } else {
-                    ch = rk86char(raw);
+                const cell = cells[x];
+                const ch = cell.blink && blinkOff ? 0 : cell.ch;
+                const glyph = rk86char(ch);
+                if (cell.color !== prevColor) {
+                    line += `\x1b[${ANSI_FG[cell.color]}m`;
+                    prevColor = cell.color;
                 }
                 if (x === screen.cursor_x && y === screen.cursor_y) {
-                    line += `\x1b[4m${ch}${reset}`;
+                    line += `\x1b[4m${glyph}\x1b[24m`;
                 } else {
-                    line += ch;
+                    line += glyph;
                 }
             }
-            line += `${dim}│${reset}`;
+            line += `${reset}${dim}│${reset}`;
             output += line + "\n";
         }
         output += `${dim}└${"─".repeat(w)}┘${reset}\n`;
@@ -406,49 +489,52 @@ function setupKeyboard(keyboard: Keyboard) {
 // --- Embedded monitor ROM (mon32.bin, 2KB) ---
 
 const MON32_B64 =
-    "wzb4w2P+w5j7w7r8w0b8w7r8wwH+w6X8wyL5w3L+w3v6w3/6w7b6w0n7wxb7w876" +
-    "w1L/w1b/PooyA4Axz3bNzvohAHYRX3YOAM3t+SHPdiIcdiFa/80i+c3O+iH/dSIx" +
-    "diEqHSIvdj7DMiZ2Mc92IWb/zSL5MgKAPTICoM3u+CFs+OUhM3Z+/ljK0//+VcoA" +
-    "8PXNLPkqK3ZNRCopdusqJ3bx/kTKxfn+Q8rX+f5Gyu35/lPK9Pn+VMr/+f5Nyib6" +
-    "/kfKP/r+ScqG+v5Pyi37/kzKCPr+Uspo+sMA8D4zvcrx+OUhnv/NIvnhK8Pz+CEz" +
-    "dgYAzWP+/gjK3Pj+f8rc+MS5/Hf+Dcoa+f4uymz4Bv8+Ur3Krvojw/P4eBcRM3YG" +
-    "AMl+p8jNufwjwyL5ISd2ES12DgDN7fkRNHbNWvkiJ3YiKXbYPv8yLXbNWvkiKXbY" +
-    "zVr5Iit22MOu+iEAABoT/g3Kjvn+LMj+IMpd+dYw+q76/gr6gvn+Efqu+v4X8q76" +
-    "1gdPKSkpKdqu+gnDXfk3yXy6wH27yc2k+c2Q+cKi+TMzySPJzXL+/gPAzc76w676" +
-    "5SFs/80i+eHJfsXNpfw+IM25/MHJzXj7zbn5zZb5feYPysX5w8j5Cr7K5vnNePvN" +
-    "ufkKzbr5A82W+cPX+XHNmfnD7fl5vsx4+82W+cP0+X4CA82Z+cP/+c14+363+hX6" +
-    "/iDSF/o+Ls25/M2W+X3mD8oI+sML+s14+825+eXN7vjh0jv65c1a+X3hdyPDJvrN" +
-    "kPnKWvrrIiN2fjIldjb3PsMyMAAhov8iMQAxGHbB0eHx+SoWdsMmdj6QMgOgIgGg" +
-    "OgCgAgPNmfnDbfoqAnbJ5SoAdn7hyTotdrfKkfp7Mi92zbb6zXj76814++vFzRb7" +
-    "YGnNePvRzZD5yOvNePs+P825/MNs+D7/zf/65Qnrzf364Qnr5c0K+z7/zf/64eUh" +
-    "AcA2ACs2TTYdNpk2kyM2J35+5iDK4fohCOA2gC4ENtA2diw2IzZJLgg2pOHJPgjN" +
-    "mPtHPgjNmPtPyT4IzZj7d82Z+cMK+wEAAH6BT/XNkPnKn/nxeI5HzZn5wxn7ebfK" +
-    "NfsyMHblzRb74c14++vNePvr5WBpzXj74cUBAADNRvwF4+PCTfsO5s1G/M2Q++vN" +
-    "kPvrzYb7IQAAzZD7DubNRvzhzZD7w876xc2w+XzNpfx9zbr5wclOzUb8zZn5w4b7" +
-    "TM1G/E3DRvzlxdVXPoAyCOAhAAA5MQAAIg12DgA6AoAPDw8P5gFf8XnmfwdPJgAl" +
-    "yjT88ToCgA8PDw/mAbvKv/uxTxU6L3bC3PvWEkfxBcLd+xQ6AoAPDw8P5gFferf" +
-    "yC/x5/ubC//uvMi52wwn8/hnCt/s+/zIudhYJFcK3+yEE4DbQNnYjNiM2ST4nMgH" +
-    "APuAyAcAuCDakKg12+ToudqnDofwqDXb5zc76erfyrvrNpPnDnPvlxdX1PoAyCOAh" +
-    "AAA5MQAAFgjxeQdPPgGpMgKAOjB2R/EFwmb8PgCpMgKAFTowdsJ6/NYOR/EFwnv8" +
-    "FBXCWPz5IQTgNtA2diM2IzZJPicyAcA+4DIBwC4INqTx0cHhyfUPDw8Pza788eYP" +
-    "/gr6t/zGB8YwT/XF1eXNAf4hhf3lKgJ26yoAdjoEdj367vzKZf3ic/151iBPDfrp/" +
-    "MXNuf3Bw938rzIEdsl55n9P/h/Ko/3+DMqy/f4NyvP9/grKR/3+CMrW/f4Yyrn9/h" +
-    "nK4v3+GsrF/f4byp79/gfCOP0B8AV4+z3CKP148z3CLv0Nwif9yXHNuf16/gPAe/" +
-    "4IwM3i/Xr+G8LF/eXVIcJ3ERB4AZ4HGncjEwt5sMJY/dHhyXn+WcLp/M2y/T4C" +
-    "w+r8edYgTw0+BPrq/MXNxf3Bw3f9IgB26yICdj6AMgHAfTIAwHwyAMDh0cHxyT4B" +
-    "w+r8IfR/ESUJr3crG3uywqn9EQgDIcJ3yXsjHP5HwB4IAcD/CXr+GwFOAMLT/RYC" +
-    "AbD4FAnJeysd/gjAHkcBQAAJev4DAbL/wvD9FhwBUAcVCcl9k9L5/SVvHggBCAAJ" +
-    "yToCgOaAyg7+OgV2t8DlKgl2zXL+vW/KKv4+ATILdiYVryIJduEyBXbJJcIh/jzK" +
-    "Iv48ylH+xQEDUM0n/cE6C3Ym4D0yC3bKTP4mQD7/wyL+OgKA5oDKUf46BnYvMgZ2" +
-    "wxr+zQH+t8pj/q8yBXY6CXbJOgKA5oDCff4+/smvMgCAMgKAOgZ25gH2BjIDgDoB" +
-    "gDzCl/49yeUuASYHfQ9vLzIAgDoBgC+3wrP+JfKc/j7/4ckuIDoBgC+3yq/+LcK1" +
-    "/i4ILQfSw/58ZW/+Acr6/trz/gcHB8YgtP5fwgb/PiDhyQkKDX8IGRgaDB8bAAEC" +
-    "AwQFfCHq/sP+/nwh4v6Fb37+QOHY5W86AoBn5kDCGv99/kD6P//mH+HJOgZ2t8oq" +
-    "/33+QPoq//Ygb3zmIMI//33+QPo7/33uIOHJfeYvb33+QOHw5W/mD/4MffpQ/+4Q" +
-    "4ckqMXbJIjF2yR9yYWRpby04NnJrAA0KLS0+AA0KGBgYGAANCiBQQy0NCiBITC0N" +
-    "CiBCQy0NCiBERS0NCiBTUC0NCiBBRi0ZGRkZGRkACCAIACIWdvXhIh524SsiFHYh" +
-    "AAA5MR525dXFKhR2Mc92zXj76yojds2Q+cJs+DoldnfDbPghc//NIvkhFHYGBl4j" +
-    "VsXl6814+83u+NL2/81a+dHV63Irc+HBBSPC3v/J//8=";
+    "wzb4w2P+w5j7w7r8w0b8w7r8wwH+w6X8wyL5w3L+w3v6w3/6w7b6w0n7wxb7" +
+    "w876w1L/w1b/PooyA4Axz3bNzvohAHYRX3YOAM3t+SHPdiIcdiFa/80i+c3O" +
+    "+iH/dSIxdiEqHSIvdj7DMiZ2Mc92IWb/zSL5MgKAPTICoM3u+CFs+OUhM3Z+" +
+    "/ljK0//+VcoA8PXNLPkqK3ZNRCopdusqJ3bx/kTKxfn+Q8rX+f5Gyu35/lPK" +
+    "9Pn+VMr/+f5Nyib6/kfKP/r+ScqG+v5Pyi37/kzKCPr+Uspo+sMA8D4zvcrx" +
+    "+OUhnv/NIvnhK8Pz+CEzdgYAzWP+/gjK3Pj+f8rc+MS5/Hf+Dcoa+f4uymz4" +
+    "Bv8+Ur3Krvojw/P4eBcRM3YGAMl+p8jNufwjwyL5ISd2ES12DgDN7fkRNHbN" +
+    "WvkiJ3YiKXbYPv8yLXbNWvkiKXbYzVr5Iit22MOu+iEAABoT/g3Kjvn+LMj+" +
+    "IMpd+dYw+q76/gr6gvn+Efqu+v4X8q761gdPKSkpKdqu+gnDXfk3yXy6wH27" +
+    "yc2k+c2Q+cKi+TMzySPJzXL+/gPAzc76w6765SFs/80i+eHJfsXNpfw+IM25" +
+    "/MHJzXj7zbn5zZb5feYPysX5w8j5Cr7K5vnNePvNufkKzbr5A82W+cPX+XHN" +
+    "mfnD7fl5vsx4+82W+cP0+X4CA82Z+cP/+c14+363+hX6/iDSF/o+Ls25/M2W" +
+    "+X3mD8oI+sML+s14+825+eXN7vjh0jv65c1a+X3hdyPDJvrNkPnKWvrrIiN2" +
+    "fjIldjb3PsMyMAAhov8iMQAxGHbB0eHx+SoWdsMmdj6QMgOgIgGgOgCgAgPN" +
+    "mfnDbfoqAnbJ5SoAdn7hyTotdrfKkfp7Mi92zbb6zXj76814++vFzRb7YGnN" +
+    "ePvRzZD5yOvNePs+P825/MNs+D7/zf/65Qnrzf364Qnr5c0K+z7/zf/64eUh" +
+    "AcA2ACs2TTYdNpk2kyM2J35+5iDK4fohCOA2gC4ENtA2diw2IzZJLgg2pOHJ" +
+    "PgjNmPtHPgjNmPtPyT4IzZj7d82Z+cMK+wEAAH6BT/XNkPnKn/nxeI5HzZn5" +
+    "wxn7ebfKNfsyMHblzRb74c14++vNePvr5WBpzXj74cUBAADNRvwF4+PCTfsO" +
+    "5s1G/M2Q++vNkPvrzYb7IQAAzZD7DubNRvzhzZD7w876xc2w+XzNpfx9zbr5" +
+    "wclOzUb8zZn5w4b7TM1G/E3DRvzlxdVXPoAyCOAhAAA5MQAAIg12DgA6AoAP" +
+    "Dw8P5gFf8XnmfwdPJgAlyjT88ToCgA8PDw/mAbvKv/uxTxU6L3bC3PvWEkfx" +
+    "BcLd+xQ6AoAPDw8P5gFferfyC/x5/ubC//uvMi52wwn8/hnCt/s+/zIudhYJ" +
+    "FcK3+yEE4DbQNnYjNiM2ST4nMgHAPuAyAcAuCDakKg12+ToudqnDofwqDXb5" +
+    "zc76erfyrvrNpPnDnPvlxdX1PoAyCOAhAAA5MQAAFgjxeQdPPgGpMgKAOjB2" +
+    "R/EFwmb8PgCpMgKAFTowdsJ6/NYOR/EFwnv8FBXCWPz5IQTgNtA2diM2IzZJ" +
+    "PicyAcA+4DIBwC4INqTx0cHhyfUPDw8Pza788eYP/gr6t/zGB8YwT/XF1eXN" +
+    "Af4hhf3lKgJ26yoAdjoEdj367vzKZf3ic/151iBPDfrp/MXNuf3Bw938rzIE" +
+    "dsl55n9P/h/Ko/3+DMqy/f4NyvP9/grKR/3+CMrW/f4Yyrn9/hnK4v3+GsrF" +
+    "/f4byp79/gfCOP0B8AV4+z3CKP148z3CLv0Nwif9yXHNuf16/gPAe/4IwM3i" +
+    "/Xr+G8LF/eXVIcJ3ERB4AZ4HGncjEwt5sMJY/dHhyXn+WcLp/M2y/T4Cw+r8" +
+    "edYgTw0+BPrq/MXNxf3Bw3f9IgB26yICdj6AMgHAfTIAwHwyAMDh0cHxyT4B" +
+    "w+r8IfR/ESUJr3crG3uywqn9EQgDIcJ3yXsjHP5HwB4IAcD/CXr+GwFOAMLT" +
+    "/RYCAbD4FAnJeysd/gjAHkcBQAAJev4DAbL/wvD9FhwBUAcVCcl9k9L5/SVv" +
+    "HggBCAAJyToCgOaAyg7+OgV2t8DlKgl2zXL+vW/KKv4+ATILdiYVryIJduEy" +
+    "BXbJJcIh/jzKIv48ylH+xQEDUM0n/cE6C3Ym4D0yC3bKTP4mQD7/wyL+OgKA" +
+    "5oDKUf46BnYvMgZ2wxr+zQH+t8pj/q8yBXY6CXbJOgKA5oDCff4+/smvMgCA" +
+    "MgKAOgZ25gH2BjIDgDoBgDzCl/49yeUuASYHfQ9vLzIAgDoBgC+3wrP+JfKc" +
+    "/j7/4ckuIDoBgC+3yq/+LcK1/i4ILQfSw/58ZW/+Acr6/trz/gcHB8YgtP5f" +
+    "wgb/PiDhyQkKDX8IGRgaDB8bAAECAwQFfCHq/sP+/nwh4v6Fb37+QOHY5W86" +
+    "AoBn5kDCGv99/kD6P//mH+HJOgZ2t8oq/33+QPoq//Ygb3zmIMI//33+QPo7" +
+    "/33uIOHJfeYvb33+QOHw5W/mD/4MffpQ/+4Q4ckqMXbJIjF2yR9yYWRpby04" +
+    "NnJrAA0KLS0+AA0KGBgYGAANCiBQQy0NCiBITC0NCiBCQy0NCiBERS0NCiBT" +
+    "UC0NCiBBRi0ZGRkZGRkACCAIACIWdvXhIh524SsiFHYhAAA5MR525dXFKhR2" +
+    "Mc92zXj76yojds2Q+cJs+DoldnfDbPghc//NIvkhFHYGBl4jVsXl6814+83u" +
+    "+NL2/81a+dHV63Irc+HBBSPC3v/J//8=";
 
 function decodeMon32(): number[] {
     return Array.from(new Uint8Array(Uint8Array.from(atob(MON32_B64), (c) => c.charCodeAt(0))));

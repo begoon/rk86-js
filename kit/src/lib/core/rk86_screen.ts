@@ -34,6 +34,7 @@ export class Screen {
     light_pen_active: number;
     video_memory_base = 0;
     video_memory_size = 0;
+    transparent_attr = false;
     ready = false;
 
     private renderer!: Renderer;
