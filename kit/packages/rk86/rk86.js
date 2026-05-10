@@ -6060,16 +6060,30 @@ class TerminalRenderer {
     output += `${dim}\u250C${"\u2500".repeat(w)}\u2510${reset}
 `;
     let addr = screen.video_memory_base;
+    let frameStopped = false;
     for (let y = 0;y < screen.height; y++) {
       let line = `${dim}\u2502${reset}`;
+      let rowStopped = frameStopped;
       for (let x = 0;x < w; x++) {
-        const ch = rk86char(memory.read(addr));
+        const raw = memory.read(addr++);
+        let ch;
+        if (rowStopped) {
+          ch = " ";
+        } else if (raw >= 240) {
+          ch = " ";
+          rowStopped = true;
+          if (raw >= 248)
+            frameStopped = true;
+        } else if (raw >= 128) {
+          ch = " ";
+        } else {
+          ch = rk86char(raw);
+        }
         if (x === screen.cursor_x && y === screen.cursor_y) {
           line += `\x1B[4m${ch}${reset}`;
         } else {
           line += ch;
         }
-        addr++;
       }
       line += `${dim}\u2502${reset}`;
       output += line + `
