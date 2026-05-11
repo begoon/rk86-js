@@ -54,6 +54,11 @@ export class Memory {
     last_access_address: number = 0;
     last_access_operation: string | undefined = undefined;
 
+    // Set by the Debugger when attached. Called from read()/write() on
+    // every CPU-driven memory access (not from read_raw/write_raw, so
+    // debugger panel edits and snapshot loads do not fire breakpoints).
+    tracer: ((operation: "read" | "write", address: number) => void) | null = null;
+
     constructor(machine: Machine) {
         this.machine = machine;
 
@@ -162,6 +167,7 @@ export class Memory {
         const addr = address & 0xffff;
         this.last_access_address = addr;
         this.last_access_operation = "read";
+        this.tracer?.("read", addr);
 
         // RK86 chip-select decoder (К555ИД7) uses A13..A15 only; chips see
         // only the low address bits they need (others are mirrored). Use
@@ -216,6 +222,7 @@ export class Memory {
 
         this.last_access_address = addr;
         this.last_access_operation = "write";
+        this.tracer?.("write", addr);
 
         // RAM write — protect monitor ROM at 0xF800-0xFFFF.
         if (addr < 0xf800) this.buf[addr] = byte;

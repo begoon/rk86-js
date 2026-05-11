@@ -178,7 +178,6 @@ function rk86char(byte: number): string {
 class TerminalUI {
     canvas = { getContext: () => null, width: 0, height: 0 };
     visualizer_visible = false;
-    terminal = { put: () => {}, history: [] as string[] };
     i8080disasm: unknown;
     visualizer: unknown;
     on_visualizer_hit: ((opcode: number) => void) | undefined;

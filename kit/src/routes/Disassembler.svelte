@@ -1,33 +1,40 @@
 <script lang="ts">
-    import { i8080_opcode } from "$lib/core/i8080_disasm";
+    import { i8080_opcode, type I8080Instruction } from "$lib/core/i8080_disasm";
 
     import type { I8080 } from "$lib/core/i8080";
+    import type { Memory } from "$lib/core/rk86_memory";
+    import type Debugger from "$lib/core/rk86_debugger";
+    import { debuggerState } from "./state.svelte";
 
     let {
         memory,
         cpu,
         pc,
+        dbg,
         initialDataAddr = "0000",
         ondatachange,
+        onrunToCursor,
     }: {
-        memory: import("$lib/rk86_memory").Memory;
+        memory: Memory;
         cpu: I8080;
         pc: () => number;
+        dbg: Debugger;
         initialDataAddr?: string;
         ondatachange?: (addr: string) => void;
+        onrunToCursor?: (addr: number) => void;
     } = $props();
 
-    const hex = (v: number) => v.toString(16).toUpperCase();
-    const hex8 = (v: number) => hex(v).padStart(2, "0");
-    const hex16 = (v: number) => hex(v).padStart(4, "0");
-    const DATA_WIDTH = 8;
+    const hex = (v: number, w: number) => v.toString(16).toUpperCase().padStart(w, "0");
+    const hex8 = (v: number) => hex(v, 2);
+    const hex16 = (v: number) => hex(v, 4);
+    const DATA_WIDTH = 16;
 
     function wrap(addr: number): number {
         return (addr + memory.length()) % memory.length();
     }
 
-    function disasm(addr: number) {
-        return i8080_opcode(memory.read(addr), memory.read(addr + 1), memory.read(addr + 2));
+    function disasm(addr: number): I8080Instruction {
+        return i8080_opcode(memory.read_raw(addr), memory.read_raw(addr + 1), memory.read_raw(addr + 2));
     }
 
     let codeAddr = $state("0000");
@@ -37,8 +44,68 @@
     let dataAddr = $state(initialDataAddr);
     let dataLines = $state(12);
 
-    let codeHtml = $state("");
-    let dataHtml = $state("");
+    let codePane = $state<HTMLDivElement>();
+    let dataPane = $state<HTMLDivElement>();
+    let lineHeight = $state(0);
+
+    function measureLineHeight(): number {
+        if (lineHeight) return lineHeight;
+        const probe = codePane?.querySelector(".code-line") as HTMLElement | null;
+        if (probe && probe.offsetHeight > 0) {
+            lineHeight = probe.offsetHeight;
+        }
+        return lineHeight || 12;
+    }
+
+    function recomputeRows() {
+        const lh = measureLineHeight();
+        if (!lh) return;
+        if (codePane) {
+            const rows = Math.max(4, Math.floor(codePane.clientHeight / lh));
+            if (rows !== codeLines) codeLines = rows;
+        }
+        if (dataPane) {
+            const rows = Math.max(2, Math.floor(dataPane.clientHeight / lh));
+            if (rows !== dataLines) dataLines = rows;
+        }
+    }
+
+    let cursorAddr = $state<number | null>(null);
+    let dataFlashAddr = $state<number | null>(null);
+    let dataFlashKey = $state(0);
+    let dataFlashTimer: ReturnType<typeof setTimeout> | undefined;
+    let codeFlashAddr = $state<number | null>(null);
+    let codeFlashTimer: ReturnType<typeof setTimeout> | undefined;
+
+    // Bump on every render trigger so memory edits / step events refresh
+    // even though `memory` itself is not reactive.
+    let revision = $state(0);
+
+    export function refresh() {
+        const p = pc();
+        if (!pcVisible(p)) {
+            codeAddr = hex16(walkBack(p, Math.floor(codeLines / 2)));
+        }
+        cursorAddr = p;
+        revision++;
+    }
+
+    export function goCodePC() {
+        const p = pc();
+        codeAddr = hex16(walkBack(p, Math.floor(codeLines / 2)));
+        cursorAddr = p;
+        revision++;
+    }
+
+    function pcVisible(p: number): boolean {
+        const start = parseInt("0x" + codeAddr) | 0;
+        let addr = isNaN(start) ? 0 : start & 0xffff;
+        for (let i = 0; i < codeLines; i++) {
+            if (addr === p) return true;
+            addr = wrap(addr + disasm(addr).length);
+        }
+        return false;
+    }
 
     function walkBack(from: number, steps: number): number {
         let addr = from;
@@ -53,184 +120,344 @@
         return addr;
     }
 
-    function renderCode(center = false) {
-        const targetAddr = parseInt("0x" + codeAddr);
-        let addr = center ? walkBack(targetAddr, Math.floor(codeLines / 2)) : targetAddr;
-        const lines = [];
-        const currentPC = pc();
+    type CodeLine = {
+        addr: number;
+        instr: I8080Instruction;
+        bytes: number[];
+        chars: string;
+    };
+
+    const codeView = $derived.by((): CodeLine[] => {
+        revision; // dependency
+        const target = parseInt("0x" + codeAddr) | 0;
+        const start = isNaN(target) ? 0 : target & 0xffff;
+        let addr = start;
+        const lines: CodeLine[] = [];
         for (let i = 0; i < codeLines; i++) {
             const instr = disasm(addr);
-            const addrStr = hex16(addr);
-            const isPC = addr === currentPC;
-            let line = (isPC ? `<span class="flag-set">${addrStr}</span>` : addrStr) + `:&nbsp;`;
+            const bytes: number[] = [];
             let chars = "";
-            for (let j = 0; j < instr.length; ++j) {
-                const ch = memory.read(addr + j);
-                line += hex8(ch);
-                chars += String.fromCharCode(ch < 32 || ch > 127 ? 0x2e : ch);
+            for (let j = 0; j < instr.length; j++) {
+                const b = memory.read_raw(addr + j);
+                bytes.push(b);
+                chars += String.fromCharCode(b < 32 || b > 127 ? 0x2e : b);
             }
-            chars += "&nbsp;".repeat(3 - instr.length);
-            chars = chars.replace(" ", "&nbsp;");
-            line += "&nbsp;".repeat((3 - instr.length) * 2) + " " + chars + " ";
-            const color = instr.bad ? "red" : "white";
-            line += `<span style='color: ${color};'>${instr.cmd}</span>`;
-            line += "&nbsp;".repeat(5 - instr.cmd.length);
-
-            const fmtArg = (action: string | undefined, a: string): string => {
-                if (!action) return `<span>${a}</span>`;
-                return `<span class="disasm_${action}_offset" data-addr="${a}">${a}</span>`;
-            };
-            if (instr.arg1) {
-                const action = instr.code ? "code" : instr.data1 ? "data" : undefined;
-                line += " " + fmtArg(action, instr.arg1);
-            }
-            if (instr.arg2) {
-                const action = instr.data2 ? "data" : undefined;
-                line += ", " + fmtArg(action, instr.arg2);
-            }
-            lines.push(isPC ? `<span class="pc-line">${line}</span>` : line);
+            lines.push({ addr, instr, bytes, chars });
             addr = wrap(addr + instr.length);
         }
-        codeHtml = lines.join("<br />");
-    }
+        return lines;
+    });
 
-    function renderData() {
-        ondatachange?.(dataAddr);
-        let addr = parseInt("0x" + dataAddr);
-        const lines = [];
+    type DataLine = {
+        addr: number;
+        bytes: number[];
+        chars: string;
+    };
+
+    const dataView = $derived.by((): DataLine[] => {
+        revision; // dependency
+        const start = parseInt("0x" + dataAddr) | 0;
+        let addr = isNaN(start) ? 0 : start & 0xffff;
+        const lines: DataLine[] = [];
         for (let i = 0; i < dataLines; i++) {
-            let line = hex16(addr) + ": ";
-            for (let j = 0; j < DATA_WIDTH; ++j) line += hex8(memory.read(addr + j)) + " ";
-            for (let j = 0; j < DATA_WIDTH; ++j) {
-                const ch = memory.read(addr + j);
-                line += String.fromCharCode(ch < 32 || ch > 127 ? 0x2e : ch);
+            const bytes: number[] = [];
+            let chars = "";
+            for (let j = 0; j < DATA_WIDTH; j++) {
+                const b = memory.read_raw(addr + j);
+                bytes.push(b);
+                chars += String.fromCharCode(b < 32 || b > 127 ? 0x2e : b);
             }
+            lines.push({ addr, bytes, chars });
             addr = wrap(addr + DATA_WIDTH);
-            lines.push(line);
         }
-        dataHtml = lines.join("<br />");
-    }
+        return lines;
+    });
 
-    export function refresh() {
-        renderCode();
-        renderRegs();
-        renderData();
-    }
-
-    let regsHtml = $state("");
-
-    function renderRegs() {
+    // Regs are also a $derived value so flag/register edits repaint.
+    const regsView = $derived.by(() => {
+        revision; // dependency
         const r = cpu.regs;
-        const bc = (r[0] << 8) | r[1];
-        const de = (r[2] << 8) | r[3];
-        const hl = (r[4] << 8) | r[5];
-        const a = r[7];
-        const f = cpu.store_flags();
-        const flagDef = "SZ_H_P_C"; // _ = unused/hardcoded bit
-        const flags = flagDef
-            .split("")
-            .map((ch, i) => {
-                const bit = (f >> (7 - i)) & 1;
-                if (ch === "_") return `<span class="flag-unused">${bit}</span>`;
-                return bit ? `<span class="flag-set">${ch}</span>` : `<span class="flag-unset">-</span>`;
-            })
-            .join("");
+        return {
+            a: r[7],
+            b: r[0],
+            c: r[1],
+            d: r[2],
+            e: r[3],
+            h: r[4],
+            l: r[5],
+            bc: (r[0] << 8) | r[1],
+            de: (r[2] << 8) | r[3],
+            hl: (r[4] << 8) | r[5],
+            sp: cpu.sp,
+            pc: cpu.pc,
+            sf: cpu.sf,
+            zf: cpu.zf,
+            hf: cpu.hf,
+            pf: cpu.pf,
+            cf: cpu.cf,
+            iff: cpu.iff,
+        };
+    });
 
-        const pair = (name: string, val: number) =>
-            `${name}:<span class="reg-link" data-regaddr="${hex16(val)}">${hex16(val)}</span>`;
-
+    const stackView = $derived.by(() => {
+        revision; // dependency
         const sp = cpu.sp;
-        const stackStart = wrap(sp - 10);
-        let stackHtml = `SP(<span class="reg-link" data-regaddr="${hex16(stackStart)}">${hex16(stackStart)}</span>): `;
+        const start = wrap(sp - 10);
+        const out: { addr: number; lo: number; hi: number; word: number; isSP: boolean }[] = [];
         for (let j = 0; j < 14; j += 2) {
-            const lo = memory.read(wrap(stackStart + j));
-            const hi = memory.read(wrap(stackStart + j + 1));
-            const word = (hi << 8) | lo;
-            const addr = wrap(stackStart + j);
-            const isSP = addr === sp;
-            const cls = isSP ? "reg-link flag-set" : "reg-link";
-            stackHtml += `<span class="${cls}" data-regaddr="${hex16(word)}">${hex8(lo)}&nbsp;${hex8(hi)}</span> `;
+            const addr = wrap(start + j);
+            const lo = memory.read_raw(addr);
+            const hi = memory.read_raw(wrap(addr + 1));
+            out.push({ addr, lo, hi, word: (hi << 8) | lo, isSP: addr === sp });
         }
-
-        regsHtml =
-            [
-                `A:${hex8(a)}`,
-                `F:${flags}`,
-                pair("BC", bc),
-                pair("DE", de),
-                pair("HL", hl),
-                `SP:<span class="reg-link flag-set" data-regaddr="${hex16(cpu.sp)}">${hex16(cpu.sp)}</span>`,
-                pair("PC", cpu.pc),
-            ].join(" ") + `<br/><span class="registers-stack">${stackHtml}</span>`;
-    }
-
-    function handleRegClick(e: MouseEvent) {
-        const el = (e.target as HTMLElement).closest("[data-regaddr]") as HTMLElement | null;
-        if (!el) return;
-        const addr = el.dataset.regaddr!;
-        if (el.closest(".registers-stack")) {
-            codeAddr = addr;
-            renderCode(true);
-        } else {
-            dataAddr = addr;
-            renderData();
-        }
-    }
-
-    export function goCodePC() {
-        codeAddr = hex16(pc());
-        renderCode(true);
-        renderRegs();
-        renderData();
-    }
+        return { start, items: out };
+    });
 
     function codeShift(direction: number, one = false) {
         let addr = parseInt("0x" + codeAddr);
         let n = direction * (one ? 1 : codeLines);
         if (n < 0) {
-            while (n++ < 0) {
-                let i;
-                for (i = 3; i > 0; --i) {
-                    const d = disasm(wrap(addr - i));
-                    if (d.length === i) break;
-                }
-                addr = wrap(addr - (i > 0 ? i : 1));
-            }
+            while (n++ < 0) addr = walkBack(addr, 1);
         } else {
-            while (n-- > 0) {
-                addr = wrap(addr + disasm(addr).length);
-            }
+            while (n-- > 0) addr = wrap(addr + disasm(addr).length);
         }
         codeAddr = hex16(addr);
-        renderCode();
     }
 
     function dataShift(direction: number, one = false) {
         const offset = one ? 1 : DATA_WIDTH;
         const from = parseInt("0x" + dataAddr);
         dataAddr = hex16(wrap(from + offset * direction));
-        renderData();
     }
 
-    function handleCodeClick(e: MouseEvent) {
-        const el = (e.target as HTMLElement).closest("[data-addr]") as HTMLElement | null;
-        if (!el) return;
-        const addr = el.dataset.addr!;
-        if (el.classList.contains("disasm_code_offset")) {
-            codeAddr = addr;
-            renderCode(true);
-        } else if (el.classList.contains("disasm_data_offset")) {
-            dataAddr = addr;
-            renderData();
+    // ---- Hex cell editing -------------------------------------------------
+
+    let editingCell = $state<string | null>(null); // "code-<addr>" or "data-<addr>"
+    let editingValue = $state("");
+    let editFlash = $state<{ key: string; ok: boolean } | null>(null);
+
+    function startEdit(kind: "code" | "data", addr: number, current: number) {
+        editingCell = `${kind}-${addr}`;
+        editingValue = hex8(current);
+        // Focus + select happens in the on:introend handler below via autofocus action.
+    }
+
+    function commitEditValue(addr: number): void {
+        const v = parseInt(editingValue, 16);
+        const key = editingCell!;
+        if (!isNaN(v) && v >= 0 && v <= 0xff) {
+            memory.write_raw(addr, v);
+            const after = memory.read_raw(addr);
+            editFlash = { key, ok: after === v };
+            setTimeout(() => {
+                if (editFlash?.key === key) editFlash = null;
+            }, 600);
         }
     }
 
-    import { onMount } from "svelte";
+    function commitEdit(addr: number) {
+        commitEditValue(addr);
+        editingCell = null;
+        revision++;
+    }
+
+    function commitAndMove(addr: number, delta: number) {
+        commitEditValue(addr);
+        const kind = editingCell!.startsWith("code-") ? "code" : "data";
+        const nextAddr = (addr + delta + 0x10000) & 0xffff;
+        if (kind === "data") {
+            const top = parseInt("0x" + dataAddr) & 0xffff;
+            const visibleSize = dataLines * DATA_WIDTH;
+            const offset = (nextAddr - top + 0x10000) & 0xffff;
+            if (offset >= visibleSize) {
+                dataAddr = hex16(
+                    (delta > 0 ? top + DATA_WIDTH : top - DATA_WIDTH + 0x10000) & 0xffff,
+                );
+            }
+        } else {
+            // Code: re-center if the byte we're moving to is off-screen.
+            if (!pcVisible(nextAddr)) {
+                codeAddr = hex16(walkBack(nextAddr, Math.floor(codeLines / 2)));
+            }
+        }
+        editingCell = `${kind}-${nextAddr}`;
+        editingValue = hex8(memory.read_raw(nextAddr));
+        revision++;
+    }
+
+    function cancelEdit() {
+        editingCell = null;
+    }
+
+    function onHexInputKey(e: KeyboardEvent, addr: number) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            commitEdit(addr);
+        } else if (e.key === "Escape") {
+            e.preventDefault();
+            cancelEdit();
+        } else if (e.key === "Tab") {
+            e.preventDefault();
+            commitAndMove(addr, e.shiftKey ? -1 : 1);
+        }
+    }
+
+    // ---- Register / flag editing ------------------------------------------
+
+    let editingReg = $state<string | null>(null);
+    let editingRegValue = $state("");
+
+    function startRegEdit(name: string, value: number, width: number) {
+        editingReg = name;
+        editingRegValue = hex(value, width);
+    }
+
+    function commitRegEdit(name: string) {
+        const v = parseInt(editingRegValue, 16);
+        if (!isNaN(v)) {
+            switch (name) {
+                case "A": cpu.set_a(v & 0xff); break;
+                case "B": cpu.regs[0] = v & 0xff; break;
+                case "C": cpu.regs[1] = v & 0xff; break;
+                case "D": cpu.regs[2] = v & 0xff; break;
+                case "E": cpu.regs[3] = v & 0xff; break;
+                case "H": cpu.regs[4] = v & 0xff; break;
+                case "L": cpu.regs[5] = v & 0xff; break;
+                case "BC": cpu.set_rp(0, v & 0xffff); break;
+                case "DE": cpu.set_rp(2, v & 0xffff); break;
+                case "HL": cpu.set_rp(4, v & 0xffff); break;
+                case "SP": cpu.sp = v & 0xffff; break;
+                case "PC": cpu.pc = v & 0xffff; break;
+            }
+        }
+        editingReg = null;
+        revision++;
+    }
+
+    function onRegInputKey(e: KeyboardEvent, name: string) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            commitRegEdit(name);
+        } else if (e.key === "Escape") {
+            e.preventDefault();
+            editingReg = null;
+        }
+    }
+
+    function toggleFlag(name: "sf" | "zf" | "hf" | "pf" | "cf" | "iff") {
+        cpu[name] = cpu[name] ? 0 : 1;
+        revision++;
+    }
+
+    // ---- Breakpoint awareness for code view -------------------------------
+
+    function execBpAt(addr: number): boolean {
+        for (const b of debuggerState.breakpoints) {
+            if (b.type === "exec" && b.active && !b.temp && b.address === addr) return true;
+        }
+        return false;
+    }
+
+    function toggleBpAt(addr: number) {
+        dbg.toggleExecAt(addr);
+    }
+
+    export function getCursor(): number | null {
+        return cursorAddr;
+    }
+
+    function selectCursor(addr: number) {
+        cursorAddr = addr;
+    }
+
+    // ---- Click-through for register/data addresses ------------------------
+
+    function gotoCode(addr: number) {
+        codeAddr = hex16(addr);
+        cursorAddr = addr;
+    }
+
+    function gotoData(addr: number) {
+        dataAddr = hex16(addr);
+    }
+
+    function gotoCodeCentered(addr: number) {
+        codeAddr = hex16(walkBack(addr, Math.floor(codeLines / 2)));
+        cursorAddr = addr;
+        flashCodeRow(addr);
+    }
+
+    function flashCodeRow(addr: number) {
+        codeFlashAddr = null;
+        clearTimeout(codeFlashTimer);
+        requestAnimationFrame(() => {
+            codeFlashAddr = addr & 0xffff;
+            codeFlashTimer = setTimeout(() => {
+                codeFlashAddr = null;
+            }, 1500);
+        });
+    }
+
+    function gotoDataCentered(addr: number) {
+        const middleRow = Math.floor(dataLines / 2);
+        const top = (addr - middleRow * DATA_WIDTH + 0x10000) & 0xffff;
+        // Align to row boundary so the target row contains the target byte.
+        const rowAligned = (top - (top % DATA_WIDTH) + (addr % DATA_WIDTH)) & 0xffff;
+        dataAddr = hex16(rowAligned & ~(DATA_WIDTH - 1));
+        flashDataRow(addr);
+    }
+
+    function flashDataRow(addr: number) {
+        // Clear first so re-clicking the same target restarts the animation.
+        dataFlashAddr = null;
+        clearTimeout(dataFlashTimer);
+        requestAnimationFrame(() => {
+            dataFlashAddr = addr & 0xffff;
+            dataFlashKey++;
+            dataFlashTimer = setTimeout(() => {
+                dataFlashAddr = null;
+            }, 1500);
+        });
+    }
+
+    function autofocus(node: HTMLInputElement) {
+        node.focus();
+        node.select();
+    }
+
+    import { onMount, onDestroy } from "svelte";
+    let resizeObserver: ResizeObserver | undefined;
     onMount(() => {
         goCodePC();
-        renderData();
+        recomputeRows();
+        if (typeof ResizeObserver !== "undefined") {
+            resizeObserver = new ResizeObserver(() => recomputeRows());
+            if (codePane) resizeObserver.observe(codePane);
+            if (dataPane) resizeObserver.observe(dataPane);
+        }
+        // After the first render, line height is known — re-measure once more.
+        requestAnimationFrame(() => recomputeRows());
     });
+    onDestroy(() => resizeObserver?.disconnect());
+
+    $effect(() => {
+        ondatachange?.(dataAddr);
+    });
+
+    // ---- Context menu for code rows ---------------------------------------
+
+    let menu = $state<{ x: number; y: number; addr: number } | null>(null);
+    function openContextMenu(e: MouseEvent, addr: number) {
+        e.preventDefault();
+        cursorAddr = addr;
+        menu = { x: e.clientX, y: e.clientY, addr };
+    }
+    function closeMenu() {
+        menu = null;
+    }
 </script>
+
+<svelte:window on:click={() => menu && closeMenu()} on:resize={closeMenu} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="disasm" onkeydown={(e) => e.stopPropagation()} onkeyup={(e) => e.stopPropagation()}>
@@ -241,22 +468,9 @@
             type="text"
             bind:value={codeAddr}
             style="width: calc(4ch + 4px)"
-            onchange={() => renderCode()}
-            onkeydown={(e) => {
-                if (e.key === "Enter") renderCode();
-            }}
+            onkeydown={(e) => { if (e.key === "Enter") revision++; }}
         />
-        /
-        <input
-            type="number"
-            bind:value={codeLines}
-            style="width: calc(5ch + 4px)"
-            onchange={() => renderCode()}
-            onkeydown={(e) => {
-                if (e.key === "Enter") renderCode();
-            }}
-        />
-        <button type="button" onclick={() => renderCode()} data-text="Перейти по адресу">▶</button>
+        <button type="button" onclick={() => revision++} data-text="Перейти по адресу">▶</button>
         <button type="button" onclick={() => codeShift(1, true)}>›</button>
         <button type="button" onclick={() => codeShift(1)}>»</button>
         <button
@@ -267,14 +481,100 @@
         >
     </div>
     <hr />
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-    <code onclick={handleCodeClick}>{@html codeHtml}</code>
+    <div class="code pane" bind:this={codePane}>
+        {#each codeView as line (line.addr)}
+            {@const isPC = line.addr === regsView.pc}
+            {@const isCursor = line.addr === cursorAddr}
+            {@const hasBp = execBpAt(line.addr)}
+            {@const isFlashCode = codeFlashAddr !== null && codeFlashAddr >= line.addr && codeFlashAddr < line.addr + line.instr.length}
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+            <div
+                class="code-line"
+                class:pc={isPC}
+                class:cursor={isCursor}
+                class:flash={isFlashCode}
+                onclick={() => selectCursor(line.addr)}
+                oncontextmenu={(e) => openContextMenu(e, line.addr)}
+            >
+                <span class="addr" class:bp={hasBp} onclick={(e) => { e.stopPropagation(); toggleBpAt(line.addr); }} data-text="Точка останова">{hex16(line.addr)}</span>:&nbsp;<!--
+                -->{#each [0, 1, 2] as j}
+                    {#if j < line.bytes.length}
+                        {@const cellKey = `code-${line.addr + j}`}
+                        {#if editingCell === cellKey}
+                            <input
+                                class="hex-edit"
+                                type="text"
+                                maxlength="2"
+                                data-key={cellKey}
+                                bind:value={editingValue}
+                                use:autofocus
+                                onblur={(e) => {
+                                    const k = (e.currentTarget as HTMLInputElement).dataset.key;
+                                    if (editingCell === k) commitEdit(line.addr + j);
+                                }}
+                                onkeydown={(e) => onHexInputKey(e, line.addr + j)}
+                            />
+                        {:else}
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <!-- svelte-ignore a11y_no_static_element_interactions -->
+                            <span
+                                class="hex-cell"
+                                class:flash-ok={editFlash?.key === cellKey && editFlash.ok}
+                                class:flash-bad={editFlash?.key === cellKey && !editFlash.ok}
+                                onclick={(e) => { e.stopPropagation(); startEdit("code", line.addr + j, line.bytes[j]); }}
+                            >{hex8(line.bytes[j])}</span>
+                        {/if}
+                    {:else}
+                        <span class="hex-cell empty">&nbsp;&nbsp;</span>
+                    {/if}
+                {/each}
+                <span class="chars">&nbsp;{line.chars}{" ".repeat(3 - line.bytes.length)}&nbsp;</span>
+                <span class="cmd" class:bad={line.instr.bad}>{line.instr.cmd}</span>
+                <span class="args">
+                    {#if line.instr.arg1}
+                        {#if line.instr.code}
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <!-- svelte-ignore a11y_no_static_element_interactions -->
+                            <span class="arg-code" onclick={(e) => { e.stopPropagation(); gotoCodeCentered(parseInt(line.instr.arg1!, 16)); }}>{line.instr.arg1}</span>
+                        {:else if line.instr.data1}
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <!-- svelte-ignore a11y_no_static_element_interactions -->
+                            <span class="arg-data" onclick={(e) => { e.stopPropagation(); gotoDataCentered(parseInt(line.instr.arg1!, 16)); }}>{line.instr.arg1}</span>
+                        {:else}
+                            <span>{line.instr.arg1}</span>
+                        {/if}
+                    {/if}{#if line.instr.arg2}, {#if line.instr.data2}
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
+                        <span class="arg-data" onclick={(e) => { e.stopPropagation(); gotoDataCentered(parseInt(line.instr.arg2!, 16)); }}>{line.instr.arg2}</span>
+                    {:else}<span>{line.instr.arg2}</span>{/if}{/if}
+                </span>
+            </div>
+        {/each}
+    </div>
     <hr />
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="registers" onclick={handleRegClick}>{@html regsHtml}</div>
+    <div class="registers">
+        {@render reg8("A", regsView.a)}
+        <span class="flags">
+            F:{@render flag("S", regsView.sf, () => toggleFlag("sf"))}{@render flag("Z", regsView.zf, () => toggleFlag("zf"))}<span class="flag-unused">_</span>{@render flag("H", regsView.hf, () => toggleFlag("hf"))}<span class="flag-unused">_</span>{@render flag("P", regsView.pf, () => toggleFlag("pf"))}<span class="flag-unused">_</span>{@render flag("C", regsView.cf, () => toggleFlag("cf"))}
+            <span class="iff">{@render flag("I", regsView.iff, () => toggleFlag("iff"))}</span>
+        </span>
+        {@render reg16("BC", regsView.bc)}
+        {@render reg16("DE", regsView.de)}
+        {@render reg16("HL", regsView.hl)}
+        {@render reg16("SP", regsView.sp, true)}
+        {@render reg16("PC", regsView.pc)}
+        <br />
+        <span class="stack">
+            SP(<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-link" onclick={() => gotoData(stackView.start)}>{hex16(stackView.start)}</span>):
+            {#each stackView.items as it}
+                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <span class="reg-link" class:sp-marker={it.isSP} onclick={() => gotoCode(it.word)}>{hex8(it.lo)}&nbsp;{hex8(it.hi)}</span>
+            {/each}
+        </span>
+    </div>
     <hr />
     <div class="toolbar">
         <button type="button" onclick={() => dataShift(-1)}>«</button>
@@ -283,50 +583,189 @@
             type="text"
             bind:value={dataAddr}
             style="width: calc(4ch + 4px)"
-            onchange={() => renderData()}
-            onkeydown={(e) => {
-                if (e.key === "Enter") renderData();
-            }}
+            onkeydown={(e) => { if (e.key === "Enter") revision++; }}
         />
-        /
-        <input
-            type="number"
-            bind:value={dataLines}
-            style="width: calc(5ch + 4px)"
-            onchange={() => renderData()}
-            onkeydown={(e) => {
-                if (e.key === "Enter") renderData();
-            }}
-        />
-        <button type="button" onclick={() => renderData()} data-text="Перейти по адресу">▶</button>
+        <button type="button" onclick={() => revision++} data-text="Перейти по адресу">▶</button>
         <button type="button" onclick={() => dataShift(1, true)}>›</button>
         <button type="button" onclick={() => dataShift(1)}>»</button>
     </div>
     <hr />
-    <code>{@html dataHtml}</code>
+    <div class="data pane" bind:this={dataPane}>
+        {#each dataView as line (line.addr)}
+            {@const isFlash = dataFlashAddr !== null && dataFlashAddr >= line.addr && dataFlashAddr < line.addr + DATA_WIDTH}
+            <div class="data-line" class:flash={isFlash} data-flash-key={isFlash ? dataFlashKey : 0}>
+                <span class="addr">{hex16(line.addr)}</span>:
+                {#each line.bytes as b, j}
+                    {@const cellKey = `data-${line.addr + j}`}
+                    {#if editingCell === cellKey}
+                        <input
+                            class="hex-edit"
+                            type="text"
+                            maxlength="2"
+                            data-key={cellKey}
+                            bind:value={editingValue}
+                            use:autofocus
+                            onblur={(e) => {
+                                const k = (e.currentTarget as HTMLInputElement).dataset.key;
+                                if (editingCell === k) commitEdit(line.addr + j);
+                            }}
+                            onkeydown={(e) => onHexInputKey(e, line.addr + j)}
+                        />
+                    {:else}
+                        <!-- svelte-ignore a11y_click_events_have_key_events -->
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
+                        <span
+                            class="hex-cell"
+                            class:flash-ok={editFlash?.key === cellKey && editFlash.ok}
+                            class:flash-bad={editFlash?.key === cellKey && !editFlash.ok}
+                            onclick={() => startEdit("data", line.addr + j, b)}
+                        >{hex8(b)}</span>
+                    {/if}
+                {/each}
+                <span class="chars">&nbsp;{line.chars}</span>
+            </div>
+        {/each}
+    </div>
 </div>
+
+{#if menu}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="context-menu" style="left: {menu.x}px; top: {menu.y}px" onclick={(e) => e.stopPropagation()}>
+        <button type="button" onclick={() => { toggleBpAt(menu!.addr); closeMenu(); }}>
+            {execBpAt(menu.addr) ? "Удалить точку останова" : "Поставить точку останова"} (F9)
+        </button>
+        <button type="button" onclick={() => { onrunToCursor?.(menu!.addr); closeMenu(); }}>Выполнить до сюда (Ctrl+F10)</button>
+        <button type="button" onclick={() => { cpu.pc = menu!.addr; revision++; closeMenu(); }}>Установить PC</button>
+    </div>
+{/if}
+
+{#snippet reg8(name: string, value: number)}
+    <span class="reg-pair">{name}:{#if editingReg === name}
+        <input
+            class="reg-edit reg-edit-8"
+            type="text"
+            maxlength="2"
+            bind:value={editingRegValue}
+            use:autofocus
+            onblur={() => commitRegEdit(name)}
+            onkeydown={(e) => onRegInputKey(e, name)}
+        />
+    {:else}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <span class="reg-value reg-value-8" onclick={() => startRegEdit(name, value, 2)}>{hex8(value)}</span>
+    {/if}</span>
+{/snippet}
+
+{#snippet reg16(name: string, value: number, highlight = false)}
+    <span class="reg-pair">
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <span
+            class="reg-name"
+            onclick={() => {
+                if (name === "PC") gotoCodeCentered(value);
+                else gotoDataCentered(value);
+            }}
+        >{name}</span>:{#if editingReg === name}
+        <input
+            class="reg-edit reg-edit-16"
+            type="text"
+            maxlength="4"
+            bind:value={editingRegValue}
+            use:autofocus
+            onblur={() => commitRegEdit(name)}
+            onkeydown={(e) => onRegInputKey(e, name)}
+        />
+    {:else}
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <span class="reg-value reg-value-16" class:highlight onclick={() => startRegEdit(name, value, 4)}>{hex16(value)}</span>
+    {/if}</span>
+{/snippet}
+
+{#snippet flag(ch: string, bit: number, toggle: () => void)}
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <span class="flag-bit" class:flag-set={bit} class:flag-unset={!bit} onclick={toggle}>{bit ? ch : ch.toLowerCase()}</span>
+{/snippet}
 
 <style>
     .disasm {
         width: fit-content;
         height: 100%;
-        overflow: auto;
+        overflow: hidden;
         background-color: #000000;
         color: #ffffff;
         font-family: monospace;
         font-size: x-small;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    .pane {
+        flex: 1 1 0;
+        min-height: 0;
+        overflow: hidden;
     }
     .registers {
         padding: 2px 4px;
         color: #ccc;
         white-space: nowrap;
     }
-    :global(.reg-link) {
-        color: lightblue;
+    .reg-pair {
+        margin-right: 6px;
+    }
+    .reg-name {
         cursor: pointer;
     }
-    :global(.reg-link:hover) {
+    .reg-name:hover {
         text-decoration: underline;
+    }
+    .reg-value,
+    .reg-edit {
+        display: inline-block;
+        box-sizing: border-box;
+        padding: 0 1px;
+        font-family: monospace;
+        text-align: left;
+        vertical-align: baseline;
+        line-height: 1;
+        border: 1px solid transparent;
+    }
+    .reg-value-8,
+    .reg-edit-8 {
+        width: calc(2ch + 4px);
+    }
+    .reg-value-16,
+    .reg-edit-16 {
+        width: calc(4ch + 4px);
+    }
+    .reg-value {
+        color: lightblue;
+        cursor: text;
+    }
+    .reg-value.highlight {
+        color: #ffcc00;
+    }
+    .reg-value:hover {
+        background-color: #222;
+    }
+    .reg-edit {
+        background-color: #222;
+        color: white;
+        border-color: #4a9;
+        outline: none;
+    }
+    .flags {
+        margin-right: 8px;
+    }
+    .flag-bit {
+        cursor: pointer;
+        padding: 0 1px;
+    }
+    .flag-bit:hover {
+        background-color: #222;
     }
     :global(.flag-set) {
         color: #ffcc00;
@@ -336,6 +775,22 @@
     }
     :global(.flag-unused) {
         color: #444;
+    }
+    .iff {
+        margin-left: 6px;
+    }
+    .stack .reg-link {
+        margin-right: 4px;
+    }
+    .reg-link {
+        color: lightblue;
+        cursor: pointer;
+    }
+    .reg-link:hover {
+        text-decoration: underline;
+    }
+    .sp-marker {
+        color: #ffcc00;
     }
     .toolbar {
         padding: 2px 4px;
@@ -355,23 +810,125 @@
     hr {
         margin: 2px 0;
     }
-    code {
-        display: block;
+    .code, .data {
         padding: 2px 4px;
+    }
+    .toolbar, .registers, hr {
+        flex: 0 0 auto;
+    }
+    .code-line, .data-line {
         white-space: nowrap;
         cursor: default;
+        padding: 0 2px;
     }
-    :global(.pc-line) {
+    @keyframes row-flash {
+        from { background-color: #ffcc00; color: #000; }
+        to { background-color: transparent; color: inherit; }
+    }
+    .data-line.flash,
+    .code-line.flash {
+        animation: row-flash 1.4s ease-out forwards;
+    }
+    .code-line.pc {
         background-color: #333;
-        display: inline-block;
-        width: 100%;
     }
-    :global(.disasm_code_offset) {
+    .code-line.cursor {
+        outline: 1px dashed #4a9;
+        outline-offset: -1px;
+    }
+    .code-line.pc.cursor {
+        background-color: #444;
+    }
+    .addr {
+        cursor: pointer;
+        padding: 0 1px;
+    }
+    .addr.bp {
+        background-color: #c33;
+        color: white;
+        border-radius: 6px;
+    }
+    .addr:hover {
+        outline: 1px solid #666;
+    }
+    .hex-cell,
+    .hex-edit {
+        display: inline-block;
+        box-sizing: border-box;
+        width: calc(2ch + 4px);
+        padding: 0 1px;
+        font-family: monospace;
+        text-align: left;
+        vertical-align: baseline;
+        line-height: 1;
+        border: 1px solid transparent;
+    }
+    .hex-cell {
+        cursor: text;
+    }
+    .hex-cell:hover {
+        background-color: #222;
+    }
+    .hex-cell.empty {
+        cursor: default;
+    }
+    .hex-cell.flash-ok {
+        background-color: #2a5;
+    }
+    .hex-cell.flash-bad {
+        background-color: #a23;
+    }
+    .hex-edit {
+        background-color: #222;
+        color: white;
+        border-color: #4a9;
+        outline: none;
+    }
+    .chars {
+        color: #aaa;
+        white-space: pre;
+    }
+    .cmd {
+        color: white;
+        margin-left: 6px;
+        display: inline-block;
+        min-width: 5ch;
+    }
+    .cmd.bad {
+        color: red;
+    }
+    .arg-code {
         color: lightgreen;
         cursor: pointer;
     }
-    :global(.disasm_data_offset) {
+    .arg-data {
         color: lightblue;
         cursor: pointer;
+    }
+    .arg-code:hover, .arg-data:hover {
+        text-decoration: underline;
+    }
+    .context-menu {
+        position: fixed;
+        background-color: #222;
+        border: 1px solid #444;
+        border-radius: 4px;
+        padding: 4px;
+        z-index: 5000;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-family: monospace;
+    }
+    .context-menu button {
+        all: unset;
+        padding: 4px 8px;
+        color: white;
+        cursor: pointer;
+        text-align: left;
+        font-size: small;
+    }
+    .context-menu button:hover {
+        background-color: #444;
     }
 </style>

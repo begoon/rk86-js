@@ -1,7 +1,13 @@
 // Reactive bridge between imperative engine code and Svelte components.
 // Engine writes here via callbacks, Svelte reads reactively.
 
+import type { Breakpoint } from "$lib/core/rk86_debugger";
 import type { RK86File } from "$lib/core/rk86_file_parser";
+
+export const debuggerState = $state({
+    breakpoints: [] as Breakpoint[],
+    visible: false,
+});
 
 export const ui = $state({
     selectedFile: undefined as RK86File | undefined,

@@ -9,30 +9,36 @@
     import { main as boot, type HostCallbacks } from "$lib/web/boot";
     import Debugger from "$lib/core/rk86_debugger";
     import { rk86_snapshot, rk86_snapshot_restore } from "$lib/core/rk86_snapshot";
+    import {
+        loadFreezes,
+        saveFreeze,
+        deleteFreezeFromStore,
+        trimFreezes,
+        type Freeze,
+    } from "$lib/web/freeze_store";
+    import BreakpointEditor from "./BreakpointEditor.svelte";
     import CatalogSelector from "./CatalogSelector.svelte";
     import Disassembler from "./Disassembler.svelte";
     import FreezeSelector from "./FreezeSelector.svelte";
     import Keyboard from "./Keyboard.svelte";
-    import Terminal from "./Terminal.svelte";
-    import { ui } from "./state.svelte";
+    import { debuggerState, ui } from "./state.svelte";
     import Visualizer from "./Visualizer.svelte";
 
     let keyboardVisible = $state(false);
     let catalogDialog = $state<HTMLDialogElement>();
     let catalogSelector = $state<CatalogSelector>();
 
-    type Freeze = {
-        id: string;
-        createdAt: number;
-        fileName: string;
-        thumbnail: string;
-        snapshot: string;
-    };
     const FREEZE_CAP = 20;
     let freezes = $state<Freeze[]>([]);
     let freezeDialog = $state<HTMLDialogElement>();
     let freezeFlash = $state(false);
     let freezeFlashTimeout: ReturnType<typeof setTimeout>;
+
+    $effect(() => {
+        loadFreezes().then((loaded) => {
+            freezes = loaded.slice(0, FREEZE_CAP);
+        });
+    });
 
     function freezeNow() {
         if (!machine || !canvas) return;
@@ -49,6 +55,8 @@
             snapshot,
         };
         freezes = [entry, ...freezes].slice(0, FREEZE_CAP);
+        saveFreeze(entry);
+        trimFreezes(FREEZE_CAP);
         freezeFlash = true;
         clearTimeout(freezeFlashTimeout);
         freezeFlashTimeout = setTimeout(() => (freezeFlash = false), 400);
@@ -68,6 +76,7 @@
 
     function deleteFreeze(id: string) {
         freezes = freezes.filter((f) => f.id !== id);
+        deleteFreezeFromStore(id);
         if (freezes.length === 0) freezeDialog?.close();
     }
 
@@ -101,18 +110,14 @@
             m.ui.on_pause_changed = (value: boolean) => {
                 paused = value;
             };
-            m.ui.terminal = {
-                put: (str: string) => terminal?.put(str),
-                get history() {
-                    if (!terminal) return [];
-                    return terminal.currentHistory();
-                },
-            };
             m.ui.refreshDebugger = () => {
-                disassemblerRef?.goCodePC();
+                disassemblerRef?.refresh();
             };
             machine = m;
             dbg = new Debugger(machine);
+            dbg.subscribe((bps) => {
+                debuggerState.breakpoints = bps.slice();
+            });
         });
     });
 
@@ -127,6 +132,7 @@
     function togglePaused() {
         paused = !paused;
         machine?.pause(paused);
+        if (paused) disassemblerRef?.refresh();
     }
 
     function openAssembler() {
@@ -160,7 +166,11 @@
             canvasPlaceholder.appendChild(canvas);
         }
         debuggerVisible = !debuggerVisible;
-        if (debuggerVisible) setTimeout(() => terminal?.focus(), 0);
+        debuggerState.visible = debuggerVisible;
+        if (dbg) {
+            if (debuggerVisible) dbg.attach();
+            else dbg.detach();
+        }
     }
 
     const shortcuts: Record<string, () => void> = {
@@ -203,6 +213,40 @@
         }
         if (catalogDialog?.open) return;
         if (freezeDialog?.open) return;
+        if (debuggerVisible && dbg) {
+            if (e.key === "F5") {
+                e.preventDefault();
+                togglePaused();
+                return;
+            }
+            if (e.key === "F11" && e.shiftKey) {
+                e.preventDefault();
+                if (paused) dbg.stepOut();
+                return;
+            }
+            if (e.key === "F11") {
+                e.preventDefault();
+                if (paused) dbg.step();
+                return;
+            }
+            if (e.key === "F10" && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                const cursor = disassemblerRef?.getCursor();
+                if (paused && cursor !== null && cursor !== undefined) dbg.runToCursor(cursor);
+                return;
+            }
+            if (e.key === "F10") {
+                e.preventDefault();
+                if (paused) dbg.stepOver();
+                return;
+            }
+            if (e.key === "F9") {
+                e.preventDefault();
+                const cursor = disassemblerRef?.getCursor();
+                if (cursor !== null && cursor !== undefined) dbg.toggleExecAt(cursor);
+                return;
+            }
+        }
         if (debuggerVisible && !canvasFocused) return;
         emulatorKeyDown?.(e.code);
     }
@@ -231,9 +275,7 @@
         }
     });
 
-    let terminal = $state<Terminal>();
-
-    let dbg: Debugger;
+    let dbg = $state<Debugger>();
 
     let soundEnabled = $state(false);
     let soundImageVisible = $state(false);
@@ -526,12 +568,31 @@
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div class="debugger-disasm" onclick={() => (canvasFocused = false)}>
-                <Disassembler bind:this={disassemblerRef} memory={machine.memory} cpu={machine.cpu} pc={() => machine!.cpu.pc} initialDataAddr={lastDataAddr} ondatachange={(addr) => lastDataAddr = addr} />
+                <Disassembler
+                    bind:this={disassemblerRef}
+                    memory={machine.memory}
+                    cpu={machine.cpu}
+                    pc={() => machine!.cpu.pc}
+                    dbg={dbg!}
+                    initialDataAddr={lastDataAddr}
+                    ondatachange={(addr) => (lastDataAddr = addr)}
+                    onrunToCursor={(addr) => dbg?.runToCursor(addr)}
+                />
             </div>
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div class="debugger-terminal" onclick={() => { canvasFocused = false; terminal?.focus(); }}>
-                <Terminal bind:this={terminal} onrun={(cmd) => dbg?.run(cmd)} />
+            <div class="debugger-bps" onclick={() => (canvasFocused = false)}>
+                {#if dbg!}
+                    <BreakpointEditor
+                        dbg={dbg!}
+                        {paused}
+                        ongo={() => dbg!.go()}
+                        onpause={() => { machine!.pause(true); disassemblerRef?.refresh(); }}
+                        onstep={() => dbg!.step()}
+                        onstepover={() => dbg!.stepOver()}
+                        onstepout={() => dbg!.stepOut()}
+                    />
+                {/if}
             </div>
         </div>
     {/if}
@@ -778,7 +839,7 @@
         width: fit-content;
         height: fit-content;
         cursor: pointer;
-        border: 2px solid transparent;
+        border: 2px solid #333;
     }
     .canvas-placeholder {
         flex: 1;
@@ -806,11 +867,17 @@
         overflow: auto;
         border-left: 1px solid #333;
     }
-    .debugger-terminal {
+    .debugger-bps {
         grid-row: 2;
         grid-column: 1;
-        overflow: auto;
+        overflow: hidden;
         border-top: 1px solid #333;
+        min-height: 0;
+        display: flex;
+    }
+    .debugger-bps > :global(*) {
+        flex: 1;
+        min-height: 0;
     }
     .dimmed {
         opacity: 0.6;

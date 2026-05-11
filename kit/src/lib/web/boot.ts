@@ -37,7 +37,6 @@ export class UI {
     screenshot_count = 1;
     memory_snapshot_name = "rk86-memory";
     memory_snapshot_count = 1;
-    terminal!: { put: (str: string) => void; history: string[] };
     i8080disasm: unknown;
     visualizer: unknown;
     visualizer_visible = false;
