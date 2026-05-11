@@ -409,6 +409,9 @@
         <a href="/web/" target="_blank" rel="noopener" class="icon" data-text="Веб-компоненты">
             <img class="icon" src="i/web.svg" alt="Веб-компоненты" />
         </a>
+        <a href="https://hub.rk86.ru" target="_blank" rel="noopener" class="icon" data-text="Хаб">
+            <img class="icon" src="i/hub.svg" alt="Хаб" />
+        </a>
         <a
             href="https://donate.stripe.com/eVa9ATeZr18u2o8289"
             target="_blank"
