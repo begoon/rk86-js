@@ -198,13 +198,47 @@ on every build/dev.
   requirement).
 - `$lib` alias points to `src/lib/`.
 - Debugger mode: combined view with 1:1 canvas (top-left),
-  disassembler (right), console (below). Canvas click focuses
-  keyboard input to emulator; clicking disassembler/console
-  redirects input there.
+  disassembler (right), breakpoint editor (bottom-left). Canvas
+  click focuses keyboard input to emulator; clicking
+  disassembler/breakpoint editor redirects input there. Canvas
+  wrap shows a thin grey border, switches to green on hover/focus.
 - Floating panels (visualizer, keyboard) are non-modal, draggable
   Svelte components.
-- Disassembler and Terminal are embedded-only (no standalone
-  floating mode).
+- Disassembler is embedded-only (no standalone floating mode);
+  there is no CLI/console.
+- Debugger is a programmatic GUI debugger (`rk86_debugger.ts`),
+  not a CLI. Public surface: `add`/`update`/`remove`/`toggleExecAt`,
+  `step`/`stepOver`/`stepOut`/`runToCursor`/`go`, `attach`/`detach`,
+  `subscribe(listener)`. Breakpoint shape: `{id, type:
+  exec|read|write|opcode, address, length, count, hits, temp,
+  active}`. `temp` bps are removed on hit (used by step-over /
+  step-out / run-to-cursor). Persisted in `localStorage` under
+  `rk86:debugger:breakpoints` (schema-versioned; `temp` and
+  `hits` excluded).
+- Tracer attaches only while the debugger panel is visible —
+  zero perf cost otherwise. `+page.svelte#toggleDebugger`
+  calls `dbg.attach()` / `dbg.detach()`. `attach()` sets
+  `runner.tracer` (per-instruction before/after) and
+  `memory.tracer` (per-access for read/write breakpoints).
+- Memory tracer fires from `memory.read()`/`write()` only — NOT
+  from `read_raw`/`write_raw`, so debugger panel edits and
+  snapshot loads do not trip breakpoints. Per-access tracing
+  catches every read/write of multi-byte instructions (e.g.
+  `LHLD`, `PUSH`, `MVI M`); relying on `last_access_address`
+  would only catch the last access of each instruction.
+- Disassembler keyboard shortcuts (debugger-visible only): F5
+  Go/Pause, F10 Step Over, F11 Step, Shift+F11 Step Out, F9
+  toggle exec bp at cursor, Ctrl+F10 Run to cursor. Inside hex
+  edit fields: Tab/Shift+Tab advance to next/prev byte, Enter
+  commits, Esc cancels.
+- Disassembler code+data row counts autosize via ResizeObserver
+  (pane `clientHeight / line height`), with the regs row pinned
+  in the middle by flexbox (`.disasm` flex column, panes
+  `flex: 1 1 0`). Data view shows 16 bytes per row.
+- Frozen states live in IndexedDB (`rk86` db, `freezes` store)
+  via `kit/src/lib/web/freeze_store.ts` — not localStorage,
+  because each freeze (snapshot JSON + PNG thumbnail) easily
+  exceeds the 5 MB localStorage cap. Cap: 20 entries.
 - Assembler is the standalone asm8 playground under `static/asm/`
   (drop-in of `asm8/docs/`). The toolbar "Ассемблер" button opens
   `{base}/asm/` in a new tab. Example `.asm` files live at
@@ -227,7 +261,9 @@ on every build/dev.
 - `asm8080` npm package (which is asm8) is also used by the terminal
   to assemble `.asm` files at load time.
 - UI state from engine callbacks flows through `state.svelte.ts`
-  (reactive `$state` object).
+  (reactive `$state` object). Two stores: `ui` (general
+  engine-driven status) and `debuggerState` (mirror of
+  `debugger.breaks` plus visibility flag).
 - Machine methods (`reset`, `restart`, `pause`, `loadCatalogFile`,
   `runLoadedFile`, `uploadFile`) are assigned in `boot.ts`.
   `runLoadedFile` injects `G<addr>Enter` via `simulate_keyboard`
