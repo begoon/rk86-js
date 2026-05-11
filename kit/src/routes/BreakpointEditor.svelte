@@ -78,6 +78,7 @@
     }
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="bp-editor" onkeydown={(e) => e.stopPropagation()} onkeyup={(e) => e.stopPropagation()}>
     <div class="toolbar">
         {#if paused}

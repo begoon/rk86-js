@@ -630,6 +630,7 @@
 
 {#if menu}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div class="context-menu" style="left: {menu.x}px; top: {menu.y}px" onclick={(e) => e.stopPropagation()}>
         <button type="button" onclick={() => { toggleBpAt(menu!.addr); closeMenu(); }}>
             {execBpAt(menu.addr) ? "Удалить точку останова" : "Поставить точку останова"} (F9)
