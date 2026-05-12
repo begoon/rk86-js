@@ -40,6 +40,13 @@
     $effect(() => { if (zoomImages.length > 0) overlayEl?.focus(); });
 </script>
 
+<svelte:head>
+    <style>
+        html { scrollbar-gutter: stable; }
+        body { background-color: white; color: #333; }
+    </style>
+</svelte:head>
+
 <main>
     <h1 id="top">Каталог программ для Радио-86РК</h1>
     <div class="search-bar">
@@ -127,13 +134,6 @@
 {/if}
 
 <style>
-    :global(html) {
-        scrollbar-gutter: stable;
-    }
-    :global(body) {
-        background-color: white;
-        color: #333;
-    }
     main {
         max-width: 1000px;
         margin: 0 auto;
