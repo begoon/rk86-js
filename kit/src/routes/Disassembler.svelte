@@ -40,6 +40,36 @@
     let codeAddr = $state("0000");
     let codeLines = $state(22);
 
+    type CondInfo = { flag: "sf" | "zf" | "pf" | "cf"; name: string; want: 0 | 1 };
+
+    function conditionFor(cmd: string): CondInfo | null {
+        switch (cmd) {
+            case "JNZ": case "CNZ": case "RNZ": return { flag: "zf", name: "Z", want: 0 };
+            case "JZ":  case "CZ":  case "RZ":  return { flag: "zf", name: "Z", want: 1 };
+            case "JNC": case "CNC": case "RNC": return { flag: "cf", name: "C", want: 0 };
+            case "JC":  case "CC":  case "RC":  return { flag: "cf", name: "C", want: 1 };
+            case "JPO": case "CPO": case "RPO": return { flag: "pf", name: "P", want: 0 };
+            case "JPE": case "CPE": case "RPE": return { flag: "pf", name: "P", want: 1 };
+            case "JP":  case "CP":  case "RP":  return { flag: "sf", name: "S", want: 0 };
+            case "JM":  case "CM":  case "RM":  return { flag: "sf", name: "S", want: 1 };
+            default: return null;
+        }
+    }
+
+    function jumpArrow(fromAddr: number, target: number): string {
+        target &= 0xffff;
+        if (target > fromAddr) return "↓";
+        if (target < fromAddr) return "↑";
+        return "↻";
+    }
+
+    function returnAddress(): number {
+        const sp = cpu.sp;
+        const lo = memory.read_raw(sp);
+        const hi = memory.read_raw(wrap(sp + 1));
+        return (hi << 8) | lo;
+    }
+
     // svelte-ignore state_referenced_locally
     let dataAddr = $state(initialDataAddr);
     let dataLines = $state(12);
@@ -550,6 +580,50 @@
                         <span class="arg-data" onclick={(e) => { e.stopPropagation(); gotoDataCentered(parseInt(line.instr.arg2!, 16)); }}>{line.instr.arg2}</span>
                     {:else}<span>{line.instr.arg2}</span>{/if}{/if}
                 </span>
+                {#if line.instr.cmd === "JMP" || line.instr.cmd === "CALL"}
+                    <span class="hint">
+                        <span class="cond-take">{jumpArrow(line.addr, parseInt(line.instr.arg1!, 16))}</span>
+                    </span>
+                {:else if line.instr.cmd === "RET"}
+                    {@const retAddr = returnAddress()}
+                    <span class="hint">
+                        <span class="memval">[{hex16(retAddr)}]</span>
+                        <span class="cond-take">{jumpArrow(line.addr, retAddr)}</span>
+                    </span>
+                {:else if conditionFor(line.instr.cmd)}
+                    {@const cond = conditionFor(line.instr.cmd)!}
+                    {@const current = regsView[cond.flag]}
+                    {@const taken = current === cond.want}
+                    {@const isJumpOrCall = line.instr.cmd.startsWith("J") || line.instr.cmd.startsWith("C")}
+                    {@const isRet = line.instr.cmd.startsWith("R")}
+                    <span class="hint">
+                        <span class={current ? "flag-set" : "flag-unset"}>{cond.name}={current}</span>
+                        {#if taken && isJumpOrCall}
+                            <span class="cond-take">{jumpArrow(line.addr, parseInt(line.instr.arg1!, 16))}</span>
+                        {:else if taken && isRet}
+                            {@const retAddr = returnAddress()}
+                            <span class="memval">[{hex16(retAddr)}]</span>
+                            <span class="cond-take">{jumpArrow(line.addr, retAddr)}</span>
+                        {:else if taken}
+                            <span class="cond-take">✓</span>
+                        {:else}
+                            <span class="cond-skip">✗</span>
+                        {/if}
+                    </span>
+                {:else if line.instr.cmd === "LDA" || line.instr.cmd === "STA"}
+                    {@const target = parseInt(line.instr.arg1!, 16) & 0xffff}
+                    <span class="hint">
+                        <span class="memval">[{hex8(memory.read_raw(target))}]</span>
+                    </span>
+                {:else if line.instr.cmd === "LHLD" || line.instr.cmd === "SHLD" || line.instr.cmd === "LXI"}
+                    {@const addrHex = line.instr.cmd === "LXI" ? line.instr.arg2 : line.instr.arg1}
+                    {@const target = parseInt(addrHex!, 16) & 0xffff}
+                    {@const lo = memory.read_raw(target)}
+                    {@const hi = memory.read_raw(wrap(target + 1))}
+                    <span class="hint">
+                        <span class="memval">[{hex16((hi << 8) | lo)}]</span>
+                    </span>
+                {/if}
             </div>
         {/each}
     </div>
@@ -908,6 +982,26 @@
     }
     .arg-code:hover, .arg-data:hover {
         text-decoration: underline;
+    }
+    .args {
+        display: inline-block;
+        min-width: 9ch;
+    }
+    .hint {
+        margin-left: 6px;
+    }
+    .hint::before {
+        content: "; ";
+        color: #777;
+    }
+    .cond-take {
+        color: #6c6;
+    }
+    .cond-skip {
+        color: #555;
+    }
+    .memval {
+        color: #88c0d0;
     }
     .context-menu {
         position: fixed;
