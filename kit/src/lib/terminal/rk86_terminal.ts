@@ -560,7 +560,6 @@ function printHelp() {
 Опции:
   -v                       версия
   -h                       справка
-  -l                       список файлов из каталога
   -m <файл>                монитор (по умолчанию: встроенный mon32.bin)
   -p                       загрузить файл без запуска
   -g <адрес>               адрес запуска (несовместим с -p)
@@ -586,30 +585,12 @@ function printHelp() {
   bunx rk86 -m mon16.bin             запуск с другим монитором
   bunx rk86 --exit-halt prog.bin     выход при HLT
   bunx rk86 --exit-address prog.bin  выход при JMP FFFEh
-  bunx rk86 -l                       список известных файлов
   bunx rk86 --exit-halt prog.asm     собрать и запустить .asm файл
   bunx rk86 -g 0x100 prog.bin        запуск с адреса 100h
 
 Управление:
   Ctrl+C       выход
   Ctrl+<буква> СС + <буква> (например Ctrl+A = СС+A)`);
-}
-
-function htmlToAnsi(html: string): string {
-    return html
-        .replace(/<a\s+href="([^"]*)"[^>]*>(.*?)<\/a>/g, (_m, url, text) => `\x1b]8;;${url}\x1b\\${text}\x1b]8;;\x1b\\`)
-        .replace(/<[^>]*>/g, "")
-        .replace(/\n+/g, " ")
-        .trim();
-}
-
-async function listFiles() {
-    const { catalog } = await import("../catalog_data.js");
-    for (const entry of catalog) {
-        const title = htmlToAnsi(entry.title);
-        const desc = entry.description ? ` — ${htmlToAnsi(entry.description)}` : "";
-        console.log(`\x1b[33m${entry.name.padEnd(20)}\x1b[0m ${title}${desc}`);
-    }
 }
 
 // --- Main ---
@@ -688,11 +669,6 @@ async function main() {
 
     if (flag(args, "-h") || flag(args, "--help")) {
         printHelp();
-        process.exit(0);
-    }
-
-    if (flag(args, "-l") || flag(args, "--list")) {
-        await listFiles();
         process.exit(0);
     }
 
