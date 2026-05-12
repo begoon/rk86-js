@@ -5,6 +5,11 @@ export interface ExecuteOptions {
     terminate_address?: number;
     on_terminate?: () => void;
     exit_on_halt?: boolean;
+    // Web trap: fired right after an HLT executes (PC has been pinned back
+    // to the HLT opcode by the CPU). Return true to stop the batch (callback
+    // is expected to have paused the runner); return false/void to keep
+    // running (HLT will pin PC and effectively spin in place).
+    on_halt?: () => boolean | void;
     on_batch_complete?: () => void;
     // Run many batches back-to-back per macrotask, yielding with setTimeout(0)
     // between calls. Tests see the same per-tick behavior (on_batch_complete
@@ -63,7 +68,7 @@ export class Runner {
     }
 
     execute(options: ExecuteOptions = {}) {
-        const { terminate_address, on_terminate, exit_on_halt, on_batch_complete, turbo } = options;
+        const { terminate_address, on_terminate, exit_on_halt, on_halt, on_batch_complete, turbo } = options;
         clearTimeout(this.execute_timer);
         const bursts = turbo ? 100 : 1;
         for (let burst = 0; burst < bursts; burst++) {
@@ -96,9 +101,12 @@ export class Runner {
                     on_terminate?.();
                     return;
                 }
-                if (exit_on_halt && this.machine.memory.read_raw(this.machine.cpu.pc) === 0x76) {
-                    on_terminate?.();
-                    return;
+                if (this.machine.memory.read_raw(this.machine.cpu.pc) === 0x76) {
+                    if (exit_on_halt) {
+                        on_terminate?.();
+                        return;
+                    }
+                    if (on_halt && on_halt()) return;
                 }
             }
             const now = performance.now();

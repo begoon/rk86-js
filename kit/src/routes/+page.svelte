@@ -117,6 +117,9 @@
                 memoryMapRef?.refresh();
                 cursorInfoRef?.refresh();
             };
+            m.ui.openDebugger = () => {
+                if (!debuggerVisible) toggleDebugger();
+            };
             machine = m;
             dbg = new Debugger(machine);
             dbg.subscribe((bps) => {

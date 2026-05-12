@@ -43,6 +43,8 @@ export class UI {
     on_visualizer_hit: ((opcode: number) => void) | undefined;
     on_pause_changed: ((value: boolean) => void) | undefined;
     refreshDebugger: (() => void) | undefined;
+    openDebugger: (() => void) | undefined;
+    trapOnHalt = true;
 
     constructor(machine: Machine, canvas: HTMLCanvasElement) {
         this.machine = machine;
@@ -462,7 +464,15 @@ export async function main(host: HostCallbacks) {
         await loadAutoexecFile(auto_load);
     }
 
-    machine.runner.execute();
+    machine.runner.execute({
+        on_halt: () => {
+            if (!machine.ui.trapOnHalt) return false;
+            machine.log(`HLT @ ${machine.cpu.pc.toString(16).padStart(4, "0")} — открыт отладчик`);
+            machine.pause(true);
+            machine.ui.openDebugger?.();
+            return true;
+        },
+    });
 
     if ((auto_run || handoff_url) && ui.selectedFile) {
         // Route through the monitor's G command (same path as the toolbar
