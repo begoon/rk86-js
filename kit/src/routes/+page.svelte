@@ -497,19 +497,19 @@
             <button
                 type="button"
                 class="icon"
-                data-text="Визуализатор WAV-лент"
-                onclick={openTape}
-            >
-                <img class="icon" src="i/tape.svg" alt="Визуализатор WAV-лент" />
-            </button>
-            <button
-                type="button"
-                class="icon"
                 class:active={debuggerVisible}
                 data-text="Отладчик"
                 onclick={toggleDebugger}
             >
                 <img class="icon" src="i/debug.svg" alt="Отладчик" />
+            </button>
+            <button
+                type="button"
+                class="icon"
+                data-text="Визуализатор WAV-лент"
+                onclick={openTape}
+            >
+                <img class="icon" src="i/tape.svg" alt="Визуализатор WAV-лент" />
             </button>
             <button
                 type="button"
@@ -811,6 +811,8 @@
     #footer {
         box-sizing: border-box;
         display: flex;
+        align-items: center;
+        gap: 4px;
         width: 100%;
         padding: 8px;
         flex-shrink: 0; /* do not shrink header/footer */
