@@ -67,6 +67,7 @@
 </script>
 
 <div class="mem-map-wrap">
+    <div class="label">Карта памяти</div>
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <canvas
@@ -99,6 +100,11 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 4px;
+    }
+    .label {
+        font-family: monospace;
+        font-size: small;
+        color: #888;
     }
     canvas.mem-map {
         width: 256px;
