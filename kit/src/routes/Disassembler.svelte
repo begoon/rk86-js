@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { i8080_opcode, type I8080Instruction } from "$lib/core/i8080_disasm";
+    import { i8080_opcode, i8080_cycles, type I8080Instruction } from "$lib/core/i8080_disasm";
 
     import type { I8080 } from "$lib/core/i8080";
     import type { Memory } from "$lib/core/rk86_memory";
@@ -123,6 +123,11 @@
     let revision = $state(0);
 
     export function refresh() {
+        prevSnapshot = {
+            a: regsView.a, fByte: regsView.fByte,
+            bc: regsView.bc, de: regsView.de, hl: regsView.hl,
+            sp: regsView.sp, psw: regsView.psw,
+        };
         const p = pc();
         if (!pcVisible(p)) {
             codeAddr = hex16(walkBack(p, Math.floor(codeLines / 2)));
@@ -214,12 +219,18 @@
         return lines;
     });
 
+    type RegsSnapshot = { a: number; fByte: number; bc: number; de: number; hl: number; sp: number; psw: number };
+    let prevSnapshot = $state<RegsSnapshot | null>(null);
+
     // Regs are also a $derived value so flag/register edits repaint.
     const regsView = $derived.by(() => {
         revision; // dependency
         const r = cpu.regs;
+        const a = r[7];
+        const sf = cpu.sf, zf = cpu.zf, hf = cpu.hf, pf = cpu.pf, cf = cpu.cf;
+        const fByte = (sf << 7) | (zf << 6) | (hf << 4) | (pf << 2) | 0x02 | cf;
         return {
-            a: r[7],
+            a,
             b: r[0],
             c: r[1],
             d: r[2],
@@ -231,27 +242,42 @@
             hl: (r[4] << 8) | r[5],
             sp: cpu.sp,
             pc: cpu.pc,
-            sf: cpu.sf,
-            zf: cpu.zf,
-            hf: cpu.hf,
-            pf: cpu.pf,
-            cf: cpu.cf,
+            sf, zf, hf, pf, cf,
             iff: cpu.iff,
+            fByte,
+            psw: (a << 8) | fByte,
+        };
+    });
+
+    const changes = $derived.by(() => {
+        const r = regsView;
+        const p = prevSnapshot;
+        if (!p) return { a: false, f: false, bc: false, de: false, hl: false, sp: false, psw: false };
+        return {
+            a: r.a !== p.a,
+            f: r.fByte !== p.fByte,
+            bc: r.bc !== p.bc,
+            de: r.de !== p.de,
+            hl: r.hl !== p.hl,
+            sp: r.sp !== p.sp,
+            psw: r.psw !== p.psw,
         };
     });
 
     const stackView = $derived.by(() => {
         revision; // dependency
         const sp = cpu.sp;
-        const start = wrap(sp - 10);
+        const start = wrap(sp - 8);
         const out: { addr: number; lo: number; hi: number; word: number; isSP: boolean }[] = [];
-        for (let j = 0; j < 14; j += 2) {
+        for (let j = 0; j < 12; j += 2) {
             const addr = wrap(start + j);
             const lo = memory.read_raw(addr);
             const hi = memory.read_raw(wrap(addr + 1));
             out.push({ addr, lo, hi, word: (hi << 8) | lo, isSP: addr === sp });
         }
-        return { start, items: out };
+        const spLo = memory.read_raw(sp);
+        const spHi = memory.read_raw(wrap(sp + 1));
+        return { start, items: out, spLo, spHi, spWord: (spHi << 8) | spLo };
     });
 
     function codeShift(direction: number, one = false) {
@@ -514,12 +540,9 @@
         <button type="button" onclick={() => revision++} data-text="Перейти по адресу">▶</button>
         <button type="button" onclick={() => codeShift(1, true)}>›</button>
         <button type="button" onclick={() => codeShift(1)}>»</button>
-        <button
-            type="button"
-            onclick={goCodePC}
-            style="margin-left: 4px; text-decoration: underline"
-            data-text="Перейти на PC">PC</button
-        >
+        <span class="pc-jump" data-text="Перейти на PC">
+            PC:<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-link" onclick={goCodePC}>{hex16(regsView.pc)}</span>
+        </span>
     </div>
     <hr />
     <div class="code pane" bind:this={codePane}>
@@ -528,6 +551,9 @@
             {@const isCursor = line.addr === cursorAddr}
             {@const hasBp = execBpAt(line.addr)}
             {@const isFlashCode = codeFlashAddr !== null && codeFlashAddr >= line.addr && codeFlashAddr < line.addr + line.instr.length}
+            {@const condInfo = conditionFor(line.instr.cmd)}
+            {@const condTaken = condInfo ? regsView[condInfo.flag] === condInfo.want : undefined}
+            {@const cycles = i8080_cycles(line.bytes[0], condTaken ?? true)}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
             <div
@@ -591,81 +617,89 @@
                         <span class="arg-data" onclick={(e) => { e.stopPropagation(); gotoDataCentered(parseInt(line.instr.arg2!, 16)); }}>{line.instr.arg2}</span>
                     {:else}<span>{line.instr.arg2}</span>{/if}{/if}
                 </span>
-                {#if line.instr.cmd === "JMP" || line.instr.cmd === "CALL"}
-                    <span class="hint">
+                <span class="hint">
+                    {#if line.instr.cmd === "JMP" || line.instr.cmd === "CALL"}
                         <span class="cond-take">{jumpArrow(line.addr, parseInt(line.instr.arg1!, 16))}</span>
-                    </span>
-                {:else if line.instr.cmd === "RET"}
-                    {@const retAddr = returnAddress()}
-                    <span class="hint">
+                    {:else if line.instr.cmd === "RET"}
+                        {@const retAddr = returnAddress()}
                         <span class="memval">[{hex16(retAddr)}]</span>
                         <span class="cond-take">{jumpArrow(line.addr, retAddr)}</span>
-                    </span>
-                {:else if conditionFor(line.instr.cmd)}
-                    {@const cond = conditionFor(line.instr.cmd)!}
-                    {@const current = regsView[cond.flag]}
-                    {@const taken = current === cond.want}
-                    {@const isJumpOrCall = line.instr.cmd.startsWith("J") || line.instr.cmd.startsWith("C")}
-                    {@const isRet = line.instr.cmd.startsWith("R")}
-                    <span class="hint">
-                        <span class={current ? "flag-set" : "flag-unset"}>{cond.name}={current}</span>
-                        {#if taken && isJumpOrCall}
+                    {:else if condInfo}
+                        {@const isJumpOrCall = line.instr.cmd.startsWith("J") || line.instr.cmd.startsWith("C")}
+                        {@const isRet = line.instr.cmd.startsWith("R")}
+                        <span class={condTaken ? "flag-set" : "flag-unset"}>{condInfo.name}={regsView[condInfo.flag]}</span>
+                        {#if condTaken && isJumpOrCall}
                             <span class="cond-take">{jumpArrow(line.addr, parseInt(line.instr.arg1!, 16))}</span>
-                        {:else if taken && isRet}
+                        {:else if condTaken && isRet}
                             {@const retAddr = returnAddress()}
                             <span class="memval">[{hex16(retAddr)}]</span>
                             <span class="cond-take">{jumpArrow(line.addr, retAddr)}</span>
-                        {:else if taken}
+                        {:else if condTaken}
                             <span class="cond-take">✓</span>
                         {:else}
                             <span class="cond-skip">✗</span>
                         {/if}
-                    </span>
-                {:else if line.instr.cmd === "LDA" || line.instr.cmd === "STA"}
-                    {@const target = parseInt(line.instr.arg1!, 16) & 0xffff}
-                    <span class="hint">
+                    {:else if line.instr.cmd === "LDA" || line.instr.cmd === "STA"}
+                        {@const target = parseInt(line.instr.arg1!, 16) & 0xffff}
                         <span class="memval">[{hex8(memory.read_raw(target))}]</span>
-                    </span>
-                {:else if line.instr.cmd === "LHLD" || line.instr.cmd === "SHLD" || line.instr.cmd === "LXI"}
-                    {@const addrHex = line.instr.cmd === "LXI" ? line.instr.arg2 : line.instr.arg1}
-                    {@const target = parseInt(addrHex!, 16) & 0xffff}
-                    {@const lo = memory.read_raw(target)}
-                    {@const hi = memory.read_raw(wrap(target + 1))}
-                    <span class="hint">
+                    {:else if line.instr.cmd === "LHLD" || line.instr.cmd === "SHLD" || line.instr.cmd === "LXI"}
+                        {@const addrHex = line.instr.cmd === "LXI" ? line.instr.arg2 : line.instr.arg1}
+                        {@const target = parseInt(addrHex!, 16) & 0xffff}
+                        {@const lo = memory.read_raw(target)}
+                        {@const hi = memory.read_raw(wrap(target + 1))}
                         <span class="memval">[{hex16((hi << 8) | lo)}]</span>
-                    </span>
-                {:else if line.instr.arg1 === "M" || line.instr.arg2 === "M"}
-                    {@const hl = regsView.hl}
-                    <span class="hint">
+                    {:else if line.instr.arg1 === "M" || line.instr.arg2 === "M"}
+                        {@const hl = regsView.hl}
                         <span class="memval">HL={hex16(hl)}=[{hex8(memory.read_raw(hl))}]</span>
-                    </span>
-                {:else if hasImm8(line.instr.cmd) && line.bytes[1] >= 32 && line.bytes[1] <= 126}
-                    <span class="hint">
+                    {:else if hasImm8(line.instr.cmd) && line.bytes[1] >= 32 && line.bytes[1] <= 126}
                         <span class="memval">'{String.fromCharCode(line.bytes[1])}'</span>
-                    </span>
-                {/if}
+                    {/if}
+                    <span class="cycles">{cycles}t</span>
+                </span>
             </div>
         {/each}
     </div>
     <hr />
     <div class="registers">
-        {@render reg8("A", regsView.a)}
+        {@render reg8("A", regsView.a, changes.a)}
+        <span class="reg-binary">[{regsView.a.toString(2).padStart(8, "0")}]</span>
         <span class="flags">
-            F:{@render flag("S", regsView.sf, () => toggleFlag("sf"))}{@render flag("Z", regsView.zf, () => toggleFlag("zf"))}<span class="flag-unused">_</span>{@render flag("H", regsView.hf, () => toggleFlag("hf"))}<span class="flag-unused">_</span>{@render flag("P", regsView.pf, () => toggleFlag("pf"))}<span class="flag-unused">_</span>{@render flag("C", regsView.cf, () => toggleFlag("cf"))}
+            <span class="reg-label" class:changed={changes.f}>F</span>:{@render flag("S", regsView.sf, () => toggleFlag("sf"))}{@render flag("Z", regsView.zf, () => toggleFlag("zf"))}<span class="flag-unused">0</span>{@render flag("H", regsView.hf, () => toggleFlag("hf"))}<span class="flag-unused">0</span>{@render flag("P", regsView.pf, () => toggleFlag("pf"))}<span class="flag-unused">1</span>{@render flag("C", regsView.cf, () => toggleFlag("cf"))}
+            <span class="reg-binary">[{hex8(regsView.fByte)}]</span>
+            <span class="psw"><span class="reg-label" class:changed={changes.psw}>PSW</span>:{hex16(regsView.psw)}</span>
             <span class="iff">{@render flag("I", regsView.iff, () => toggleFlag("iff"))}</span>
         </span>
-        {@render reg16("BC", regsView.bc)}
-        {@render reg16("DE", regsView.de)}
-        {@render reg16("HL", regsView.hl)}
-        {@render reg16("SP", regsView.sp, true)}
-        {@render reg16("PC", regsView.pc)}
         <br />
-        <span class="stack">
-            SP(<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-link" onclick={() => gotoData(stackView.start)}>{hex16(stackView.start)}</span>):
-            {#each stackView.items as it}
+        {@render reg16("BC", regsView.bc, false, true, false, changes.bc)}
+        {@render reg16("DE", regsView.de, false, true, false, changes.de)}
+        {@render reg16("HL", regsView.hl, false, true, true, changes.hl)}
+        <span class="reg-pair">
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <span class="reg-name" class:changed={changes.sp} onclick={() => gotoDataCentered(regsView.sp)}>SP</span>:{#if editingReg === "SP"}
+                <input
+                    class="reg-edit reg-edit-16"
+                    type="text"
+                    maxlength="4"
+                    bind:value={editingRegValue}
+                    use:autofocus
+                    onblur={() => commitRegEdit("SP")}
+                    onkeydown={(e) => onRegInputKey(e, "SP")}
+                />
+            {:else}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <span class="reg-link" class:sp-marker={it.isSP} onclick={() => gotoCode(it.word)}>{hex8(it.lo)}&nbsp;{hex8(it.hi)}</span>
+                <span class="reg-value reg-value-16 highlight" onclick={() => startRegEdit("SP", regsView.sp, 4)}>{hex16(regsView.sp)}</span>
+            {/if}<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-peek">[<span class="reg-link" onclick={() => gotoCode(stackView.spWord)}>{hex8(stackView.spLo)}{hex8(stackView.spHi)}</span>]</span>
+        </span>
+        <br />
+        <span class="stack">
+            {#each stackView.items as it}
+                <span class="stack-pair" class:sp-marker={it.isSP}>
+                    <!-- svelte-ignore a11y_click_events_have_key_events -->
+                    <!-- svelte-ignore a11y_no_static_element_interactions -->
+                    <span class="reg-link" onclick={() => gotoData(it.addr)}>{hex16(it.addr)}</span>:<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-link" onclick={() => gotoCode(it.word)}>{hex8(it.lo)}{hex8(it.hi)}</span>
+                </span>
             {/each}
         </span>
     </div>
@@ -734,8 +768,8 @@
     </div>
 {/if}
 
-{#snippet reg8(name: string, value: number)}
-    <span class="reg-pair">{name}:{#if editingReg === name}
+{#snippet reg8(name: string, value: number, changed = false)}
+    <span class="reg-pair"><span class="reg-label" class:changed>{name}</span>:{#if editingReg === name}
         <input
             class="reg-edit reg-edit-8"
             type="text"
@@ -752,12 +786,13 @@
     {/if}</span>
 {/snippet}
 
-{#snippet reg16(name: string, value: number, highlight = false)}
+{#snippet reg16(name: string, value: number, highlight = false, showPeek = false, showPeek16 = false, changed = false)}
     <span class="reg-pair">
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <span
             class="reg-name"
+            class:changed
             onclick={() => {
                 if (name === "PC") gotoCodeCentered(value);
                 else gotoDataCentered(value);
@@ -776,7 +811,7 @@
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <span class="reg-value reg-value-16" class:highlight onclick={() => startRegEdit(name, value, 4)}>{hex16(value)}</span>
-    {/if}</span>
+    {/if}{#if showPeek} <span class="reg-peek">[{hex8(memory.read_raw(value & 0xffff))}]</span>{/if}{#if showPeek16}<span class="reg-peek">[{hex16((memory.read_raw(wrap((value & 0xffff) + 1)) << 8) | memory.read_raw(value & 0xffff))}]</span>{/if}</span>
 {/snippet}
 
 {#snippet flag(ch: string, bit: number, toggle: () => void)}
@@ -816,6 +851,10 @@
     }
     .reg-name:hover {
         text-decoration: underline;
+    }
+    .reg-label.changed,
+    .reg-name.changed {
+        color: #f55;
     }
     .reg-value,
     .reg-edit {
@@ -869,13 +908,14 @@
         color: #666;
     }
     :global(.flag-unused) {
-        color: #444;
+        color: #888;
+        padding: 0 1px;
     }
     .iff {
         margin-left: 6px;
     }
-    .stack .reg-link {
-        margin-right: 4px;
+    .stack-pair {
+        margin-right: 6px;
     }
     .reg-link {
         color: lightblue;
@@ -884,7 +924,7 @@
     .reg-link:hover {
         text-decoration: underline;
     }
-    .sp-marker {
+    .sp-marker .reg-link {
         color: #ffcc00;
     }
     .toolbar {
@@ -1022,6 +1062,25 @@
     }
     .memval {
         color: #88c0d0;
+    }
+    .reg-peek {
+        color: #88c0d0;
+    }
+    .reg-binary {
+        color: #88c0d0;
+        margin-right: 6px;
+    }
+    .psw {
+        color: #ccc;
+        margin-right: 6px;
+    }
+    .cycles {
+        color: #888;
+    }
+    .pc-jump {
+        margin-left: 6px;
+        font-family: monospace;
+        color: #ccc;
     }
     .context-menu {
         position: fixed;
