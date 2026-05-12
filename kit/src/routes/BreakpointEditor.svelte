@@ -82,13 +82,13 @@
 <div class="bp-editor" onkeydown={(e) => e.stopPropagation()} onkeyup={(e) => e.stopPropagation()}>
     <div class="toolbar">
         {#if paused}
-            <button type="button" class="run" data-text="Продолжить (F5)" onclick={ongo}>▶ Go</button>
+            <button type="button" class="run" data-text="Продолжить (F5)" onclick={ongo}>▶ Пуск</button>
         {:else}
-            <button type="button" data-text="Остановить (F5)" onclick={onpause}>⏸ Pause</button>
+            <button type="button" data-text="Остановить (F5)" onclick={onpause}>⏸ Пауза</button>
         {/if}
-        <button type="button" disabled={!paused} data-text="Шаг (F11)" onclick={onstep}>⤼ Step</button>
-        <button type="button" disabled={!paused} data-text="Шаг через (F10)" onclick={onstepover}>⤽ Over</button>
-        <button type="button" disabled={!paused} data-text="Выход из подпрограммы (Shift+F11)" onclick={onstepout}>⤴ Out</button>
+        <button type="button" disabled={!paused} data-text="Шаг (F11)" onclick={onstep}>⤼ Шаг</button>
+        <button type="button" disabled={!paused} data-text="Шаг через (F10)" onclick={onstepover}>⤽ Через</button>
+        <button type="button" disabled={!paused} data-text="Выход из подпрограммы (Shift+F11)" onclick={onstepout}>⤴ Выход</button>
         <span class="spacer"></span>
         <button type="button" onclick={addNew}>+ Точка останова</button>
     </div>
