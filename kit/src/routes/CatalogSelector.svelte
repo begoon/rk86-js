@@ -7,30 +7,86 @@
     let {
         onrun,
         onload,
+        ondebug,
         onclose,
     }: {
         onrun: (name: string) => void;
         onload: (name: string) => void;
+        ondebug: (name: string, entry: number) => void;
         onclose: () => void;
     } = $props();
 
     const files = tape_catalog();
     const byName = new Map(catalog.map((e) => [e.name, e]));
 
+    const RECENT_KEY = "rk86:catalog:recent-files";
+    const RECENT_FIRST_KEY = "rk86:catalog:recent-first";
+    const RECENT_CAP = 30;
+
+    function loadRecents(): string[] {
+        try {
+            const raw = localStorage.getItem(RECENT_KEY);
+            if (!raw) return [];
+            const arr = JSON.parse(raw);
+            return Array.isArray(arr) ? arr.filter((x) => typeof x === "string") : [];
+        } catch {
+            return [];
+        }
+    }
+
+    function loadRecentFirst(): boolean {
+        const v = localStorage.getItem(RECENT_FIRST_KEY);
+        return v === null ? true : v === "1";
+    }
+
+    let recents = $state<string[]>([]);
+    let recentFirst = $state(true);
+
+    function pushRecent(name: string) {
+        const next = [name, ...recents.filter((n) => n !== name)].slice(0, RECENT_CAP);
+        recents = next;
+        try {
+            localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+        } catch {}
+    }
+
+    $effect(() => {
+        try {
+            localStorage.setItem(RECENT_FIRST_KEY, recentFirst ? "1" : "0");
+        } catch {}
+    });
+
     let selectedIndex = $state(0);
     let filter = $state("");
     let filterInput = $state<HTMLInputElement>();
 
-    onMount(() => filterInput?.focus());
+    onMount(() => {
+        recents = loadRecents();
+        recentFirst = loadRecentFirst();
+        filterInput?.focus();
+    });
 
     export function focus() {
         filterInput?.focus();
     }
 
+    const ordered = $derived.by(() => {
+        if (!recentFirst) return files;
+        const fileSet = new Set(files);
+        const recentInFiles = recents.filter((n) => fileSet.has(n));
+        const recentSet = new Set(recentInFiles);
+        const rest = files.filter((n) => !recentSet.has(n));
+        return [...recentInFiles, ...rest];
+    });
+
+    const recentCount = $derived(
+        recentFirst ? ordered.findIndex((n) => !recents.includes(n)) : -1,
+    );
+
     const filtered = $derived.by(() => {
-        if (!filter) return files;
+        if (!filter) return ordered;
         const q = filter.toLowerCase();
-        return files.filter((name) => {
+        return ordered.filter((name) => {
             if (name.toLowerCase().includes(q)) return true;
             const e = byName.get(name);
             if (!e) return false;
@@ -40,6 +96,8 @@
             );
         });
     });
+
+    const recentSetForFiltered = $derived(new Set(recentFirst ? recents : []));
 
     const selectedName = $derived(filtered[selectedIndex]);
     const selectedEntry = $derived(selectedName ? byName.get(selectedName) : undefined);
@@ -60,7 +118,7 @@
             case "Enter":
                 e.preventDefault();
                 if (filtered[selectedIndex]) {
-                    onrun(filtered[selectedIndex]);
+                    runFile(filtered[selectedIndex]);
                 }
                 break;
             case "Escape":
@@ -68,6 +126,21 @@
                 onclose();
                 break;
         }
+    }
+
+    function runFile(name: string) {
+        pushRecent(name);
+        onrun(name);
+    }
+
+    function loadFile(name: string) {
+        pushRecent(name);
+        onload(name);
+    }
+
+    function debugFile(name: string, entry: number) {
+        pushRecent(name);
+        ondebug(name, entry);
     }
 
     let list = $state<HTMLDivElement>();
@@ -78,30 +151,43 @@
     });
 
     $effect(() => {
-        const el = list?.children[selectedIndex] as HTMLElement | undefined;
+        const el = list?.querySelector(
+            `[data-index="${selectedIndex}"]`,
+        ) as HTMLElement | null;
         el?.scrollIntoView({ block: "nearest" });
     });
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="catalog" onkeydown={handleKeydown}>
-    <!-- svelte-ignore a11y_autofocus -->
-    <input
-        class="filter"
-        type="text"
-        placeholder="Фильтр..."
-        bind:value={filter}
-        bind:this={filterInput}
-    />
+    <div class="toolbar">
+        <!-- svelte-ignore a11y_autofocus -->
+        <input
+            class="filter"
+            type="text"
+            placeholder="Фильтр..."
+            bind:value={filter}
+            bind:this={filterInput}
+        />
+        <label class="recent-toggle" title="Показывать недавно загруженные первыми">
+            <input type="checkbox" bind:checked={recentFirst} />
+            Недавние первыми
+        </label>
+    </div>
     <div class="body">
         <div class="list" bind:this={list} role="listbox">
             {#each filtered as name, i}
+                {#if !filter && recentFirst && recentCount > 0 && i === recentCount}
+                    <div class="divider" aria-hidden="true"></div>
+                {/if}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <div
                     class="item"
                     class:selected={i === selectedIndex}
+                    class:recent={recentSetForFiltered.has(name)}
+                    data-index={i}
                     onmouseenter={() => (selectedIndex = i)}
-                    onclick={() => onrun(name)}
+                    onclick={() => runFile(name)}
                     role="option"
                     aria-selected={i === selectedIndex}
                     tabindex="-1"
@@ -113,9 +199,12 @@
         <div class="info">
             {#if selectedName}
                 <div class="actions">
-                    <button type="button" class="run-button" onclick={() => onrun(selectedName)}>Запустить</button>
-                    <button type="button" class="load-button" onclick={() => onload(selectedName)}>Загрузить</button>
+                    <button type="button" class="run-button" onclick={() => runFile(selectedName)}>Запустить</button>
+                    <button type="button" class="load-button" onclick={() => loadFile(selectedName)}>Загрузить</button>
                     <a class="download-button" href="{base}/files/{selectedName}" download={selectedName}>Скачать</a>
+                    {#if selectedEntry}
+                        <button type="button" class="debug-button" onclick={() => debugFile(selectedName, selectedEntry.entry)}>Отладка</button>
+                    {/if}
                 </div>
             {/if}
             {#if selectedEntry}
@@ -160,15 +249,41 @@
         height: 70vh;
         overflow: hidden;
     }
+    .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
     .filter {
+        flex: 1;
         background: #444;
         color: white;
         border: 1px solid #666;
         padding: 6px 10px;
         font-size: 1em;
         outline: none;
-        margin-bottom: 8px;
         border-radius: 4px;
+    }
+    .recent-toggle {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #ccc;
+        font-size: 0.9em;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .recent-toggle input {
+        margin: 0;
+        cursor: pointer;
+    }
+    .divider {
+        border-top: 1px solid #555;
+        margin: 4px 0;
+    }
+    .item.recent {
+        color: #cfc;
     }
     .filter::placeholder {
         color: #999;
@@ -243,7 +358,8 @@
     }
     .run-button,
     .load-button,
-    .download-button {
+    .download-button,
+    .debug-button {
         padding: 4px 12px;
         border: none;
         border-radius: 4px;
@@ -272,5 +388,11 @@
     }
     .download-button:hover {
         background: #999;
+    }
+    .debug-button {
+        background: #b85;
+    }
+    .debug-button:hover {
+        background: #c96;
     }
 </style>

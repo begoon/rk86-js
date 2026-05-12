@@ -822,6 +822,13 @@
             catalogDialog?.close();
             machine?.loadCatalogFile(name);
         }}
+        ondebug={async (name, entry) => {
+            catalogDialog?.close();
+            if (!debuggerVisible) toggleDebugger();
+            dbg?.add({ type: "exec", address: entry, temp: true });
+            await machine?.loadCatalogFile(name);
+            setTimeout(() => machine?.runLoadedFile(), 500);
+        }}
         onclose={() => catalogDialog?.close()}
     />
 </dialog>
