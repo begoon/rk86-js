@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none"
-    xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="9" stroke="#ffffff" stroke-width="2"/>
-    <circle cx="9" cy="11" r="2" stroke="#ffffff" stroke-width="2"/>
-    <circle cx="15" cy="11" r="2" stroke="#ffffff" stroke-width="2"/>
-    <path d="M9 15L15 15" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 12 Q4 4 6 12 T10 12 T14 12 T18 12 T22 12" stroke="#ffffff" stroke-width="2" stroke-linecap="round" fill="none"/>
 </svg>
