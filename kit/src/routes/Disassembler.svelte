@@ -63,6 +63,17 @@
         return "↻";
     }
 
+    function hasImm8(cmd: string): boolean {
+        switch (cmd) {
+            case "MVI": case "ADI": case "ACI": case "SUI": case "SBI":
+            case "ANI": case "XRI": case "ORI": case "CPI":
+            case "IN":  case "OUT":
+                return true;
+            default:
+                return false;
+        }
+    }
+
     function returnAddress(): number {
         const sp = cpu.sp;
         const lo = memory.read_raw(sp);
@@ -622,6 +633,15 @@
                     {@const hi = memory.read_raw(wrap(target + 1))}
                     <span class="hint">
                         <span class="memval">[{hex16((hi << 8) | lo)}]</span>
+                    </span>
+                {:else if line.instr.arg1 === "M" || line.instr.arg2 === "M"}
+                    {@const hl = regsView.hl}
+                    <span class="hint">
+                        <span class="memval">HL={hex16(hl)}=[{hex8(memory.read_raw(hl))}]</span>
+                    </span>
+                {:else if hasImm8(line.instr.cmd) && line.bytes[1] >= 32 && line.bytes[1] <= 126}
+                    <span class="hint">
+                        <span class="memval">'{String.fromCharCode(line.bytes[1])}'</span>
                     </span>
                 {/if}
             </div>
