@@ -490,6 +490,7 @@ export async function main(host: HostCallbacks) {
     function restart() {
         machine.memory.zero_ram();
         reset();
+        machine.ui.refreshDebugger?.();
     }
 
     function pause(value: boolean) {
