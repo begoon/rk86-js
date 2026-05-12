@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { resolve } from "$app/paths";
+    import { resolve, base } from "$app/paths";
     import { catalog } from "$lib/catalog_data";
 
     const hex4 = (n: number) => n.toString(16).toUpperCase().padStart(4, "0");
@@ -77,6 +77,7 @@
                 <div class="actions">
                     <a class="run-btn" href="{resolve('/')}?run={entry.name}">Запустить</a>
                     <a class="load-btn" href="{resolve('/')}?load={entry.name}">Загрузить</a>
+                    <a class="download-btn" href="{base}/files/{entry.name}" download={entry.name}>Скачать</a>
                     <a class="top-btn" href="#top">В начало</a>
                 </div>
             </div>
@@ -219,7 +220,8 @@
         gap: 8px;
     }
     .run-btn,
-    .load-btn {
+    .load-btn,
+    .download-btn {
         display: inline-block;
         padding: 4px 12px;
         border-radius: 4px;
@@ -232,6 +234,10 @@
     }
     .load-btn {
         background: #68b;
+        color: white;
+    }
+    .download-btn {
+        background: #888;
         color: white;
     }
     .top-btn {

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { resolve } from "$app/paths";
+    import { resolve, base } from "$app/paths";
     import { tape_catalog } from "$lib/tape_catalog";
     import { catalog } from "$lib/catalog_data";
     import { onMount } from "svelte";
@@ -115,6 +115,7 @@
                 <div class="actions">
                     <button type="button" class="run-button" onclick={() => onrun(selectedName)}>Запустить</button>
                     <button type="button" class="load-button" onclick={() => onload(selectedName)}>Загрузить</button>
+                    <a class="download-button" href="{base}/files/{selectedName}" download={selectedName}>Скачать</a>
                 </div>
             {/if}
             {#if selectedEntry}
@@ -241,7 +242,8 @@
         margin-bottom: 0.5em;
     }
     .run-button,
-    .load-button {
+    .load-button,
+    .download-button {
         padding: 4px 12px;
         border: none;
         border-radius: 4px;
@@ -249,6 +251,9 @@
         font-size: 0.9em;
         color: white;
         font-family: inherit;
+        text-decoration: none;
+        display: inline-block;
+        line-height: normal;
     }
     .run-button {
         background: #4a9;
@@ -261,5 +266,11 @@
     }
     .load-button:hover {
         background: #79c;
+    }
+    .download-button {
+        background: #888;
+    }
+    .download-button:hover {
+        background: #999;
     }
 </style>
