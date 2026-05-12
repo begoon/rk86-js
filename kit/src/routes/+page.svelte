@@ -282,6 +282,42 @@
     let lastDataAddr = $state("0000");
     let debuggerCanvasSlot = $state<HTMLDivElement>();
     let canvasPlaceholder = $state<HTMLDivElement>();
+    let hoverCharX = $state<number | null>(null);
+    let hoverCharY = $state<number | null>(null);
+
+    function updateHover(e: MouseEvent) {
+        if (!canvas || !machine) return;
+        const width = machine.memory.video_screen_size_x;
+        const height = machine.memory.video_screen_size_y;
+        if (!width || !height) return;
+        const box = canvas.getBoundingClientRect();
+        if (box.width === 0 || box.height === 0) return;
+        const px = (e.clientX - box.left) / box.width;
+        const py = (e.clientY - box.top) / box.height;
+        if (px < 0 || px >= 1 || py < 0 || py >= 1) {
+            hoverCharX = null;
+            hoverCharY = null;
+            return;
+        }
+        hoverCharX = Math.floor(px * width);
+        hoverCharY = Math.floor(py * height);
+    }
+
+    function clearHover() {
+        hoverCharX = null;
+        hoverCharY = null;
+    }
+
+    function onCanvasWrapClick() {
+        if (canvasFocused && hoverCharX != null && hoverCharY != null && machine) {
+            const width = machine.memory.video_screen_size_x || 0;
+            const addr =
+                (machine.memory.video_memory_base + hoverCharY * width + hoverCharX) & 0xffff;
+            disassemblerRef?.gotoDataCentered(addr);
+            return;
+        }
+        canvasFocused = true;
+    }
 
     $effect(() => {
         if (canvas && debuggerVisible && debuggerCanvasSlot) {
@@ -581,7 +617,9 @@
             <div
                 class="debugger-canvas-wrap"
                 class:canvas-focused={canvasFocused}
-                onclick={() => (canvasFocused = true)}
+                onclick={onCanvasWrapClick}
+                onmousemove={updateHover}
+                onmouseleave={clearHover}
                 data-text={canvasFocused ? "" : "Кликнуть для ввода"}
                 bind:this={debuggerCanvasSlot}
             ></div>
@@ -631,6 +669,8 @@
                 <CursorInfo
                     bind:this={cursorInfoRef}
                     memory={machine.memory}
+                    hoverX={hoverCharX}
+                    hoverY={hoverCharY}
                     ongotodata={(addr) => disassemblerRef?.gotoDataCentered(addr)}
                 />
             </div>

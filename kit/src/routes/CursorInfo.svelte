@@ -3,9 +3,13 @@
 
     let {
         memory,
+        hoverX,
+        hoverY,
         ongotodata,
     }: {
         memory: Memory;
+        hoverX?: number | null;
+        hoverY?: number | null;
         ongotodata?: (addr: number) => void;
     } = $props();
 
@@ -26,6 +30,15 @@
         const value = memory.read_raw(addr) & 0xff;
         return { x, y, addr, value };
     });
+
+    const hover = $derived.by(() => {
+        tick;
+        if (hoverX == null || hoverY == null) return null;
+        const width = memory.video_screen_size_x || 0;
+        const addr = (memory.video_memory_base + hoverY * width + hoverX) & 0xffff;
+        const value = memory.read_raw(addr) & 0xff;
+        return { x: hoverX, y: hoverY, addr, value };
+    });
 </script>
 
 <div class="cursor-info">
@@ -36,6 +49,15 @@
             title="Показать в окне данных"
             onclick={() => ongotodata?.(info.addr)}
         >{hex(info.addr, 4)}</button>:{hex(info.value, 2)}</span>
+    {#if hover}
+        <span class="label">Позиция:</span>
+        <span>X={hex(hover.x, 2)} Y={hex(hover.y, 2)} <button
+                type="button"
+                class="addr-link"
+                title="Показать в окне данных"
+                onclick={() => ongotodata?.(hover.addr)}
+            >{hex(hover.addr, 4)}</button>:{hex(hover.value, 2)}</span>
+    {/if}
 </div>
 
 <style>
