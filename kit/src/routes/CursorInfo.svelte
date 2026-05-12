@@ -1,0 +1,66 @@
+<script lang="ts">
+    import type { Memory } from "$lib/core/rk86_memory";
+
+    let {
+        memory,
+        ongotodata,
+    }: {
+        memory: Memory;
+        ongotodata?: (addr: number) => void;
+    } = $props();
+
+    let tick = $state(0);
+
+    export function refresh() {
+        tick++;
+    }
+
+    const hex = (v: number, w: number) => v.toString(16).toUpperCase().padStart(w, "0");
+
+    const info = $derived.by(() => {
+        tick;
+        const x = (memory.video_screen_cursor_x - 1) & 0xff;
+        const y = (memory.video_screen_cursor_y - 1) & 0xff;
+        const width = memory.video_screen_size_x || 0;
+        const addr = (memory.video_memory_base + y * width + x) & 0xffff;
+        const value = memory.read_raw(addr) & 0xff;
+        return { x, y, addr, value };
+    });
+</script>
+
+<div class="cursor-info">
+    <span class="label">Курсор:</span>
+    <span>X={hex(info.x, 2)} Y={hex(info.y, 2)} <button
+            type="button"
+            class="addr-link"
+            title="Показать в окне данных"
+            onclick={() => ongotodata?.(info.addr)}
+        >{hex(info.addr, 4)}</button>:{hex(info.value, 2)}</span>
+</div>
+
+<style>
+    .cursor-info {
+        display: flex;
+        gap: 12px;
+        padding: 4px 8px;
+        font-family: monospace;
+        font-size: small;
+        color: #ddd;
+        align-items: center;
+    }
+    .label {
+        color: #888;
+    }
+    .addr-link {
+        font: inherit;
+        color: #4af;
+        background: transparent;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        text-decoration: underline;
+    }
+    .addr-link:hover {
+        color: #8cf;
+    }
+</style>

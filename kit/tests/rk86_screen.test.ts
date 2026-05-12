@@ -1,11 +1,12 @@
 import { beforeEach, expect, test } from "bun:test";
 
 import { Screen } from "../src/lib/core/rk86_screen.js";
+import type { Machine } from "../src/lib/core/rk86_machine.js";
 
 let screen: Screen;
 
 beforeEach(() => {
-    screen = new Screen({});
+    screen = new Screen({} as Machine);
     screen.scale_x = 1;
     screen.scale_y = 2;
     screen.width = 3;
@@ -38,7 +39,7 @@ test("screen export", () => {
 });
 
 test("screen import", () => {
-    const imported = new Screen({});
+    const imported = new Screen({} as Machine);
     imported.import(screen.export());
 
     expect(imported.scale_x).toBe(screen.scale_x);

@@ -3,6 +3,7 @@ import { beforeEach, expect, test } from "bun:test";
 import { I8080 } from "../src/lib/core/i8080.ts";
 import { hex8, hex16 } from "../src/lib/core/hex.js";
 import { Memory } from "../src/lib/core/rk86_memory.js";
+import type { Machine } from "../src/lib/core/rk86_machine.js";
 
 import { ADI } from "./cpu/adi_data.ts";
 import { ACI } from "./cpu/aci_data.ts";
@@ -91,7 +92,7 @@ let cpu: I8080;
 const flags = (cpu: I8080) => cpu.store_flags().toString(2).padStart(8, "0");
 
 beforeEach(() => {
-    memory = new Memory(undefined);
+    memory = new Memory({} as Machine);
     const io = {
         input: (_port: number): number => 0,
         output: (_port: number, _value: number): void => {},

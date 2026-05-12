@@ -82,9 +82,9 @@
 <div class="bp-editor" onkeydown={(e) => e.stopPropagation()} onkeyup={(e) => e.stopPropagation()}>
     <div class="toolbar">
         {#if paused}
-            <button type="button" class="run" data-text="Продолжить (F5)" onclick={ongo}>▶ Пуск</button>
+            <button type="button" class="run go-pause" data-text="Продолжить (F5)" onclick={ongo}>▶ Пуск</button>
         {:else}
-            <button type="button" data-text="Остановить (F5)" onclick={onpause}>⏸ Пауза</button>
+            <button type="button" class="go-pause" data-text="Остановить (F5)" onclick={onpause}>⏸ Пауза</button>
         {/if}
         <button type="button" disabled={!paused} data-text="Шаг (F11)" onclick={onstep}>⤼ Шаг</button>
         <button type="button" disabled={!paused} data-text="Шаг через (F10)" onclick={onstepover}>⤽ Через</button>
@@ -184,11 +184,15 @@
         font-size: 1em;
         padding: 2px 6px;
         cursor: pointer;
+        border: 1px solid #555;
     }
     .toolbar button.run {
         background-color: #2a5;
         color: white;
-        border: 1px solid #4d8;
+        border-color: #4d8;
+    }
+    .toolbar button.go-pause {
+        min-width: 7em;
     }
     .toolbar button:disabled {
         opacity: 0.35;

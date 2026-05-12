@@ -3,6 +3,7 @@
 
 import { I8080 } from "../src/lib/core/i8080.ts";
 import { Memory } from "../src/lib/core/rk86_memory.js";
+import type { Machine } from "../src/lib/core/rk86_machine.js";
 import { hex8, hex16 } from "../src/lib/core/hex.js";
 
 async function writeData(name: string, varName: string, results: string[]) {
@@ -20,7 +21,7 @@ const io = {
 };
 
 function createCPU(): { cpu: I8080; memory: Memory } {
-    const memory = new Memory(undefined);
+    const memory = new Memory({} as Machine);
     const cpu = new I8080({ memory, io });
     return { cpu, memory };
 }

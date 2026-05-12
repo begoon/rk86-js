@@ -22,6 +22,7 @@
     import FreezeSelector from "./FreezeSelector.svelte";
     import Keyboard from "./Keyboard.svelte";
     import MemoryMap from "./MemoryMap.svelte";
+    import CursorInfo from "./CursorInfo.svelte";
     import { debuggerState, ui } from "./state.svelte";
     import Visualizer from "./Visualizer.svelte";
 
@@ -114,6 +115,7 @@
             m.ui.refreshDebugger = () => {
                 disassemblerRef?.refresh();
                 memoryMapRef?.refresh();
+                cursorInfoRef?.refresh();
             };
             machine = m;
             dbg = new Debugger(machine);
@@ -137,6 +139,7 @@
         if (paused) {
             disassemblerRef?.refresh();
             memoryMapRef?.refresh();
+            cursorInfoRef?.refresh();
         }
     }
 
@@ -218,7 +221,7 @@
         }
         if (catalogDialog?.open) return;
         if (freezeDialog?.open) return;
-        if (debuggerVisible && dbg) {
+        if (debuggerVisible && dbg && !canvasFocused) {
             if (e.key === "F5") {
                 e.preventDefault();
                 togglePaused();
@@ -271,6 +274,7 @@
     let disassemblerRef = $state<Disassembler>();
     let breakpointEditorRef = $state<BreakpointEditor>();
     let memoryMapRef = $state<MemoryMap>();
+    let cursorInfoRef = $state<CursorInfo>();
     let canvasFocused = $state(false);
     let lastDataAddr = $state("0000");
     let debuggerCanvasSlot = $state<HTMLDivElement>();
@@ -607,13 +611,22 @@
                         bind:this={breakpointEditorRef}
                         dbg={dbg!}
                         {paused}
-                        ongo={() => dbg!.go()}
-                        onpause={() => { machine!.pause(true); disassemblerRef?.refresh(); memoryMapRef?.refresh(); }}
+                        ongo={() => { dbg!.go(); cursorInfoRef?.refresh(); }}
+                        onpause={() => { machine!.pause(true); disassemblerRef?.refresh(); memoryMapRef?.refresh(); cursorInfoRef?.refresh(); }}
                         onstep={() => dbg!.step()}
                         onstepover={() => dbg!.stepOver()}
                         onstepout={() => dbg!.stepOut()}
                     />
                 {/if}
+            </div>
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div class="debugger-cursor-info" onclick={() => (canvasFocused = false)}>
+                <CursorInfo
+                    bind:this={cursorInfoRef}
+                    memory={machine.memory}
+                    ongotodata={(addr) => disassemblerRef?.gotoDataCentered(addr)}
+                />
             </div>
         </div>
     {/if}
@@ -849,7 +862,7 @@
         min-height: 0;
         display: grid;
         grid-template-columns: 1fr auto auto;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto 1fr;
         gap: 0;
         width: 100%;
         overflow: hidden;
@@ -866,7 +879,6 @@
         grid-row: 1;
         grid-column: 2;
         padding: 4px;
-        border-left: 1px solid #333;
         display: flex;
         align-items: flex-start;
         justify-content: flex-start;
@@ -893,13 +905,14 @@
         border-color: #4a9;
     }
     .debugger-disasm {
-        grid-row: 1 / 3;
+        grid-row: 1 / 4;
         grid-column: 3;
-        overflow: auto;
+        overflow-y: auto;
+        overflow-x: hidden;
         border-left: 1px solid #333;
     }
     .debugger-bps {
-        grid-row: 2;
+        grid-row: 3;
         grid-column: 1 / 3;
         overflow: hidden;
         border-top: 1px solid #333;
@@ -909,6 +922,14 @@
     .debugger-bps > :global(*) {
         flex: 1;
         min-height: 0;
+    }
+    .debugger-cursor-info {
+        grid-row: 2;
+        grid-column: 1 / 3;
+        border-top: 1px solid #333;
+        display: flex;
+        align-items: center;
+        gap: 16px;
     }
     .dimmed {
         opacity: 0.6;

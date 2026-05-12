@@ -2,11 +2,12 @@ import { beforeEach, expect, test } from "bun:test";
 
 import { hex16, hexArray } from "../src/lib/core/hex.js";
 import { Memory } from "../src/lib/core/rk86_memory.js";
+import type { Machine } from "../src/lib/core/rk86_machine.js";
 
 let memory!: Memory;
 
 beforeEach(() => {
-    memory = new Memory(undefined);
+    memory = new Memory({} as Machine);
     memory.vg75_c001_00_cmd = 1;
     memory.video_screen_size_x_buf = 2;
     memory.video_screen_size_y_buf = 3;
@@ -62,7 +63,7 @@ test("memory export", () => {
 });
 
 test("memory import", () => {
-    const imported = new Memory(undefined);
+    const imported = new Memory({} as Machine);
     imported.import(memory.export());
 
     expect(imported.vg75_c001_00_cmd).toBe(memory.vg75_c001_00_cmd);
