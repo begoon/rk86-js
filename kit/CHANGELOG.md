@@ -1,5 +1,13 @@
 # Журнал изменений
 
+## 2026-05-12 — Удалён alpha-слот деплоя
+
+Экспериментальный слот `docs/alpha/` (с `BASE_PATH=/alpha`) удалён.
+Из `kit/Justfile` убрана цель `release-alpha`; `release-experimental`
+теперь эквивалент `release-beta`. README, CLAUDE.md и
+`.claude/settings.local.json` обновлены. Каталог `docs/alpha/` удалён
+из репозитория (950 файлов).
+
 ## 2026-05-11 — Отладчик: переход с CLI на GUI
 
 Бывшая консоль («Console/Debugger») заменена на полноценный

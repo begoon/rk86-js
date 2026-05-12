@@ -9,9 +9,9 @@ maintained side-by-side in one repository:
   (terminal emulator).
 
 `docs/` is served by GitHub Pages at rk86.ru: `docs/` (root) = kit
-production, `docs/classic/` = classic, `docs/alpha/` and `docs/beta/`
-= kit experimental slots (built with `BASE_PATH=/alpha` and `/beta`
-respectively), `docs/monitor/` = separately maintained.
+production, `docs/classic/` = classic, `docs/beta/` = kit experimental
+slot (built with `BASE_PATH=/beta`), `docs/monitor/` = separately
+maintained.
 
 ## Toolchain
 
@@ -56,9 +56,9 @@ for other platforms.
 - `just test-ci` — full CI suite
 - `just release` / `just release-root` — production deploy to
   `../docs/` (root, no BASE_PATH)
-- `just release-alpha` / `just release-beta` — experimental deploy
-  with base path to `../docs/alpha/` and `../docs/beta/`
-- `just release-experimental` — both alpha and beta
+- `just release-beta` — experimental deploy with base path to
+  `../docs/beta/`
+- `just release-experimental` — same as `release-beta`
 - `just terminal-run [args]` — run terminal emulator locally
   (executes `src/lib/terminal/rk86_terminal.ts` under bun directly;
   does not use the regenerable `kit/rk86.ts` bundle intermediate,
@@ -135,7 +135,6 @@ info/
 docs/
   (root)            — kit output (production)
   classic/          — classic output
-  alpha/            — kit output (experimental, BASE_PATH=/alpha)
   beta/             — kit output (experimental, BASE_PATH=/beta)
   monitor/          — hand-maintained monitor viewer
 loader/
@@ -290,7 +289,7 @@ on every build/dev.
 - Dialogs blur active element on close to prevent focus returning to
   triggering button.
 - `BASE_PATH` env var sets deployment base path (e.g.
-  `BASE_PATH=/alpha bun run build`).
+  `BASE_PATH=/beta bun run build`).
 - URL auto-load: `?file=` / `?run=` (load + run) and `?load=` (load
   only) in `boot.ts`. Value can be a catalog name, absolute URL, or
   `data:[;name=<filename>];base64,<payload>` data URL. `name=` hint

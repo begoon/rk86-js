@@ -33,17 +33,13 @@ release-root:
     bun run build
     rsync -a build/ ../docs/
 
-release-alpha:
-    BASE_PATH=/alpha bun run build
-    cp -R ./build/* ../docs/alpha/
-
 release-beta:
     BASE_PATH=/beta bun run build
     cp -R ./build/* ../docs/beta/
 
 release: release-root
 
-release-experimental: release-alpha release-beta
+release-experimental: release-beta
 
 #
 

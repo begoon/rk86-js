@@ -81,7 +81,7 @@ bun run build             # статическая сборка в kit/build/
 just test                 # модульные тесты + тесты CPU
 just test-ci              # полный набор включая CPU Exerciser
 just release              # сборка + публикация в ../docs/ (production)
-just release-experimental # публикация в ../docs/{alpha,beta}
+just release-experimental # публикация в ../docs/beta
 ```
 
 ## Деплой
@@ -92,11 +92,10 @@ GitHub Pages публикует [`docs/`](docs/) на <https://rk86.ru>.
 |------|----------|----------------|
 | `docs/` (root) | `kit/` (production) | `cd kit && just release` |
 | `docs/classic/` | `classic/src/` | `cd classic && just release` |
-| `docs/alpha/` | `kit/` (экспериментальный) | `cd kit && just release-alpha` |
 | `docs/beta/` | `kit/` (экспериментальный) | `cd kit && just release-beta` |
 | `docs/monitor/` | поддерживается вручную | коммитится напрямую |
 
-`docs/alpha/` и `docs/beta/` зарезервированы для экспериментальных деплоев `kit/` (с `BASE_PATH=/alpha` и `/beta` соответственно).
+`docs/beta/` зарезервирован для экспериментальных деплоев `kit/` (с `BASE_PATH=/beta`).
 
 ## Возможности
 
@@ -282,7 +281,6 @@ kit/                    — новая версия (SvelteKit)
 docs/                   — публикуемый сайт (GH Pages, rk86.ru)
   (root)                — новая версия (production)
   classic/              — классическая версия
-  alpha/                — новая версия (экспериментальный слот)
   beta/                 — новая версия (экспериментальный слот)
   monitor/              — просмотрщик ROM-монитора (отдельный артефакт)
 info/                   — общая документация и ассемблерные примеры

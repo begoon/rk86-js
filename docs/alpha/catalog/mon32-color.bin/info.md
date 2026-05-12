@@ -1,1 +1,0 @@
-Монитор 32КБ с visible field-attribute mode (i8275 reset byte 4 = 0xD3 вместо vanilla 0x93). Используется для цветных программ для РК, которые рассчитаны на этот режим. Загружается через URL-параметр `?monitor=mon32-color.bin` (web) или `-m static/files/mon32-color.bin` (terminal).
