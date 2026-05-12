@@ -21,6 +21,7 @@
     import Disassembler from "./Disassembler.svelte";
     import FreezeSelector from "./FreezeSelector.svelte";
     import Keyboard from "./Keyboard.svelte";
+    import MemoryMap from "./MemoryMap.svelte";
     import { debuggerState, ui } from "./state.svelte";
     import Visualizer from "./Visualizer.svelte";
 
@@ -112,6 +113,7 @@
             };
             m.ui.refreshDebugger = () => {
                 disassemblerRef?.refresh();
+                memoryMapRef?.refresh();
             };
             machine = m;
             dbg = new Debugger(machine);
@@ -132,7 +134,10 @@
     function togglePaused() {
         paused = !paused;
         machine?.pause(paused);
-        if (paused) disassemblerRef?.refresh();
+        if (paused) {
+            disassemblerRef?.refresh();
+            memoryMapRef?.refresh();
+        }
     }
 
     function openAssembler() {
@@ -264,6 +269,8 @@
     let visualizerVisible = $state(false);
     let debuggerVisible = $state(false);
     let disassemblerRef = $state<Disassembler>();
+    let breakpointEditorRef = $state<BreakpointEditor>();
+    let memoryMapRef = $state<MemoryMap>();
     let canvasFocused = $state(false);
     let lastDataAddr = $state("0000");
     let debuggerCanvasSlot = $state<HTMLDivElement>();
@@ -570,6 +577,16 @@
             ></div>
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
+            <div class="debugger-map" onclick={() => (canvasFocused = false)}>
+                <MemoryMap
+                    bind:this={memoryMapRef}
+                    memory={machine.memory}
+                    ongotodata={(addr) => disassemblerRef?.gotoDataCentered(addr)}
+                    ongotocode={(addr) => disassemblerRef?.gotoCodeCentered(addr)}
+                />
+            </div>
+            <!-- svelte-ignore a11y_click_events_have_key_events -->
+            <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div class="debugger-disasm" onclick={() => (canvasFocused = false)}>
                 <Disassembler
                     bind:this={disassemblerRef}
@@ -587,10 +604,11 @@
             <div class="debugger-bps" onclick={() => (canvasFocused = false)}>
                 {#if dbg!}
                     <BreakpointEditor
+                        bind:this={breakpointEditorRef}
                         dbg={dbg!}
                         {paused}
                         ongo={() => dbg!.go()}
-                        onpause={() => { machine!.pause(true); disassemblerRef?.refresh(); }}
+                        onpause={() => { machine!.pause(true); disassemblerRef?.refresh(); memoryMapRef?.refresh(); }}
                         onstep={() => dbg!.step()}
                         onstepover={() => dbg!.stepOver()}
                         onstepout={() => dbg!.stepOut()}
@@ -830,7 +848,7 @@
         flex: 1;
         min-height: 0;
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr auto auto;
         grid-template-rows: auto 1fr;
         gap: 0;
         width: 100%;
@@ -843,6 +861,16 @@
         height: fit-content;
         cursor: pointer;
         border: 2px solid #333;
+    }
+    .debugger-map {
+        grid-row: 1;
+        grid-column: 2;
+        padding: 4px;
+        border-left: 1px solid #333;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        background-color: #000;
     }
     .canvas-placeholder {
         flex: 1;
@@ -866,13 +894,13 @@
     }
     .debugger-disasm {
         grid-row: 1 / 3;
-        grid-column: 2;
+        grid-column: 3;
         overflow: auto;
         border-left: 1px solid #333;
     }
     .debugger-bps {
         grid-row: 2;
-        grid-column: 1;
+        grid-column: 1 / 3;
         overflow: hidden;
         border-top: 1px solid #333;
         min-height: 0;

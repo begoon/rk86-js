@@ -381,7 +381,7 @@
         dataAddr = hex16(addr);
     }
 
-    function gotoCodeCentered(addr: number) {
+    export function gotoCodeCentered(addr: number) {
         codeAddr = hex16(walkBack(addr, Math.floor(codeLines / 2)));
         cursorAddr = addr;
         flashCodeRow(addr);
@@ -398,7 +398,7 @@
         });
     }
 
-    function gotoDataCentered(addr: number) {
+    export function gotoDataCentered(addr: number) {
         const middleRow = Math.floor(dataLines / 2);
         const top = (addr - middleRow * DATA_WIDTH + 0x10000) & 0xffff;
         // Align to row boundary so the target row contains the target byte.

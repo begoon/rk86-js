@@ -330,6 +330,7 @@ function parseAndPlaceFile(
     } catch (e) {
         console.error(e);
     }
+    machine.ui.refreshDebugger?.();
 }
 
 function command_injector(keyboard: Keyboard, sequence: SequenceAction[], i: number): void {
