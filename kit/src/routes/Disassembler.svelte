@@ -267,7 +267,7 @@
     const stackView = $derived.by(() => {
         revision; // dependency
         const sp = cpu.sp;
-        const start = wrap(sp - 8);
+        const start = sp;
         const out: { addr: number; lo: number; hi: number; word: number; isSP: boolean }[] = [];
         for (let j = 0; j < 12; j += 2) {
             const addr = wrap(start + j);
@@ -673,32 +673,19 @@
         {@render reg16("BC", regsView.bc, false, true, false, changes.bc)}
         {@render reg16("DE", regsView.de, false, true, false, changes.de)}
         {@render reg16("HL", regsView.hl, false, true, true, changes.hl)}
-        <span class="reg-pair">
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <span class="reg-name" class:changed={changes.sp} onclick={() => gotoDataCentered(regsView.sp)}>SP</span>:{#if editingReg === "SP"}
-                <input
-                    class="reg-edit reg-edit-16"
-                    type="text"
-                    maxlength="4"
-                    bind:value={editingRegValue}
-                    use:autofocus
-                    onblur={() => commitRegEdit("SP")}
-                    onkeydown={(e) => onRegInputKey(e, "SP")}
-                />
-            {:else}
-                <!-- svelte-ignore a11y_click_events_have_key_events -->
-                <!-- svelte-ignore a11y_no_static_element_interactions -->
-                <span class="reg-value reg-value-16 highlight" onclick={() => startRegEdit("SP", regsView.sp, 4)}>{hex16(regsView.sp)}</span>
-            {/if}<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-peek">[<span class="reg-link" onclick={() => gotoCode(stackView.spWord)}>{hex8(stackView.spLo)}{hex8(stackView.spHi)}</span>]</span>
-        </span>
         <br />
         <span class="stack">
-            {#each stackView.items as it}
+            {#each stackView.items as it, i}
                 <span class="stack-pair" class:sp-marker={it.isSP}>
-                    <!-- svelte-ignore a11y_click_events_have_key_events -->
-                    <!-- svelte-ignore a11y_no_static_element_interactions -->
-                    <span class="reg-link" onclick={() => gotoData(it.addr)}>{hex16(it.addr)}</span>:<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-link" onclick={() => gotoCode(it.word)}>{hex8(it.lo)}{hex8(it.hi)}</span>
+                    {#if i === 0}<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-name" class:changed={changes.sp} onclick={() => startRegEdit("SP", regsView.sp, 4)}>SP</span>:{/if}{#if i === 0 && editingReg === "SP"}<input
+                            class="reg-edit reg-edit-16"
+                            type="text"
+                            maxlength="4"
+                            bind:value={editingRegValue}
+                            use:autofocus
+                            onblur={() => commitRegEdit("SP")}
+                            onkeydown={(e) => onRegInputKey(e, "SP")}
+                        />{:else}<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-link" onclick={() => gotoData(it.addr)}>{hex16(it.addr)}</span>{/if}:<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-link" onclick={() => gotoCode(it.word)}>{hex8(it.lo)}{hex8(it.hi)}</span>
                 </span>
             {/each}
         </span>
