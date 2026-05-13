@@ -871,7 +871,7 @@ import { basename } from "path";
 // packages/rk86/package.json
 var package_default = {
   name: "rk86",
-  version: "2.0.28",
+  version: "2.0.29",
   description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
   bin: {
     rk86: "rk86.js"
@@ -892,6 +892,59 @@ var package_default = {
     url: "https://github.com/begoon/rk86-js-web"
   }
 };
+
+// src/lib/core/rk86_colors.ts
+var COLOR_MODES = ["mono", "color1", "color2", "color3"];
+var DEFAULT_COLOR_MODE = "color1";
+function attrToRgb(mode, attrs) {
+  const hglt = (attrs & 1) !== 0;
+  const gpa0 = (attrs & 4) !== 0;
+  const gpa1 = (attrs & 8) !== 0;
+  switch (mode) {
+    case "color1": {
+      const rgb = (gpa1 ? 255 : 0) | (gpa0 ? 65280 : 0) | (hglt ? 16711680 : 0);
+      return rgb === 0 ? 12632256 : rgb;
+    }
+    case "color2":
+      return (gpa0 ? 0 : 16711680) | (gpa1 ? 0 : 65280) | (hglt ? 0 : 255);
+    case "color3":
+      return (gpa0 ? 0 : 255) | (gpa1 ? 0 : 65280) | (hglt ? 0 : 16711680);
+    case "mono":
+    default:
+      return 12632256;
+  }
+}
+function hasCellOffset(mode) {
+  return mode !== "color3";
+}
+function rgbToAnsiBaseFg(rgb) {
+  const r = rgb >> 16 & 255;
+  const g = rgb >> 8 & 255;
+  const b = rgb & 255;
+  const palette = [
+    [30, 0, 0, 0],
+    [31, 255, 0, 0],
+    [32, 0, 255, 0],
+    [33, 255, 255, 0],
+    [34, 0, 0, 255],
+    [35, 255, 0, 255],
+    [36, 0, 255, 255],
+    [37, 255, 255, 255]
+  ];
+  let best = 37;
+  let bestDist = Infinity;
+  for (const [code, pr, pg, pb] of palette) {
+    const dr = r - pr;
+    const dg = g - pg;
+    const db = b - pb;
+    const dist = dr * dr + dg * dg + db * db;
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = code;
+    }
+  }
+  return best;
+}
 
 // src/lib/core/hex.ts
 function hex(v, prefix) {
@@ -2347,7 +2400,7 @@ class Runner {
     }
   }
   execute(options = {}) {
-    const { terminate_address, on_terminate, exit_on_halt, on_batch_complete, turbo } = options;
+    const { terminate_address, on_terminate, exit_on_halt, on_halt, on_batch_complete, turbo } = options;
     clearTimeout(this.execute_timer);
     const bursts = turbo ? 100 : 1;
     for (let burst = 0;burst < bursts; burst++) {
@@ -2382,9 +2435,13 @@ class Runner {
           on_terminate?.();
           return;
         }
-        if (exit_on_halt && this.machine.memory.read_raw(this.machine.cpu.pc) === 118) {
-          on_terminate?.();
-          return;
+        if (this.machine.memory.read_raw(this.machine.cpu.pc) === 118) {
+          if (exit_on_halt) {
+            on_terminate?.();
+            return;
+          }
+          if (on_halt && on_halt())
+            return;
         }
       }
       const now = performance.now();
@@ -2427,6 +2484,7 @@ class Screen {
   video_memory_base = 0;
   video_memory_size = 0;
   transparent_attr = false;
+  color_mode = DEFAULT_COLOR_MODE;
   ready = false;
   renderer;
   constructor(machine) {
@@ -2848,16 +2906,17 @@ class TerminalRenderer {
     const dim = "\x1B[2m";
     const reset = "\x1B[0m";
     const w = screen.width;
-    const ANSI_FG = ["37", "33", "35", "31", "36", "32", "34", "30"];
+    const mode = screen.color_mode;
     let output = "\x1B[H";
     output += `${dim}\u250C${"\u2500".repeat(w)}\u2510${reset}
 `;
     const transparent = screen.transparent_attr;
+    const offset = hasCellOffset(mode) && !transparent;
     const blinkOff = Math.floor(Date.now() / 320) % 2 === 1;
     const FA_PENDING = -1;
     let addr = screen.video_memory_base;
     let frameStopped = false;
-    let color = 0;
+    let latchedAttrs = 0;
     let blink = false;
     for (let y = 0;y < screen.height; y++) {
       let line = `${dim}\u2502${reset}`;
@@ -2877,23 +2936,23 @@ class TerminalRenderer {
             continue;
           }
           if (raw >= 240) {
-            cells[cellCount++] = { ch: 0, color, blink };
+            cells[cellCount++] = { ch: 0, attrs: latchedAttrs, blink, isFA: false };
             rowStopped = true;
             if (raw >= 248)
               frameStopped = true;
           } else if (raw >= 192) {
-            cells[cellCount++] = { ch: 0, color, blink };
+            cells[cellCount++] = { ch: 0, attrs: latchedAttrs, blink, isFA: false };
           } else if (raw >= 128) {
-            color = (raw & 1) << 2 | (raw & 12) >> 2;
+            latchedAttrs = raw;
             blink = (raw & 2) !== 0;
-            cells[cellCount++] = { ch: FA_PENDING, color, blink };
+            cells[cellCount++] = { ch: FA_PENDING, attrs: latchedAttrs, blink, isFA: true };
             fifoFlag = true;
           } else {
-            cells[cellCount++] = { ch: raw, color, blink };
+            cells[cellCount++] = { ch: raw, attrs: latchedAttrs, blink, isFA: false };
           }
         }
         while (cellCount < w)
-          cells[cellCount++] = { ch: 0, color, blink };
+          cells[cellCount++] = { ch: 0, attrs: latchedAttrs, blink, isFA: false };
         let fifoIdx = 0;
         for (let x = 0;x < w; ++x) {
           if (cells[x].ch === FA_PENDING) {
@@ -2910,6 +2969,7 @@ class TerminalRenderer {
         for (let x = 0;x < w; x++) {
           const raw = memory.read(addr + x);
           let ch;
+          let isFA = false;
           if (rowStopped) {
             ch = 0;
           } else if (raw >= 240) {
@@ -2920,24 +2980,30 @@ class TerminalRenderer {
           } else if (raw >= 192) {
             ch = 0;
           } else if (raw >= 128) {
-            color = (raw & 1) << 2 | (raw & 12) >> 2;
+            latchedAttrs = raw;
             blink = (raw & 2) !== 0;
             ch = 0;
+            isFA = true;
           } else {
             ch = raw;
           }
-          cells[x] = { ch, color, blink };
+          cells[x] = { ch, attrs: latchedAttrs, blink, isFA };
         }
         addr += w;
       }
-      let prevColor = -1;
+      let prevAnsi = -1;
       for (let x = 0;x < w; x++) {
         const cell = cells[x];
         const ch = cell.blink && blinkOff ? 0 : cell.ch;
         const glyph = rk86char(ch);
-        if (cell.color !== prevColor) {
-          line += `\x1B[${ANSI_FG[cell.color]}m`;
-          prevColor = cell.color;
+        let attrs = cell.attrs;
+        if (offset && x + 1 < w && cells[x + 1].isFA) {
+          attrs = cells[x + 1].attrs;
+        }
+        const ansi = rgbToAnsiBaseFg(attrToRgb(mode, attrs));
+        if (ansi !== prevAnsi) {
+          line += `\x1B[${ansi}m`;
+          prevAnsi = ansi;
         }
         if (x === screen.cursor_x && y === screen.cursor_y) {
           line += `\x1B[4m${glyph}\x1B[24m`;
@@ -3106,6 +3172,8 @@ function printHelp() {
   --snapshot <\u0444\u0430\u0439\u043B>        \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0441\u043D\u0438\u043C\u043E\u043A \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u044F (JSON) \u043F\u0440\u0438 \u0432\u044B\u0445\u043E\u0434\u0435
   --input <seq>            \u0438\u043D\u044A\u0435\u043A\u0446\u0438\u044F \u043A\u043B\u0430\u0432\u0438\u0448 (\u0447\u0435\u0440\u0435\u0437 \u0437\u0430\u043F\u044F\u0442\u0443\u044E): KeyA,Digit1,Enter,...
                            \u0442\u043E\u043A\u0435\u043D *N \u0437\u0430\u0434\u0430\u0451\u0442 \u043F\u0430\u0443\u0437\u0443 N \u043C\u0441 (\u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 *200)
+  --color <0|1|2|3>        \u0440\u0435\u0436\u0438\u043C \u0446\u0432\u0435\u0442\u0430: 0=\u0447/\u0431 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E), 1=\u0422\u043E\u043B\u043A\u0430\u043B\u0438\u043D,
+                           2=\u0410\u043A\u0438\u043C\u0435\u043D\u043A\u043E, 3=\u0410\u043F\u043E\u0433\u0435\u0439
   --online                 \u043E\u0442\u043A\u0440\u044B\u0442\u044C \u0432 \u043E\u043D\u043B\u0430\u0439\u043D-\u044D\u043C\u0443\u043B\u044F\u0442\u043E\u0440\u0435 rk86.ru
 
 \u041F\u0440\u0438\u043C\u0435\u0440\u044B:
@@ -3210,6 +3278,8 @@ async function main() {
   const screenFile = arg(args, "--screen");
   const snapshotFile = arg(args, "--snapshot");
   const goViaMonitor = arg(args, "-G", undefined, addrRe, parseAddr);
+  const colorIdx = arg(args, "--color", "0", /^[0-3]$/, (v) => parseInt(v, 10)) ?? 0;
+  const colorMode = COLOR_MODES[colorIdx];
   let inputSeq = arg(args, "--input");
   if (goViaMonitor !== undefined) {
     const hex2 = goViaMonitor.toString(16).toUpperCase();
@@ -3231,6 +3301,7 @@ async function main() {
   machine.memory = new Memory(machine);
   machine.cpu = new I8080(machine);
   machine.screen = new Screen(machine);
+  machine.screen.color_mode = colorMode;
   machine.tape = new Tape(machine);
   machine.runner = new Runner(machine);
   machine.memory.update_ruslat = machine.ui.update_ruslat;
