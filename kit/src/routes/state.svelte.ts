@@ -1,6 +1,7 @@
 // Reactive bridge between imperative engine code and Svelte components.
 // Engine writes here via callbacks, Svelte reads reactively.
 
+import { DEFAULT_COLOR_MODE, type ColorMode } from "$lib/core/rk86_colors";
 import type { Breakpoint } from "$lib/core/rk86_debugger";
 import type { RK86File } from "$lib/core/rk86_file_parser";
 
@@ -28,4 +29,5 @@ export const ui = $state({
     selectedFileEnd: 0,
     selectedFileSize: 0,
     selectedFileEntry: 0,
+    colorMode: DEFAULT_COLOR_MODE as ColorMode,
 });

@@ -5,6 +5,7 @@
     let hintText = $state("");
 
     import { asset, resolve } from "$app/paths";
+    import { COLOR_MODES, COLOR_MODE_LABELS, type ColorMode } from "$lib/core/rk86_colors";
     import { version } from "$lib/rk86_version";
     import { main as boot, type HostCallbacks } from "$lib/web/boot";
     import Debugger from "$lib/core/rk86_debugger";
@@ -127,6 +128,16 @@
             });
         });
     });
+
+    function cycleColorMode() {
+        const idx = COLOR_MODES.indexOf(ui.colorMode);
+        const next: ColorMode = COLOR_MODES[(idx + 1) % COLOR_MODES.length];
+        ui.colorMode = next;
+        if (machine) machine.screen.color_mode = next;
+        try {
+            localStorage.setItem("rk86:color-mode", next);
+        } catch {}
+    }
 
     function toggleFullscreen() {
         if (!document.fullscreenElement) {
@@ -702,6 +713,12 @@
             <span>{ui.screenHeight}</span>
         </div>
         <div class="gauge">
+            <span class="dimmed">ЦВЕТ</span>
+            <button type="button" class="color-mode" tabindex={-1} onclick={cycleColorMode} title="Переключить режим цвета">
+                {COLOR_MODE_LABELS[ui.colorMode]}
+            </button>
+        </div>
+        <div class="gauge">
             <span class={ui.modifierUS ? "modifier_active" : "dimmed"}>УС</span>
             <span class={ui.modifierSS ? "modifier_active" : "dimmed"}>СС</span>
         </div>
@@ -998,6 +1015,15 @@
         height: fit-content;
         gap: 4px;
         font-family: monospace;
+    }
+    .color-mode {
+        all: unset;
+        cursor: pointer;
+        font-family: monospace;
+        color: inherit;
+    }
+    .color-mode:hover {
+        color: #ffcc00;
     }
     #shortcuts {
         position: fixed;

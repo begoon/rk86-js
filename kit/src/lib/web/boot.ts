@@ -1,4 +1,5 @@
 import { ui } from "../../routes/state.svelte.js";
+import { isColorMode } from "../core/rk86_colors.js";
 import { hex16 } from "../core/hex.js";
 import { I8080 } from "../core/i8080.js";
 import type { RK86File } from "../core/rk86_file_parser.js";
@@ -378,6 +379,11 @@ export async function main(host: HostCallbacks) {
     console.log("процессор инициализирован");
 
     machine.screen = new Screen(machine);
+    {
+        const stored = (typeof localStorage !== "undefined" && localStorage.getItem("rk86:color-mode")) || "";
+        if (isColorMode(stored)) machine.screen.color_mode = stored;
+        ui.colorMode = machine.screen.color_mode;
+    }
     console.log("экран инициализирован");
 
     machine.tape = new Tape(machine);

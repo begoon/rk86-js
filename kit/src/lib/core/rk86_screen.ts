@@ -1,3 +1,4 @@
+import { DEFAULT_COLOR_MODE, type ColorMode } from "./rk86_colors.js";
 import { fromHex, hex16 } from "./hex.js";
 import type { Machine } from "./rk86_machine.js";
 import type { Renderer } from "./rk86_renderer_interface.js";
@@ -35,6 +36,7 @@ export class Screen {
     video_memory_base = 0;
     video_memory_size = 0;
     transparent_attr = false;
+    color_mode: ColorMode = DEFAULT_COLOR_MODE;
     ready = false;
 
     private renderer!: Renderer;

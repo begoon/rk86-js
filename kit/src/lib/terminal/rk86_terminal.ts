@@ -9,6 +9,13 @@ import { basename } from "node:path";
 import pkg from "../../../packages/rk86/package.json";
 
 const UPLOAD_SERVER = "https://rk86.ea.deno.net";
+import {
+    COLOR_MODES,
+    attrToRgb,
+    hasCellOffset,
+    rgbToAnsiBaseFg,
+    type ColorMode,
+} from "../core/rk86_colors.js";
 import { hex16 } from "../core/hex.js";
 import { I8080 } from "../core/i8080.js";
 import * as FileParser from "../core/rk86_file_parser.js";
@@ -221,39 +228,27 @@ class TerminalRenderer implements Renderer {
         const reset = "\x1b[0m";
         const w = screen.width;
 
-        // Mirror the web renderer's i8275 logic so the terminal output
-        // matches the canvas exactly (chip mode, FIFO, blink, latch
-        // persistence). 86rk's inverted color scheme maps onto the 8
-        // ANSI base colors directly, so we can render in color too —
-        // the only thing dropped vs. canvas is sub-frame blink animation
-        // (we sample blink phase once per update() call from wall clock).
-        //
-        // ANSI mapping (86rk inverted palette):
-        //   index → (H,G1,G0) → fg | sgr
-        //     0   = (0,0,0)   white   37
-        //     1   = (0,0,1)   yellow  33
-        //     2   = (0,1,0)   magenta 35
-        //     3   = (0,1,1)   red     31
-        //     4   = (1,0,0)   cyan    36
-        //     5   = (1,0,1)   green   32
-        //     6   = (1,1,0)   blue    34
-        //     7   = (1,1,1)   black   30
-        const ANSI_FG = ["37", "33", "35", "31", "36", "32", "34", "30"];
+        // Mirror the web renderer's i8275 logic (chip mode, FIFO, blink,
+        // latch persistence, cell-offset). Color modes map RGB to the
+        // nearest ANSI 30-37 base color. Sub-frame blink is sampled once
+        // per update() from wall clock.
+        const mode = screen.color_mode;
 
         let output = "\x1b[H"; // cursor home
         output += `${dim}┌${"─".repeat(w)}┐${reset}\n`;
 
         const transparent = screen.transparent_attr;
+        const offset = hasCellOffset(mode) && !transparent;
         const blinkOff = Math.floor(Date.now() / 320) % 2 === 1;
         const FA_PENDING = -1;
         let addr = screen.video_memory_base;
         let frameStopped = false;
-        let color = 0; // index 0 = white in 86rk palette
+        let latchedAttrs = 0;
         let blink = false;
 
         for (let y = 0; y < screen.height; y++) {
             let line = `${dim}│${reset}`;
-            const cells: { ch: number; color: number; blink: boolean }[] = new Array(w);
+            const cells: { ch: number; attrs: number; blink: boolean; isFA: boolean }[] = new Array(w);
 
             if (transparent) {
                 const fifo: number[] = [];
@@ -270,21 +265,21 @@ class TerminalRenderer implements Renderer {
                         continue;
                     }
                     if (raw >= 0xf0) {
-                        cells[cellCount++] = { ch: 0, color, blink };
+                        cells[cellCount++] = { ch: 0, attrs: latchedAttrs, blink, isFA: false };
                         rowStopped = true;
                         if (raw >= 0xf8) frameStopped = true;
                     } else if (raw >= 0xc0) {
-                        cells[cellCount++] = { ch: 0, color, blink };
+                        cells[cellCount++] = { ch: 0, attrs: latchedAttrs, blink, isFA: false };
                     } else if (raw >= 0x80) {
-                        color = ((raw & 0x01) << 2) | ((raw & 0x0c) >> 2);
+                        latchedAttrs = raw;
                         blink = (raw & 0x02) !== 0;
-                        cells[cellCount++] = { ch: FA_PENDING, color, blink };
+                        cells[cellCount++] = { ch: FA_PENDING, attrs: latchedAttrs, blink, isFA: true };
                         fifoFlag = true;
                     } else {
-                        cells[cellCount++] = { ch: raw, color, blink };
+                        cells[cellCount++] = { ch: raw, attrs: latchedAttrs, blink, isFA: false };
                     }
                 }
-                while (cellCount < w) cells[cellCount++] = { ch: 0, color, blink };
+                while (cellCount < w) cells[cellCount++] = { ch: 0, attrs: latchedAttrs, blink, isFA: false };
                 let fifoIdx = 0;
                 for (let x = 0; x < w; ++x) {
                     if (cells[x].ch === FA_PENDING) {
@@ -301,6 +296,7 @@ class TerminalRenderer implements Renderer {
                 for (let x = 0; x < w; x++) {
                     const raw = memory.read(addr + x);
                     let ch: number;
+                    let isFA = false;
                     if (rowStopped) {
                         ch = 0;
                     } else if (raw >= 0xf0) {
@@ -310,25 +306,31 @@ class TerminalRenderer implements Renderer {
                     } else if (raw >= 0xc0) {
                         ch = 0;
                     } else if (raw >= 0x80) {
-                        color = ((raw & 0x01) << 2) | ((raw & 0x0c) >> 2);
+                        latchedAttrs = raw;
                         blink = (raw & 0x02) !== 0;
                         ch = 0;
+                        isFA = true;
                     } else {
                         ch = raw;
                     }
-                    cells[x] = { ch, color, blink };
+                    cells[x] = { ch, attrs: latchedAttrs, blink, isFA };
                 }
                 addr += w;
             }
 
-            let prevColor = -1;
+            let prevAnsi = -1;
             for (let x = 0; x < w; x++) {
                 const cell = cells[x];
                 const ch = cell.blink && blinkOff ? 0 : cell.ch;
                 const glyph = rk86char(ch);
-                if (cell.color !== prevColor) {
-                    line += `\x1b[${ANSI_FG[cell.color]}m`;
-                    prevColor = cell.color;
+                let attrs = cell.attrs;
+                if (offset && x + 1 < w && cells[x + 1].isFA) {
+                    attrs = cells[x + 1].attrs;
+                }
+                const ansi = rgbToAnsiBaseFg(attrToRgb(mode, attrs));
+                if (ansi !== prevAnsi) {
+                    line += `\x1b[${ansi}m`;
+                    prevAnsi = ansi;
                 }
                 if (x === screen.cursor_x && y === screen.cursor_y) {
                     line += `\x1b[4m${glyph}\x1b[24m`;
@@ -576,6 +578,8 @@ function printHelp() {
   --snapshot <файл>        сохранить снимок состояния (JSON) при выходе
   --input <seq>            инъекция клавиш (через запятую): KeyA,Digit1,Enter,...
                            токен *N задаёт паузу N мс (например *200)
+  --color <0|1|2|3>        режим цвета: 0=ч/б (по умолчанию), 1=Толкалин,
+                           2=Акименко, 3=Апогей
   --online                 открыть в онлайн-эмуляторе rk86.ru
 
 Примеры:
@@ -701,6 +705,8 @@ async function main() {
     const screenFile = arg(args, "--screen") as string | undefined;
     const snapshotFile = arg(args, "--snapshot") as string | undefined;
     const goViaMonitor = arg(args, "-G", undefined, addrRe, parseAddr) as number | undefined;
+    const colorIdx = (arg(args, "--color", "0", /^[0-3]$/, (v) => parseInt(v, 10)) as number | undefined) ?? 0;
+    const colorMode: ColorMode = COLOR_MODES[colorIdx];
     let inputSeq = arg(args, "--input") as string | undefined;
     if (goViaMonitor !== undefined) {
         const hex = goViaMonitor.toString(16).toUpperCase();
@@ -726,6 +732,7 @@ async function main() {
     machine.memory = new Memory(machine);
     machine.cpu = new I8080(machine);
     machine.screen = new Screen(machine);
+    machine.screen.color_mode = colorMode;
     machine.tape = new Tape(machine);
     machine.runner = new Runner(machine);
 
