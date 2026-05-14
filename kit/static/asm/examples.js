@@ -24,4 +24,5 @@ window.asm8Examples = [
     { name: "lestnica", filename: "lestnica.asm" },
     { name: "diverse", filename: "diverse.asm" },
     { name: "aliaz1", filename: "aliaz1.asm" },
+    { name: "colortest", filename: "colortest.asm" },
 ];
