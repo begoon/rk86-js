@@ -34,7 +34,23 @@
     }
 
     function disasm(addr: number): I8080Instruction {
-        return i8080_opcode(memory.read_raw(addr), memory.read_raw(addr + 1), memory.read_raw(addr + 2));
+        const raw = i8080_opcode(
+            memory.read_raw(addr),
+            memory.read_raw(addr + 1),
+            memory.read_raw(addr + 2),
+        );
+        // Undocumented 3-byte aliases (FD/DD/ED CALL?, CB JMP?) almost
+        // never occur as real instructions in RK86 monitor code — they
+        // appear as data or as collisions with the middle of multi-byte
+        // instructions. Trusting their length-3 verdict makes walkBack
+        // pick false boundaries and the forward render show phantom
+        // CALL?/JMP? lines. Clamp them to length 1 in the GUI view so
+        // each suspect byte takes one line (still flagged ?), and the
+        // real instruction stream after the byte realigns cleanly.
+        if (raw.bad && raw.length > 1) {
+            return { cmd: raw.cmd, length: 1, bad: true };
+        }
+        return raw;
     }
 
     let codeAddr = $state("0000");
@@ -129,9 +145,11 @@
             sp: regsView.sp, psw: regsView.psw,
         };
         const p = pc();
-        if (!pcVisible(p)) {
-            codeAddr = hex16(walkBack(p, Math.floor(codeLines / 2)));
-        }
+        // Re-centre on every PC change (step / stepOver / stepOut /
+        // breakpoint hit / pause). walkBack offsets by valid-instruction
+        // boundaries, not raw bytes, so the top line never starts in the
+        // middle of a multi-byte instruction.
+        codeAddr = hex16(walkBack(p, Math.floor(codeLines / 2)));
         cursorAddr = p;
         revision++;
     }
@@ -154,14 +172,32 @@
     }
 
     function walkBack(from: number, steps: number): number {
+        // Walk backwards by valid instruction boundaries. At each step:
+        //   1. Try lengths 3/2/1 and take the longest non-bad match
+        //      (real, documented instructions).
+        //   2. If no non-bad fits, take the longest bad match (1-byte
+        //      clamped CALL?/JMP?/NOP? aliases — they advance walkBack
+        //      through suspect data bytes without losing centering).
+        //   3. If nothing matches at all, advance one byte. The clamp
+        //      inside disasm() guarantees no >1-byte bad consumption
+        //      from this fallback either, so PC stays at ~codeLines/2
+        //      with at most ±1-line jitter regardless of how messy the
+        //      backward byte stream is.
         let addr = from;
         for (let n = 0; n < steps; n++) {
-            let i;
-            for (i = 3; i > 0; --i) {
+            let pickedLen = 0;
+            for (let i = 3; i > 0; --i) {
                 const d = disasm(wrap(addr - i));
-                if (d.length === i) break;
+                if (d.length === i && !d.bad) { pickedLen = i; break; }
             }
-            addr = wrap(addr - (i > 0 ? i : 1));
+            if (pickedLen === 0) {
+                for (let i = 3; i > 0; --i) {
+                    const d = disasm(wrap(addr - i));
+                    if (d.length === i) { pickedLen = i; break; }
+                }
+            }
+            if (pickedLen === 0) pickedLen = 1;
+            addr = wrap(addr - pickedLen);
         }
         return addr;
     }
@@ -553,7 +589,9 @@
             {@const isFlashCode = codeFlashAddr !== null && codeFlashAddr >= line.addr && codeFlashAddr < line.addr + line.instr.length}
             {@const condInfo = conditionFor(line.instr.cmd)}
             {@const condTaken = condInfo ? regsView[condInfo.flag] === condInfo.want : undefined}
-            {@const cycles = i8080_cycles(line.bytes[0], condTaken ?? true)}
+            {@const cyclesTaken = i8080_cycles(line.bytes[0], true)}
+            {@const cyclesSkip = i8080_cycles(line.bytes[0], false)}
+            {@const cyclesVary = cyclesTaken !== cyclesSkip}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
             <div
@@ -621,16 +659,18 @@
                     {#if line.instr.cmd === "JMP" || line.instr.cmd === "CALL"}
                         <span class="cond-take">{jumpArrow(line.addr, parseInt(line.instr.arg1!, 16))}</span>
                     {:else if line.instr.cmd === "RET"}
-                        {@const retAddr = returnAddress()}
-                        <span class="memval">[{hex16(retAddr)}]</span>
-                        <span class="cond-take">{jumpArrow(line.addr, retAddr)}</span>
+                        {#if isPC}
+                            {@const retAddr = returnAddress()}
+                            <span class="memval">[{hex16(retAddr)}]</span>
+                            <span class="cond-take">{jumpArrow(line.addr, retAddr)}</span>
+                        {/if}
                     {:else if condInfo}
                         {@const isJumpOrCall = line.instr.cmd.startsWith("J") || line.instr.cmd.startsWith("C")}
                         {@const isRet = line.instr.cmd.startsWith("R")}
                         <span class={condTaken ? "flag-set" : "flag-unset"}>{condInfo.name}={regsView[condInfo.flag]}</span>
                         {#if condTaken && isJumpOrCall}
                             <span class="cond-take">{jumpArrow(line.addr, parseInt(line.instr.arg1!, 16))}</span>
-                        {:else if condTaken && isRet}
+                        {:else if condTaken && isRet && isPC}
                             {@const retAddr = returnAddress()}
                             <span class="memval">[{hex16(retAddr)}]</span>
                             <span class="cond-take">{jumpArrow(line.addr, retAddr)}</span>
@@ -654,7 +694,14 @@
                     {:else if hasImm8(line.instr.cmd) && line.bytes[1] >= 32 && line.bytes[1] <= 126}
                         <span class="memval">'{String.fromCharCode(line.bytes[1])}'</span>
                     {/if}
-                    <span class="cycles">{cycles}t</span>
+                    {#if cyclesVary}
+                        <span class="cycles">
+                            <span class={condTaken ? "cycles-active" : "cycles-skip"}>{cyclesTaken}t</span>/<span
+                                class={condTaken === false ? "cycles-active" : "cycles-skip"}>{cyclesSkip}t</span>
+                        </span>
+                    {:else}
+                        <span class="cycles">{cyclesTaken}t</span>
+                    {/if}
                 </span>
             </div>
         {/each}
@@ -685,7 +732,7 @@
                             use:autofocus
                             onblur={() => commitRegEdit("SP")}
                             onkeydown={(e) => onRegInputKey(e, "SP")}
-                        />{:else}<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-link" onclick={() => gotoData(it.addr)}>{hex16(it.addr)}</span>{/if}:<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-link" onclick={() => gotoCode(it.word)}>{hex8(it.lo)}{hex8(it.hi)}</span>
+                        />{:else}<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-link" onclick={() => gotoData(it.addr)}>{hex16(it.addr)}</span>{/if}:<!-- svelte-ignore a11y_click_events_have_key_events --><!-- svelte-ignore a11y_no_static_element_interactions --><span class="reg-link" onclick={() => gotoCode(it.word)}>{hex16(it.word)}</span>
                 </span>
             {/each}
         </span>
@@ -824,6 +871,12 @@
         flex: 1 1 0;
         min-height: 0;
         overflow: hidden;
+    }
+    .code.pane {
+        flex-grow: 2;
+    }
+    .data.pane {
+        flex-grow: 1;
     }
     .registers {
         padding: 2px 4px;
@@ -1063,6 +1116,12 @@
     }
     .cycles {
         color: #888;
+    }
+    .cycles-active {
+        color: #ccc;
+    }
+    .cycles-skip {
+        color: #555;
     }
     .pc-jump {
         margin-left: 6px;
