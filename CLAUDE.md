@@ -310,9 +310,24 @@ on every build/dev.
   branch between visible (1 src byte/cell, FA blanks the cell) and
   transparent (FA byte + next byte → 16-char FIFO, FA cell shows
   the FIFO byte) paths. F1/F2 stops DMA. Latched FA state (color +
-  blink) persists across rows, resets only at frame start (VRTC).
+  blink + R + U) persists across rows, resets only at frame start (VRTC).
   Color uses 86rk's inverted palette — bit set DISABLES the wired
   colour; default attr (no bits) is white, all bits is black.
+- i8275 SCN3 captured by `memory.ts`: low nibble → `screen.char_height`
+  (scan lines per row, default 10 from monitor's `0x79`), high nibble
+  → `screen.underline_scanline` (0-based LTEN line, default 7).
+  `renderer.ts` reads both for canvas pitch and underline-bar position;
+  cache invalidates on change. РАЗМЕР gauge shows `WxH:char_height`.
+- FA byte attributes are implemented as follows:
+  - Colour (HGLT D0 + GPA0 D2 + GPA1 D3) via `attrToRgb`. One-cell offset
+    (Emu80 `m_hgltOffset` / `m_gpaOffset`) in `mono`/`color1`/`color2`
+    visible mode — cell N reads colour from cell N+1's FA when N+1 is FA.
+  - Blink (D1) via wall-clock 320 ms sample. No offset.
+  - Reverse (D4) — canvas `globalCompositeOperation = "difference"` over
+    a colour-filled cell. **No offset** (no `m_rvvOffset` in Emu80) and
+    suppressed on FA cells (VSP blanks them).
+  - Underline (D5) — `scale_y`-tall bar at `screen.underline_scanline`.
+    No offset, suppressed on FA cells.
 - Drag-n-drop on the canvas (`onDrop` in `+page.svelte`) auto-runs:
   load via `uploadFile`, then `setTimeout(runLoadedFile, 500)` to
   inject the monitor G-command. Load-only paths: toolbar upload

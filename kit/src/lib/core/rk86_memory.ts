@@ -298,10 +298,11 @@ export class Memory {
 
         if (vg75_reg === 0xc000 && this.vg75_c001_00_cmd === 3) {
             // SCN3: low nibble = char_height - 1 (scan lines per row),
-            // high nibble = underline scan line. Standard RK86 monitor
-            // sets 0x79 → 10 lines, underline on line 8. Programs that
-            // want gap-less line graphics drop to 0x07/0x77 → 8 lines.
+            // high nibble = underline scan line (0-based). Standard RK86
+            // monitor sets 0x79 → 10 lines, underline at line 7. Programs
+            // that want gap-less line graphics drop to 0x07/0x77 → 8.
             this.machine.screen.set_char_height((byte & 0x0f) + 1);
+            this.machine.screen.underline_scanline = (byte >> 4) & 0x0f;
             this.vg75_c001_00_cmd += 1;
             return;
         }

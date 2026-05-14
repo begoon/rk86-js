@@ -40,6 +40,7 @@ export class CanvasRenderer implements Renderer {
     private cachedWidth = 0;
     private cachedHeight = 0;
     private cachedCharHeight = 0;
+    private cachedUnderlineScanline = -1;
     private cachedVideoBase = -1;
     private cachedColorMode: ColorMode | "" = "";
 
@@ -109,6 +110,11 @@ export class CanvasRenderer implements Renderer {
         if (mode !== this.cachedColorMode) {
             this.resetCache(screen.width * screen.height);
             this.cachedColorMode = mode;
+        }
+
+        if (screen.underline_scanline !== this.cachedUnderlineScanline) {
+            this.resetCache(screen.width * screen.height);
+            this.cachedUnderlineScanline = screen.underline_scanline;
         }
 
         // Latched FA state (color + blink). Persists across rows; only
@@ -203,19 +209,23 @@ export class CanvasRenderer implements Renderer {
             }
 
             // Render. For offset modes (mono/color1/color2 in visible
-            // mode), cell N's display color comes from cell N+1's attrs
-            // when N+1 is an FA cell; last cell of the row uses its own.
-            // R (D4) and U (D5) follow the same offset rule as colour.
+            // mode), cell N's display *colour* comes from cell N+1's
+            // attrs when N+1 is an FA cell (last cell of the row uses
+            // its own). The offset applies only to HGLT/GPA bits —
+            // matching Emu80's m_hgltOffset/m_gpaOffset, which have no
+            // counterpart for RVV or LTEN. R and U use the cell's own
+            // latched attrs unconditionally. RVV is suppressed on FA
+            // cells (chip's VSP signal blanks them).
             for (let x = 0; x < screen.width; ++x) {
                 const cell = cells[x];
                 const ch = cell.blink && blinkOff ? 0 : cell.ch;
-                let attrs = cell.attrs;
+                let colorAttrs = cell.attrs;
                 if (offset && x + 1 < screen.width && cells[x + 1].isFA) {
-                    attrs = cells[x + 1].attrs;
+                    colorAttrs = cells[x + 1].attrs;
                 }
-                const rgb = attrToRgb(mode, attrs);
-                const reverse = (attrs & 0x10) !== 0;
-                const underline = (attrs & 0x20) !== 0;
+                const rgb = attrToRgb(mode, colorAttrs);
+                const reverse = !cell.isFA && (cell.attrs & 0x10) !== 0;
+                const underline = !cell.isFA && (cell.attrs & 0x20) !== 0;
                 // Cache key packs ch (7 bits, 0..127), rgb (24 bits) and
                 // two flag bits above the rgb range (bit 32 / bit 33).
                 // Plain * / + keeps JS in float-int land — safe up to 2^53.
@@ -276,11 +286,15 @@ export class CanvasRenderer implements Renderer {
             }
         }
         if (underline) {
-            // One scaled scanline at the bottom of the glyph. In reverse
-            // mode the underline becomes black so it stays visible on the
-            // colour bg.
-            this.ctx.fillStyle = reverse ? "#000000" : rgbToCssHex(rgb);
-            this.ctx.fillRect(dstX, dstY + dstH - scale_y, dstW, scale_y);
+            // LTEN bar at the scan line programmed via SCN3 high nibble.
+            // Clamped to the cell so out-of-range values don't bleed into
+            // the next row. In reverse mode the bar is black so it stays
+            // visible on the colour bg.
+            const { underline_scanline } = this.machine.screen;
+            if (underline_scanline < char_height) {
+                this.ctx.fillStyle = reverse ? "#000000" : rgbToCssHex(rgb);
+                this.ctx.fillRect(dstX, dstY + underline_scanline * scale_y, dstW, scale_y);
+            }
         }
     }
 

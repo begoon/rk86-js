@@ -42,6 +42,11 @@ export class Screen {
     // monitor programs 10 (8-line glyph + 2-line gap); programs that want
     // gap-less line graphics drop this to 8.
     char_height = 10;
+    // Scan line index (0-based) where the i8275 asserts LTEN, drawing the
+    // underline bar. From SCN3 high nibble. Standard monitor's 0x79 →
+    // line 7 (the last scan line of an 8-line glyph in a 10-line row);
+    // programs may move it higher or lower.
+    underline_scanline = 7;
     color_mode: ColorMode = DEFAULT_COLOR_MODE;
     ready = false;
 

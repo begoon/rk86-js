@@ -325,13 +325,16 @@ class TerminalRenderer implements Renderer {
                 const cell = cells[x];
                 const ch = cell.blink && blinkOff ? 0 : cell.ch;
                 const glyph = rk86char(ch);
-                let attrs = cell.attrs;
+                let colorAttrs = cell.attrs;
                 if (offset && x + 1 < w && cells[x + 1].isFA) {
-                    attrs = cells[x + 1].attrs;
+                    colorAttrs = cells[x + 1].attrs;
                 }
-                const ansi = rgbToAnsiBaseFg(attrToRgb(mode, attrs));
-                const reverse = (attrs & 0x10) !== 0;
-                const underline = (attrs & 0x20) !== 0;
+                const ansi = rgbToAnsiBaseFg(attrToRgb(mode, colorAttrs));
+                // R/U use the cell's own latched attrs (no offset).
+                // FA cells suppress both — VSP blanks the cell and the
+                // chip drops LTEN on it too.
+                const reverse = !cell.isFA && (cell.attrs & 0x10) !== 0;
+                const underline = !cell.isFA && (cell.attrs & 0x20) !== 0;
                 if (ansi !== prevAnsi) {
                     line += `\x1b[${ansi}m`;
                     prevAnsi = ansi;
