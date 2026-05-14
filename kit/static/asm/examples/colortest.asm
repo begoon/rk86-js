@@ -1,20 +1,3 @@
-; colortest.asm — visual demo of RK86 colour modes.
-;
-; Four quadrants on a 78x30 screen, one per emulator colour mode:
-;
-;     TL  BW (MONO)              TR  COLOR1 TOLKALIN
-;     BL  COLOR2 AKIMENKO        BR  COLOR3 APOGEY
-;
-; Each quadrant lists FA byte values and the colour each byte produces
-; under that scheme. Switch the colour mode in the bottom status bar —
-; exactly one quadrant will look "right" at a time; the others render
-; the same FA bytes through their own scheme, so the labels won't match.
-;
-; The program reprograms VG75 for *visible* FA mode (SCN4 bit 6 = 1)
-; so it works against the default mon32.bin without needing the patched
-; mon32-color.bin ROM. Content is written directly to video memory by
-; a tiny line-copy loop — no `puts`, no cursor positioning.
-
 vram        equ 76D0h
 
 vram_corner equ vram + 7*78 + 8
@@ -58,7 +41,6 @@ crt_wait:
             mvi l, 8
             mvi m, 0A4h
 
-; --- draw four quadrants ---
             lxi h, vram_bw
             lxi d, bw_data
             call draw
