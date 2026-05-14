@@ -563,7 +563,7 @@
 <svelte:window on:click={() => menu && closeMenu()} on:resize={closeMenu} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="disasm" onkeydown={(e) => e.stopPropagation()} onkeyup={(e) => e.stopPropagation()}>
+<div class="disasm disasm-code" onkeydown={(e) => e.stopPropagation()} onkeyup={(e) => e.stopPropagation()}>
     <div class="toolbar">
         <button type="button" onclick={() => codeShift(-1)}>«</button>
         <button type="button" onclick={() => codeShift(-1, true)}>‹</button>
@@ -706,7 +706,10 @@
             </div>
         {/each}
     </div>
-    <hr />
+</div>
+
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="disasm disasm-regs-data" onkeydown={(e) => e.stopPropagation()} onkeyup={(e) => e.stopPropagation()}>
     <div class="registers">
         {@render reg8("A", regsView.a, changes.a)}
         <span class="reg-binary">[{regsView.a.toString(2).padStart(8, "0")}]</span>
@@ -866,17 +869,22 @@
         display: flex;
         flex-direction: column;
         min-height: 0;
+        border-left: 1px solid #333;
+    }
+    .disasm-code {
+        grid-row: 1 / 4;
+        grid-column: 3;
+        padding-right: 12px;
+    }
+    .disasm-regs-data {
+        grid-row: 3;
+        grid-column: 2;
+        border-top: 1px solid #333;
     }
     .pane {
         flex: 1 1 0;
         min-height: 0;
         overflow: hidden;
-    }
-    .code.pane {
-        flex-grow: 2;
-    }
-    .data.pane {
-        flex-grow: 1;
     }
     .registers {
         padding: 2px 4px;

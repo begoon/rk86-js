@@ -975,15 +975,15 @@
         border-color: #4a9;
     }
     .debugger-disasm {
-        grid-row: 1 / 4;
-        grid-column: 3;
-        overflow-y: auto;
-        overflow-x: hidden;
-        border-left: 1px solid #333;
+        /* Disassembler renders TWO sibling roots (.disasm-code and
+         * .disasm-regs-data); flatten this wrapper so each lands in
+         * its own grid cell — code in rows 1-2 col 3, regs+data in
+         * row 3 col 3 next to the breakpoints. */
+        display: contents;
     }
     .debugger-bps {
         grid-row: 3;
-        grid-column: 1 / 3;
+        grid-column: 1;
         overflow: hidden;
         border-top: 1px solid #333;
         min-height: 0;

@@ -204,7 +204,8 @@
     .header,
     .row {
         display: grid;
-        grid-template-columns: 32px 80px 110px 70px 60px 60px 50px 28px;
+        /* active | type | addr/opcode | len | count | hits | temp | del */
+        grid-template-columns: 32px 80px 55px 50px 50px 60px 50px 28px;
         gap: 4px;
         align-items: center;
         padding: 2px 4px;
