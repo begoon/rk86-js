@@ -205,7 +205,7 @@
     .row {
         display: grid;
         /* active | type | addr/opcode | len | count | hits | temp | del */
-        grid-template-columns: 32px 80px 55px 50px 50px 60px 50px 28px;
+        grid-template-columns: 32px 80px 80px 50px 50px 60px 50px 28px;
         gap: 4px;
         align-items: center;
         padding: 2px 4px;
@@ -214,6 +214,7 @@
         color: #888;
         border-bottom: 1px solid #222;
         font-size: 0.85em;
+        white-space: nowrap;
     }
     .row.inactive {
         opacity: 0.5;
