@@ -708,9 +708,7 @@
         </div>
         <div class="gauge">
             <span class="dimmed">РАЗМЕР</span>
-            <span>{ui.screenWidth}</span>
-            <span class="dimmed">x</span>
-            <span>{ui.screenHeight}</span>
+            <span>{ui.screenWidth}x{ui.screenHeight}:{ui.screenCharHeight}</span>
         </div>
         <div class="gauge">
             <span class="dimmed">ЦВЕТ</span>

@@ -19,6 +19,7 @@ export const ui = $state({
     videoMemoryBase: 0,
     screenWidth: 0,
     screenHeight: 0,
+    screenCharHeight: 10,
     ips: 0,
     tps: 0,
     selectedFileName: "",

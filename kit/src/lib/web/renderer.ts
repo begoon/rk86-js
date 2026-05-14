@@ -5,8 +5,10 @@ import type { Renderer } from "../core/rk86_renderer_interface.js";
 export type { Renderer };
 
 const CHAR_WIDTH = 6;
+// charROM glyph height — fixed by the i8275 ↔ charROM interface. The
+// per-row scan-line count comes from screen.char_height (SCN3 low nibble),
+// which may exceed CHAR_HEIGHT to add an inter-row gap.
 const CHAR_HEIGHT = 8;
-const CHAR_HEIGHT_GAP = 2;
 const CURSOR_HEIGHT = 1;
 
 // i8275 byte classification (used in both visible and transparent FA modes):
@@ -37,6 +39,7 @@ export class CanvasRenderer implements Renderer {
 
     private cachedWidth = 0;
     private cachedHeight = 0;
+    private cachedCharHeight = 0;
     private cachedVideoBase = -1;
     private cachedColorMode: ColorMode | "" = "";
 
@@ -79,9 +82,13 @@ export class CanvasRenderer implements Renderer {
         const { screen, memory } = this.machine;
         const mode = screen.color_mode;
 
-        if (screen.width !== this.cachedWidth || screen.height !== this.cachedHeight) {
+        if (
+            screen.width !== this.cachedWidth ||
+            screen.height !== this.cachedHeight ||
+            screen.char_height !== this.cachedCharHeight
+        ) {
             const canvasWidth = screen.width * CHAR_WIDTH * screen.scale_x;
-            const canvasHeight = screen.height * (CHAR_HEIGHT + CHAR_HEIGHT_GAP) * screen.scale_y;
+            const canvasHeight = screen.height * screen.char_height * screen.scale_y;
             this.machine.ui.resize_canvas(canvasWidth, canvasHeight);
 
             this.ctx.imageSmoothingEnabled = false;
@@ -90,6 +97,7 @@ export class CanvasRenderer implements Renderer {
 
             this.cachedWidth = screen.width;
             this.cachedHeight = screen.height;
+            this.cachedCharHeight = screen.char_height;
             this.resetCache(screen.width * screen.height);
         }
 
@@ -239,14 +247,17 @@ export class CanvasRenderer implements Renderer {
         reverse: boolean,
         underline: boolean,
     ): void {
-        const { scale_x, scale_y } = this.machine.screen;
+        const { scale_x, scale_y, char_height } = this.machine.screen;
         const dstX = x * CHAR_WIDTH * scale_x;
-        const dstY = y * (CHAR_HEIGHT + CHAR_HEIGHT_GAP) * scale_y;
+        const rowH = char_height * scale_y;
+        const dstY = y * rowH;
         const dstW = CHAR_WIDTH * scale_x;
         const dstH = CHAR_HEIGHT * scale_y;
-        // Background: colour fill if reverse, black otherwise.
+        // Background: colour fill if reverse, black otherwise. Fill the
+        // full row pitch so the inter-row gap matches (relevant when the
+        // reverse-video bar should extend across the gap).
         this.ctx.fillStyle = reverse ? rgbToCssHex(rgb) : "#000000";
-        this.ctx.fillRect(dstX, dstY, dstW, dstH);
+        this.ctx.fillRect(dstX, dstY, dstW, rowH);
         const fontSrc = this.tintedFont(rgb);
         if (fontSrc) {
             if (reverse) {
@@ -274,8 +285,12 @@ export class CanvasRenderer implements Renderer {
     }
 
     private drawCursor(x: number, y: number, visible: boolean): void {
-        const { scale_x, scale_y } = this.machine.screen;
-        const cy = (row: number) => (row * (CHAR_HEIGHT + CHAR_HEIGHT_GAP) + CHAR_HEIGHT) * scale_y;
+        const { scale_x, scale_y, char_height } = this.machine.screen;
+        // Place cursor on the row's underline slot: below the glyph when
+        // there's a gap (char_height > 8), otherwise on the last glyph
+        // scan line so it stays inside the cell.
+        const cursorScanLine = Math.min(CHAR_HEIGHT, char_height - CURSOR_HEIGHT);
+        const cy = (row: number) => (row * char_height + cursorScanLine) * scale_y;
 
         if (this.lastCursorX !== x || this.lastCursorY !== y) {
             this.ctx.fillStyle = "#000000";
@@ -304,8 +319,8 @@ export class CanvasRenderer implements Renderer {
         const mouseX = (event.clientX - box.left) * scaleX;
         const mouseY = (event.clientY - box.top) * scaleY;
 
-        const { scale_x, scale_y } = this.machine.screen;
+        const { scale_x, scale_y, char_height } = this.machine.screen;
         this.machine.screen.light_pen_x = Math.floor(mouseX / (CHAR_WIDTH * scale_x));
-        this.machine.screen.light_pen_y = Math.floor(mouseY / ((CHAR_HEIGHT + CHAR_HEIGHT_GAP) * scale_y));
+        this.machine.screen.light_pen_y = Math.floor(mouseY / (char_height * scale_y));
     }
 }

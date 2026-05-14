@@ -36,6 +36,12 @@ export class Screen {
     video_memory_base = 0;
     video_memory_size = 0;
     transparent_attr = false;
+    // Total scan lines per character row (= char_height of the i8275 SCN3
+    // low nibble + 1). The charROM glyph is always 8 scan lines tall; any
+    // excess scan lines become an inter-row gap below the glyph. The RK86
+    // monitor programs 10 (8-line glyph + 2-line gap); programs that want
+    // gap-less line graphics drop this to 8.
+    char_height = 10;
     color_mode: ColorMode = DEFAULT_COLOR_MODE;
     ready = false;
 
@@ -130,7 +136,7 @@ export class Screen {
         this.height = height;
         this.video_memory_size = width * height;
 
-        this.machine.ui.update_screen_geometry(this.width, this.height);
+        this.machine.ui.update_screen_geometry(this.width, this.height, this.char_height);
 
         if (this.last_width === this.width && this.last_height === this.height) return;
 
@@ -138,6 +144,12 @@ export class Screen {
         this.last_width = this.width;
         this.last_height = this.height;
         if (this.last_video_memory_base !== -1) this.ready = true;
+    }
+
+    set_char_height(char_height: number): void {
+        if (this.char_height === char_height) return;
+        this.char_height = char_height;
+        this.machine.ui.update_screen_geometry(this.width, this.height, this.char_height);
     }
 
     private last_video_memory_base = -1;

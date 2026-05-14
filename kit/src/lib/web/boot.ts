@@ -92,9 +92,10 @@ export class UI {
         ui.videoMemoryBase = address;
     }
 
-    update_screen_geometry(width: number, height: number): void {
+    update_screen_geometry(width: number, height: number, char_height: number): void {
         ui.screenWidth = width;
         ui.screenHeight = height;
+        ui.screenCharHeight = char_height;
     }
 
     computer_snapshot_name = "rk86-snapshot";

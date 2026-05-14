@@ -29,7 +29,7 @@ class MinimalUI {
         this.canvas.height = height;
     }
 
-    update_screen_geometry(_width: number, _height: number): void {}
+    update_screen_geometry(_width: number, _height: number, _char_height: number): void {}
     update_video_memory_address(_address: number): void {}
     update_ruslat = (_value: number): void => {};
     update_activity_indicator = (_active: boolean): void => {};
