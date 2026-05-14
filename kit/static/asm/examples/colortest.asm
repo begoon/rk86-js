@@ -23,7 +23,7 @@ vram_apogey   equ vram_corner + 12 * 78 + 40
             mvi m, 99h                  ; SCN3 — char height + underline (same as default)
             mvi m, 0D3h                 ; SCN4 — bit 6 = 1, visible FA
             inx h
-            mvi m, 27h                  ; start Display
+            mvi m, 27h                  ; start display
             mov a, m
 crt_wait:            
             mov a, m
@@ -101,7 +101,7 @@ tolkalin_data:
             db "84 zelenyj    ", 84h, "#### ", 80h, 0
             db "85 veltyj     ", 85h, "#### ", 80h, 0
             db "88 sinij      ", 88h, "#### ", 80h, 0
-            db "89 oranvewyj  ", 89h, "#### ", 80h, 0
+            db "89 fioletowyj ", 89h, "#### ", 80h, 0
             db "8C goluboj    ", 8Ch, "#### ", 80h, 0
             db "8D belyj      ", 8Dh, "#### ", 80h, 0
             db 0
@@ -113,7 +113,7 @@ akimenko_data:
             db "81 veltyj     ", 81h, "#### ", 80h, 0
             db "84 goluboj    ", 84h, "#### ", 80h, 0
             db "85 zelenyj    ", 85h, "#### ", 80h, 0
-            db "88 oranvewyj  ", 88h, "#### ", 80h, 0
+            db "88 fioletowyj ", 88h, "#### ", 80h, 0
             db "89 krasnyj    ", 89h, "#### ", 80h, 0
             db "8C sinij      ", 8Ch, "#### ", 80h, 0
             db "8D ~ernyj     ", 8Dh, "#### ", 80h, 0
@@ -126,7 +126,7 @@ apogey_data:
             db "81 goluboj    ", 81h, "#### ", 80h, 0
             db "84 zoltyj     ", 84h, "#### ", 80h, 0
             db "85 zelenyj    ", 85h, "#### ", 80h, 0
-            db "88 magenta    ", 88h, "#### ", 80h, 0
+            db "88 fioletowyj ", 88h, "#### ", 80h, 0
             db "89 sinij      ", 89h, "#### ", 80h, 0
             db "8C krasnyj    ", 8Ch, "#### ", 80h, 0
             db "8D ~ernyj     ", 8Dh, "#### ", 80h, 0
