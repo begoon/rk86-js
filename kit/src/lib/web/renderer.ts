@@ -197,6 +197,7 @@ export class CanvasRenderer implements Renderer {
             // Render. For offset modes (mono/color1/color2 in visible
             // mode), cell N's display color comes from cell N+1's attrs
             // when N+1 is an FA cell; last cell of the row uses its own.
+            // R (D4) and U (D5) follow the same offset rule as colour.
             for (let x = 0; x < screen.width; ++x) {
                 const cell = cells[x];
                 const ch = cell.blink && blinkOff ? 0 : cell.ch;
@@ -205,9 +206,18 @@ export class CanvasRenderer implements Renderer {
                     attrs = cells[x + 1].attrs;
                 }
                 const rgb = attrToRgb(mode, attrs);
-                const cacheKey = ch | (rgb << 8);
+                const reverse = (attrs & 0x10) !== 0;
+                const underline = (attrs & 0x20) !== 0;
+                // Cache key packs ch (7 bits, 0..127), rgb (24 bits) and
+                // two flag bits above the rgb range (bit 32 / bit 33).
+                // Plain * / + keeps JS in float-int land — safe up to 2^53.
+                const cacheKey =
+                    ch +
+                    rgb * 0x100 +
+                    (reverse ? 0x100000000 : 0) +
+                    (underline ? 0x200000000 : 0);
                 if (this.cache[rowBase + x] !== cacheKey) {
-                    this.drawChar(x, y, ch, rgb);
+                    this.drawChar(x, y, ch, rgb, reverse, underline);
                     this.cache[rowBase + x] = cacheKey;
                 }
             }
@@ -221,17 +231,46 @@ export class CanvasRenderer implements Renderer {
         for (let i = 0; i < size; ++i) this.cache[i] = -1;
     }
 
-    private drawChar(x: number, y: number, ch: number, rgb: number): void {
+    private drawChar(
+        x: number,
+        y: number,
+        ch: number,
+        rgb: number,
+        reverse: boolean,
+        underline: boolean,
+    ): void {
         const { scale_x, scale_y } = this.machine.screen;
         const dstX = x * CHAR_WIDTH * scale_x;
         const dstY = y * (CHAR_HEIGHT + CHAR_HEIGHT_GAP) * scale_y;
         const dstW = CHAR_WIDTH * scale_x;
         const dstH = CHAR_HEIGHT * scale_y;
-        this.ctx.fillStyle = "#000000";
+        // Background: colour fill if reverse, black otherwise.
+        this.ctx.fillStyle = reverse ? rgbToCssHex(rgb) : "#000000";
         this.ctx.fillRect(dstX, dstY, dstW, dstH);
         const fontSrc = this.tintedFont(rgb);
-        if (!fontSrc) return;
-        this.ctx.drawImage(fontSrc, 2, CHAR_HEIGHT * ch, CHAR_WIDTH, CHAR_HEIGHT, dstX, dstY, dstW, dstH);
+        if (fontSrc) {
+            if (reverse) {
+                // Cell is filled with rgb; tinted-font glyph pixels are
+                // rgb on black bg. "difference" turns glyph→black while
+                // leaving the cell bg (rgb − 0 = rgb) untouched.
+                this.ctx.globalCompositeOperation = "difference";
+                this.ctx.drawImage(
+                    fontSrc, 2, CHAR_HEIGHT * ch, CHAR_WIDTH, CHAR_HEIGHT, dstX, dstY, dstW, dstH,
+                );
+                this.ctx.globalCompositeOperation = "source-over";
+            } else {
+                this.ctx.drawImage(
+                    fontSrc, 2, CHAR_HEIGHT * ch, CHAR_WIDTH, CHAR_HEIGHT, dstX, dstY, dstW, dstH,
+                );
+            }
+        }
+        if (underline) {
+            // One scaled scanline at the bottom of the glyph. In reverse
+            // mode the underline becomes black so it stays visible on the
+            // colour bg.
+            this.ctx.fillStyle = reverse ? "#000000" : rgbToCssHex(rgb);
+            this.ctx.fillRect(dstX, dstY + dstH - scale_y, dstW, scale_y);
+        }
     }
 
     private drawCursor(x: number, y: number, visible: boolean): void {

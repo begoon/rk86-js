@@ -319,6 +319,8 @@ class TerminalRenderer implements Renderer {
             }
 
             let prevAnsi = -1;
+            let prevReverse = false;
+            let prevUnderline = false;
             for (let x = 0; x < w; x++) {
                 const cell = cells[x];
                 const ch = cell.blink && blinkOff ? 0 : cell.ch;
@@ -328,12 +330,25 @@ class TerminalRenderer implements Renderer {
                     attrs = cells[x + 1].attrs;
                 }
                 const ansi = rgbToAnsiBaseFg(attrToRgb(mode, attrs));
+                const reverse = (attrs & 0x10) !== 0;
+                const underline = (attrs & 0x20) !== 0;
                 if (ansi !== prevAnsi) {
                     line += `\x1b[${ansi}m`;
                     prevAnsi = ansi;
                 }
+                if (reverse !== prevReverse) {
+                    line += reverse ? `\x1b[7m` : `\x1b[27m`;
+                    prevReverse = reverse;
+                }
+                if (underline !== prevUnderline) {
+                    line += underline ? `\x1b[4m` : `\x1b[24m`;
+                    prevUnderline = underline;
+                }
                 if (x === screen.cursor_x && y === screen.cursor_y) {
+                    // Cursor overlays its own underline; restore the
+                    // FA-driven underline state right after.
                     line += `\x1b[4m${glyph}\x1b[24m`;
+                    prevUnderline = false;
                 } else {
                     line += glyph;
                 }
