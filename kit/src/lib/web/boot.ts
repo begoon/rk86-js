@@ -374,6 +374,8 @@ export async function main(host: HostCallbacks) {
     machine.ui.canvas = canvas;
 
     machine.memory = new Memory(machine);
+    io.input = (port) => machine.memory.read(port | (port << 8));
+    io.output = (port, w8) => machine.memory.write(port | (port << 8), w8);
     console.log("память инициализирована");
 
     machine.cpu = new I8080(machine);

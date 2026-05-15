@@ -125,6 +125,8 @@ export class Radio86Emulator extends HTMLElement {
 
         machine.ui = new MinimalUI(this.canvas) as any;
         machine.memory = new Memory(machine);
+        io.input = (port) => machine.memory.read(port | (port << 8));
+        io.output = (port, w8) => machine.memory.write(port | (port << 8), w8);
         machine.cpu = new I8080(machine);
         machine.screen = new Screen(machine);
         machine.tape = new Tape(machine);

@@ -37,6 +37,8 @@ function main() {
   var keyboard = new Keyboard();
   var memory = new Memory(keyboard);
   var io = new IO();
+  io.input = function (port) { return memory.read(port | (port << 8)); };
+  io.output = function (port, w8) { memory.write(port | (port << 8), w8); };
 
   var cpu = new I8080(memory, io);
   var runner = new Runner(cpu);
