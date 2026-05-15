@@ -19,6 +19,7 @@ export interface ExecuteOptions {
 
 export class Runner {
     paused = false;
+    turbo = false;
     tracer: ((when: string) => void) | null = null;
     last_instructions: number[] = [];
     previous_batch_time = 0;
@@ -43,7 +44,7 @@ export class Runner {
     }
 
     interrupt(iff: number) {
-        if (!this.sound) return;
+        if (!this.sound || this.turbo) return;
         if (this.last_iff == iff) return;
         if (this.last_iff == 0 && iff == 1) {
             this.last_iff_raise_ticks = this.total_ticks;
@@ -68,8 +69,10 @@ export class Runner {
     }
 
     execute(options: ExecuteOptions = {}) {
-        const { terminate_address, on_terminate, exit_on_halt, on_halt, on_batch_complete, turbo } = options;
+        const { terminate_address, on_terminate, exit_on_halt, on_halt, on_batch_complete } = options;
+        if (options.turbo !== undefined) this.turbo = options.turbo;
         clearTimeout(this.execute_timer);
+        const turbo = this.turbo;
         const bursts = turbo ? 100 : 1;
         for (let burst = 0; burst < bursts; burst++) {
             if (this.paused) break;

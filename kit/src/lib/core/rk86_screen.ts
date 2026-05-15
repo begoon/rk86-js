@@ -122,6 +122,11 @@ export class Screen {
     // Called by the runner on every batch; we advance our own tick counter.
     private last_flip_ticks = 0;
     tick_cursor(total_ticks: number, ticks_per_flip: number): void {
+        if (this.machine.runner.turbo) {
+            this.cursor_state = true;
+            this.last_flip_ticks = total_ticks;
+            return;
+        }
         while (total_ticks - this.last_flip_ticks >= ticks_per_flip) {
             this.cursor_state = !this.cursor_state;
             this.last_flip_ticks += ticks_per_flip;

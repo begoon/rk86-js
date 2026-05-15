@@ -41,7 +41,7 @@
         "scale_y": 1,
         "width": 78,
         "height": 30,
-        "cursor_state": 0,
+        "cursor_state": 1,
         "cursor_x": 8,
         "cursor_y": 21,
         "video_memory_base": "0x76D0",
