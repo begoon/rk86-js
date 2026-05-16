@@ -197,7 +197,7 @@ apogey_data:
             db "------", 0f0h, 0
             db "80 belyj        ", 80h, "#### ", 80h, 0
             db "81 goluboj      ", 81h, "#### ", 80h, 0
-            db "84 zoltyj       ", 84h, "#### ", 80h, 0
+            db "84 veltyj       ", 84h, "#### ", 80h, 0
             db "85 zelenyj      ", 85h, "#### ", 80h, 0
             db "88 fioletowyj   ", 88h, "#### ", 80h, 0
             db "89 sinij        ", 89h, "#### ", 80h, 0
