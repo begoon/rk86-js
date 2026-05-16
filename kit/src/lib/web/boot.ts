@@ -436,6 +436,8 @@ export async function main(host: HostCallbacks) {
     const auto_run = (match = url.match(/(file|run)=([^&]+)/)) ? decodeURIComponent(match[2]) : null;
     const auto_load = (match = url.match(/load=([^&]+)/)) ? decodeURIComponent(match[1]) : null;
     const handoff_id = (match = url.match(/handoff=([^&]+)/)) ? decodeURIComponent(match[1]) : null;
+    const hwid_match = url.match(/hwid=([01])/);
+    if (hwid_match) machine.runner.hardware_id_enabled = hwid_match[1] === "1";
 
     // `handoff=<uuid>` is a same-origin handoff from a playground (asm8, c8080,
     // plm80): the playground writes `{ts, url}` JSON to localStorage under

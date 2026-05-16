@@ -122,6 +122,7 @@
                 if (!debuggerVisible) toggleDebugger();
             };
             machine = m;
+            hardwareIdMode = m.runner.hardware_id_enabled;
             dbg = new Debugger(machine);
             dbg.subscribe((bps) => {
                 debuggerState.breakpoints = bps.slice();
@@ -183,6 +184,11 @@
         if (machine) machine.runner.turbo = turboMode;
     }
 
+    function toggleHardwareId() {
+        hardwareIdMode = !hardwareIdMode;
+        if (machine) machine.runner.hardware_id_enabled = hardwareIdMode;
+    }
+
     function toggleRusLat() {
         emulatorKeyDown?.("F10");
         setTimeout(() => emulatorKeyUp?.("F10"), 100);
@@ -210,6 +216,7 @@
         v: toggleVisualizer,
         d: toggleDebugger,
         t: toggleTurbo,
+        i: toggleHardwareId,
         b: () => (keyboardVisible = !keyboardVisible),
         l: () => openCatalog(),
         o: () => window.open(resolve("/catalog"), "_blank"),
@@ -291,6 +298,7 @@
 
     let visualizerVisible = $state(false);
     let turboMode = $state(false);
+    let hardwareIdMode = $state(false);
     let debuggerVisible = $state(false);
     let disassemblerRef = $state<Disassembler>();
     let breakpointEditorRef = $state<BreakpointEditor>();
@@ -556,6 +564,15 @@
                 onclick={toggleTurbo}
             >
                 <img class="icon" src="i/turbo.svg" alt="Турбо" />
+            </button>
+            <button
+                type="button"
+                class="icon"
+                class:active={hardwareIdMode}
+                data-text="Аппаратный ID (STC×4)"
+                onclick={toggleHardwareId}
+            >
+                <img class="icon" src="i/hwid.svg" alt="Аппаратный ID" />
             </button>
             <button
                 type="button"
