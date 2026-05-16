@@ -17,6 +17,8 @@ window.asm8Examples = [
     { name: "dump editor", filename: "dumped.asm" },
     { name: "chars", filename: "chars.asm" },
     { name: "noise", filename: "noise.asm" },
+    { name: "colortest", filename: "colortest.asm" },
+    { name: "hwid", filename: "hwid.asm" },
     { name: "banner", filename: "banner.asm" },
     { name: "pong", filename: "pong.asm" },
     { name: "sokoban", filename: "sokoban.asm" },
@@ -24,5 +26,4 @@ window.asm8Examples = [
     { name: "lestnica", filename: "lestnica.asm" },
     { name: "diverse", filename: "diverse.asm" },
     { name: "aliaz1", filename: "aliaz1.asm" },
-    { name: "colortest", filename: "colortest.asm" },
 ];

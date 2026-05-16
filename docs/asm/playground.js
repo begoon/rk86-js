@@ -326,12 +326,14 @@ class AsmError extends Error {
   line;
   column;
   source;
-  constructor(message, line, source, column = 1) {
+  file;
+  constructor(message, line, source, column = 1, file) {
     super(message);
     this.name = "AsmError";
     this.line = line;
     this.source = source;
     this.column = column;
+    this.file = file;
   }
 }
 function firstNonSpaceCol(s) {
@@ -472,64 +474,99 @@ var INVERT_JUMP = {
   "<>": "JZ"
 };
 var VALID_PROC_REGS = new Set(["PSW", "B", "D", "H"]);
-function popsAndRet(regs, orig) {
+function popsAndRet(regs, orig, file) {
   const out = [];
   for (let k = regs.length - 1;k >= 0; k--) {
-    out.push({ text: `	POP ${regs[k]}`, orig });
+    out.push({ text: `	POP ${regs[k]}`, orig, file });
   }
-  out.push({ text: `	RET`, orig });
+  out.push({ text: `	RET`, orig, file });
   return out;
 }
-function preprocess(source) {
+function preprocess(source, opts) {
+  const ctx = {
+    counter: { n: 0 },
+    procCounter: { n: 0 },
+    includeStack: opts?.file ? [opts.file] : [],
+    readInclude: opts?.readInclude
+  };
+  return preprocessImpl(source, opts?.file, ctx);
+}
+function preprocessImpl(source, file, ctx) {
   const lines = source.split(`
 `);
   const out = [];
   const stack = [];
-  let counter = 0;
-  let procCounter = 0;
   let proc = null;
   for (let i = 0;i < lines.length; i++) {
     const line = lines[i];
     const orig = i + 1;
     const bare = stripComment(line).trim();
+    const incMatch = bare.match(/^\.?include\s+(.+)$/i);
+    if (incMatch) {
+      const arg = incMatch[1].trim();
+      const m1 = arg.match(/^"([^"]*)"$/);
+      const m2 = arg.match(/^'([^']*)'$/);
+      const path = m1?.[1] ?? m2?.[1];
+      if (path === undefined) {
+        throw new AsmError('include requires a quoted filename, e.g. include "foo.inc"', orig, line, firstNonSpaceCol(line), file);
+      }
+      if (!ctx.readInclude) {
+        throw new AsmError("include is not supported in this environment", orig, line, firstNonSpaceCol(line), file);
+      }
+      let result;
+      try {
+        result = ctx.readInclude(path, file);
+      } catch (e) {
+        throw new AsmError(`cannot read include "${path}": ${e.message}`, orig, line, firstNonSpaceCol(line), file);
+      }
+      if (ctx.includeStack.includes(result.resolvedFile)) {
+        const chain = [...ctx.includeStack, result.resolvedFile].join(" -> ");
+        throw new AsmError(`circular include: ${chain}`, orig, line, firstNonSpaceCol(line), file);
+      }
+      ctx.includeStack.push(result.resolvedFile);
+      const nested = preprocessImpl(result.source, result.resolvedFile, ctx);
+      ctx.includeStack.pop();
+      out.push(...nested);
+      continue;
+    }
     const ifMatch = bare.match(/^\.?if\s+(\S+)\s*$/i);
     if (ifMatch) {
       const cond = ifMatch[1].toUpperCase();
       const jmp = INVERT_JUMP[cond];
       if (!jmp) {
-        throw new AsmError(`unknown .if condition: ${ifMatch[1]}`, orig, line, firstNonSpaceCol(line));
+        throw new AsmError(`unknown .if condition: ${ifMatch[1]}`, orig, line, firstNonSpaceCol(line), file);
       }
-      const id = counter++;
+      const id = ctx.counter.n++;
       stack.push({ id, sawElse: false, line: orig, source: line });
-      out.push({ text: `	${jmp} @_if_${id}_else`, orig });
+      out.push({ text: `	${jmp} @_if_${id}_else`, orig, file });
       continue;
     }
     if (/^\.?else\s*$/i.test(bare)) {
       const top = stack[stack.length - 1];
       if (!top) {
-        throw new AsmError(".else without .if", orig, line, firstNonSpaceCol(line));
+        throw new AsmError(".else without .if", orig, line, firstNonSpaceCol(line), file);
       }
       if (top.sawElse) {
-        throw new AsmError("duplicate .else", orig, line, firstNonSpaceCol(line));
+        throw new AsmError("duplicate .else", orig, line, firstNonSpaceCol(line), file);
       }
       top.sawElse = true;
-      out.push({ text: `	JMP @_if_${top.id}_exit`, orig });
-      out.push({ text: `@_if_${top.id}_else:`, orig });
+      out.push({ text: `	JMP @_if_${top.id}_exit`, orig, file });
+      out.push({ text: `@_if_${top.id}_else:`, orig, file });
       continue;
     }
     if (/^\.?endif\s*$/i.test(bare)) {
       const top = stack.pop();
       if (!top) {
-        throw new AsmError(".endif without .if", orig, line, firstNonSpaceCol(line));
+        throw new AsmError(".endif without .if", orig, line, firstNonSpaceCol(line), file);
       }
       const suffix = top.sawElse ? "exit" : "else";
-      out.push({ text: `@_if_${top.id}_${suffix}:`, orig });
+      out.push({ text: `@_if_${top.id}_${suffix}:`, orig, file });
       continue;
     }
     const procMatch = bare.match(/^([A-Za-z_]\w*):?\s+\.?proc\b\s*(.*)$/i);
     if (procMatch && !ALL_MNEMONICS.has(procMatch[1].toUpperCase())) {
       if (proc) {
-        throw new AsmError("nested .proc not allowed", orig, line, firstNonSpaceCol(line));
+        throw new AsmError("nested .proc not allowed", orig, line, firstNonSpaceCol(line), file);
       }
       const name = procMatch[1];
       const regsRaw = procMatch[2].trim();
@@ -540,12 +577,12 @@ function preprocess(source) {
             continue;
           const up = r.toUpperCase();
           if (!VALID_PROC_REGS.has(up)) {
-            throw new AsmError(`invalid .proc register: ${r} (expected PSW, B, D, or H)`, orig, line, firstNonSpaceCol(line));
+            throw new AsmError(`invalid .proc register: ${r} (expected PSW, B, D, or H)`, orig, line, firstNonSpaceCol(line), file);
           }
           regs.push(up);
         }
       }
-      const id = procCounter++;
+      const id = ctx.procCounter.n++;
       proc = {
         regs,
         line: orig,
@@ -553,46 +590,46 @@ function preprocess(source) {
         exitLabel: `__proc_${id}_exit`,
         returnUsed: false
       };
-      out.push({ text: `${name}:`, orig });
+      out.push({ text: `${name}:`, orig, file });
       for (const r of regs) {
-        out.push({ text: `	PUSH ${r}`, orig });
+        out.push({ text: `	PUSH ${r}`, orig, file });
       }
       continue;
     }
     if (/^\.proc(\s|$)/i.test(bare) || /^proc\s+\S/i.test(bare)) {
-      throw new AsmError(".proc requires a label", orig, line, firstNonSpaceCol(line));
+      throw new AsmError(".proc requires a label", orig, line, firstNonSpaceCol(line), file);
     }
     if (/^\.?endp\s*$/i.test(bare)) {
       if (!proc) {
-        throw new AsmError(".endp without .proc", orig, line, firstNonSpaceCol(line));
+        throw new AsmError(".endp without .proc", orig, line, firstNonSpaceCol(line), file);
       }
       if (proc.returnUsed) {
-        out.push({ text: `${proc.exitLabel}:`, orig });
+        out.push({ text: `${proc.exitLabel}:`, orig, file });
       }
-      out.push(...popsAndRet(proc.regs, orig));
+      out.push(...popsAndRet(proc.regs, orig, file));
       proc = null;
       continue;
     }
     if (/^\.?return\s*$/i.test(bare)) {
       if (!proc) {
-        throw new AsmError(".return outside .proc", orig, line, firstNonSpaceCol(line));
+        throw new AsmError(".return outside .proc", orig, line, firstNonSpaceCol(line), file);
       }
       if (proc.regs.length === 0) {
-        out.push({ text: `	RET`, orig });
+        out.push({ text: `	RET`, orig, file });
       } else {
         proc.returnUsed = true;
-        out.push({ text: `	JMP ${proc.exitLabel}`, orig });
+        out.push({ text: `	JMP ${proc.exitLabel}`, orig, file });
       }
       continue;
     }
-    out.push({ text: line, orig });
+    out.push({ text: line, orig, file });
   }
   if (stack.length) {
     const top = stack[stack.length - 1];
-    throw new AsmError(".if without .endif", top.line, top.source, firstNonSpaceCol(top.source));
+    throw new AsmError(".if without .endif", top.line, top.source, firstNonSpaceCol(top.source), file);
   }
   if (proc) {
-    throw new AsmError(".proc without .endp", proc.line, proc.source, firstNonSpaceCol(proc.source));
+    throw new AsmError(".proc without .endp", proc.line, proc.source, firstNonSpaceCol(proc.source), file);
   }
   return out;
 }
@@ -606,6 +643,10 @@ function splitStatements(line) {
   for (let i = 0;i + 2 < src.length; i++) {
     const c = src[i];
     if (inQ) {
+      if (c === "\\" && i + 1 < src.length) {
+        i++;
+        continue;
+      }
       if (c === qc)
         inQ = false;
       continue;
@@ -615,7 +656,7 @@ function splitStatements(line) {
       qc = c;
       continue;
     }
-    if (c !== " " || src[i + 1] !== "/" || src[i + 2] !== " ")
+    if (c !== " " || src[i + 1] !== "/" && src[i + 1] !== "\\" || src[i + 2] !== " ")
       continue;
     let j = i + 3;
     while (j < src.length && src[j] === " ")
@@ -670,12 +711,45 @@ function instrSize(m) {
     return 3;
   throw new Error(`unknown mnemonic: ${m}`);
 }
+var STRING_ESCAPES = {
+  "\\": 92,
+  '"': 34,
+  "'": 39,
+  n: 10,
+  r: 13,
+  t: 9,
+  "0": 0
+};
+function decodeString(text) {
+  const body = text.slice(1, -1);
+  const out = [];
+  for (let i = 0;i < body.length; i++) {
+    const c = body[i];
+    if (c === "\\") {
+      if (i + 1 >= body.length)
+        throw new Error("dangling '\\' in string");
+      const nxt = body[i + 1];
+      if (!(nxt in STRING_ESCAPES)) {
+        throw new Error(`unknown escape sequence '\\${nxt}'`);
+      }
+      out.push(STRING_ESCAPES[nxt]);
+      i++;
+    } else {
+      out.push(c.charCodeAt(0));
+    }
+  }
+  return out;
+}
 function stripComment(line) {
   let inQ = false;
   let qc = "";
   for (let i = 0;i < line.length; i++) {
     const c = line[i];
     if (inQ) {
+      if (c === "\\" && i + 1 < line.length) {
+        i++;
+        continue;
+      }
       if (c === qc)
         inQ = false;
     } else if (c === '"' || c === "'") {
@@ -691,9 +765,15 @@ function splitOperands(s) {
   let current = "";
   let inQ = false;
   let qc = "";
-  for (const c of s) {
+  for (let i = 0;i < s.length; i++) {
+    const c = s[i];
     if (inQ) {
       current += c;
+      if (c === "\\" && i + 1 < s.length) {
+        current += s[i + 1];
+        i++;
+        continue;
+      }
       if (c === qc)
         inQ = false;
     } else if (c === '"' || c === "'") {
@@ -767,6 +847,15 @@ function tokenizeExpr(expr) {
     let c = expr[i];
     if (/\s/.test(c)) {
       i++;
+      continue;
+    }
+    if (c === "'" && i + 3 < expr.length && expr[i + 1] === "\\" && expr[i + 3] === "'") {
+      const esc = expr[i + 2];
+      if (!(esc in STRING_ESCAPES)) {
+        throw new Error(`unknown escape sequence '\\${esc}'`);
+      }
+      tokens.push({ kind: "num", val: STRING_ESCAPES[esc] });
+      i += 4;
       continue;
     }
     if (c === "'" && i + 2 < expr.length && expr[i + 2] === "'") {
@@ -1031,9 +1120,9 @@ function encode(m, ops, symbols, pc = 0, lastLabel = "") {
 function dbBytes(operands, symbols, pc = 0, lastLabel = "") {
   const out = [];
   for (const op of operands) {
-    if (op.startsWith('"') && op.endsWith('"') || op.startsWith("'") && op.endsWith("'")) {
-      for (const ch of op.slice(1, -1))
-        out.push(ch.charCodeAt(0));
+    if (op.startsWith('"') && op.endsWith('"') && op.length >= 2 || op.startsWith("'") && op.endsWith("'") && op.length >= 2) {
+      for (const b of decodeString(op))
+        out.push(b);
     } else {
       out.push(evalExpr(op, symbols, pc, lastLabel) & 255);
     }
@@ -1069,22 +1158,22 @@ function countDs(operands, symbols, pc = 0, lastLabel = "") {
 function countDb(operands) {
   let n = 0;
   for (const op of operands) {
-    if (op.startsWith('"') && op.endsWith('"') || op.startsWith("'") && op.endsWith("'"))
-      n += op.length - 2;
+    if (op.startsWith('"') && op.endsWith('"') && op.length >= 2 || op.startsWith("'") && op.endsWith("'") && op.length >= 2)
+      n += decodeString(op).length;
     else
       n++;
   }
   return n;
 }
-function asm(source) {
-  const pp = preprocess(source);
+function asm(source, opts) {
+  const pp = preprocess(source, opts);
   const symbols = new Map;
   const pending = [];
   let pc = 0;
   let lastLabel = "";
   let ended = false;
   for (let idx = 0;idx < pp.length && !ended; idx++) {
-    const { text: line, orig } = pp[idx];
+    const { text: line, orig, file } = pp[idx];
     try {
       for (const stmt of splitStatements(line)) {
         const parts = parseLine(stmt);
@@ -1098,9 +1187,10 @@ function asm(source) {
             lastLabel = parts.label;
           }
           if (parts.isEqu) {
-            tryDefineEqu(symbols, pending, labelName, parts.operands[0], pc, lastLabel, orig, line);
+            tryDefineEqu(symbols, pending, labelName, parts.operands[0], pc, lastLabel, orig, line, file);
             continue;
           }
+          ensureSymbolFree(symbols, pending, labelName, orig, line, file);
           symbols.set(labelName.toUpperCase(), pc);
         }
         if (!parts.mnemonic)
@@ -1135,7 +1225,7 @@ function asm(source) {
     } catch (e) {
       if (e instanceof AsmError)
         throw e;
-      throw new AsmError(e.message, orig, line, firstNonSpaceCol(line));
+      throw new AsmError(e.message, orig, line, firstNonSpaceCol(line), file);
     }
   }
   resolvePendingEqus(symbols, pending);
@@ -1145,7 +1235,7 @@ function asm(source) {
   let lastLabel2 = "";
   let endedPass2 = false;
   for (let idx = 0;idx < pp.length && !endedPass2; idx++) {
-    const { text: line, orig } = pp[idx];
+    const { text: line, orig, file } = pp[idx];
     try {
       for (const stmt of splitStatements(line)) {
         const parts = parseLine(stmt);
@@ -1191,7 +1281,7 @@ function asm(source) {
     } catch (e) {
       if (e instanceof AsmError)
         throw e;
-      throw new AsmError(e.message, orig, line, firstNonSpaceCol(line));
+      throw new AsmError(e.message, orig, line, firstNonSpaceCol(line), file);
     }
   }
   if (current && current.data.length) {
@@ -1209,12 +1299,19 @@ function hex2(n) {
 function isUnknownSymbolErr(e) {
   return e instanceof Error && /^unknown symbol:/.test(e.message);
 }
-function tryDefineEqu(symbols, pending, name, expr, pc, lastLabel, orig, line) {
+function ensureSymbolFree(symbols, pending, name, orig, line, file) {
+  const upper = name.toUpperCase();
+  if (symbols.has(upper) || pending.some((p) => p.name.toUpperCase() === upper)) {
+    throw new AsmError(`duplicate symbol: ${name}`, orig, line, firstNonSpaceCol(line), file);
+  }
+}
+function tryDefineEqu(symbols, pending, name, expr, pc, lastLabel, orig, line, file) {
+  ensureSymbolFree(symbols, pending, name, orig, line, file);
   try {
     symbols.set(name.toUpperCase(), evalExpr(expr, symbols, pc, lastLabel));
   } catch (e) {
     if (isUnknownSymbolErr(e)) {
-      pending.push({ name, expr, pc, lastLabel, orig, line });
+      pending.push({ name, expr, pc, lastLabel, orig, line, file });
     } else {
       throw e;
     }
@@ -1232,7 +1329,7 @@ function resolvePendingEqus(symbols, pending) {
         if (isUnknownSymbolErr(e)) {
           next.push(p);
         } else {
-          throw new AsmError(e.message, p.orig, p.line, firstNonSpaceCol(p.line));
+          throw new AsmError(e.message, p.orig, p.line, firstNonSpaceCol(p.line), p.file);
         }
       }
     }
@@ -1241,7 +1338,7 @@ function resolvePendingEqus(symbols, pending) {
       try {
         evalExpr(p.expr, symbols, p.pc, p.lastLabel);
       } catch (e) {
-        throw new AsmError(e.message, p.orig, p.line, firstNonSpaceCol(p.line));
+        throw new AsmError(e.message, p.orig, p.line, firstNonSpaceCol(p.line), p.file);
       }
       return;
     }
@@ -1256,7 +1353,7 @@ function collectSymbols(pp) {
   let lastLabel = "";
   let ended = false;
   for (let idx = 0;idx < pp.length && !ended; idx++) {
-    let { text: line, orig } = pp[idx];
+    let { text: line, orig, file } = pp[idx];
     try {
       for (const stmt of splitStatements(line)) {
         let parts = parseLine(stmt);
@@ -1270,9 +1367,10 @@ function collectSymbols(pp) {
             lastLabel = parts.label;
           }
           if (parts.isEqu) {
-            tryDefineEqu(symbols, pending, labelName, parts.operands[0], pc, lastLabel, orig, line);
+            tryDefineEqu(symbols, pending, labelName, parts.operands[0], pc, lastLabel, orig, line, file);
             continue;
           }
+          ensureSymbolFree(symbols, pending, labelName, orig, line, file);
           symbols.set(labelName.toUpperCase(), pc);
         }
         if (!parts.mnemonic)
@@ -1307,21 +1405,21 @@ function collectSymbols(pp) {
     } catch (e) {
       if (e instanceof AsmError)
         throw e;
-      throw new AsmError(e.message, orig, line, firstNonSpaceCol(line));
+      throw new AsmError(e.message, orig, line, firstNonSpaceCol(line), file);
     }
   }
   resolvePendingEqus(symbols, pending);
   return symbols;
 }
-function lineInfo(source) {
-  let pp = preprocess(source);
+function lineInfo(source, opts) {
+  let pp = preprocess(source, opts);
   let symbols = collectSymbols(pp);
   let out = [];
   let pc = 0;
   let lastLabel = "";
   let done = false;
   for (let idx = 0;idx < pp.length; idx++) {
-    let { text: line, orig } = pp[idx];
+    let { text: line, orig, file } = pp[idx];
     if (done) {
       out.push({ orig, prefix: "", display: line, bytes: [] });
       continue;
@@ -1413,7 +1511,7 @@ function lineInfo(source) {
     } catch (e) {
       if (e instanceof AsmError)
         throw e;
-      throw new AsmError(e.message, orig, line, firstNonSpaceCol(line));
+      throw new AsmError(e.message, orig, line, firstNonSpaceCol(line), file);
     }
   }
   return out;
@@ -1422,7 +1520,7 @@ var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
 if (false) {}
 
 // docs/build-info.ts
-var BUILD_TIME = "2026-04-22 10:10:04";
+var BUILD_TIME = "2026-05-16 15:04:39";
 
 // docs/playground.ts
 var fetchExample = (f) => fetch(`examples/${f}`).then((r) => r.text());
