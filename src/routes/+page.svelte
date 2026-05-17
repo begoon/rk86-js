@@ -218,6 +218,7 @@
         v: toggleVisualizer,
         d: toggleDebugger,
         t: toggleTurbo,
+        j: toggleQwerty,
         i: toggleHardwareId,
         b: () => (keyboardVisible = !keyboardVisible),
         l: () => openCatalog(),
@@ -286,6 +287,16 @@
             }
         }
         if (debuggerVisible && !canvasFocused) return;
+        if (qwertyMode) {
+            if (QWERTY_SWALLOW_MODIFIERS.includes(e.key)) return;
+            const inj = CHAR_TO_RK[e.key];
+            if (inj) {
+                e.preventDefault();
+                qwertyInject(inj);
+                return;
+            }
+            // Fall through for Enter, Backspace, Tab, Arrow*, F1..F12, etc.
+        }
         emulatorKeyDown?.(e.code);
     }
 
@@ -293,6 +304,11 @@
         if (catalogDialog?.open) return;
         if (freezeDialog?.open) return;
         if (debuggerVisible && !canvasFocused) return;
+        if (qwertyMode) {
+            if (QWERTY_SWALLOW_MODIFIERS.includes(e.key)) return;
+            // Character keys had their own injected down/up — swallow physical up.
+            if (e.key && e.key.length === 1 && CHAR_TO_RK[e.key]) return;
+        }
         emulatorKeyUp?.(e.code);
     }
 
@@ -301,6 +317,90 @@
 
     let visualizerVisible = $state(false);
     let turboMode = $state(false);
+    let qwertyMode = $state(false);
+
+    // QWERTY mode: read e.key (the character the OS produced after applying
+    // its keyboard layout) and inject the RK keystroke that types that
+    // character on screen — toggling РУС/ЛАТ via F10 if needed, holding
+    // ShiftLeft if needed. Works regardless of whether the OS layout is
+    // US-QWERTY or Russian (browser already did the translation).
+    type Inject = { code: string; shift?: boolean; rus?: boolean };
+
+    const CHAR_TO_RK: Record<string, Inject> = (() => {
+        const m: Record<string, Inject> = {};
+        const cyr: Record<string, string> = {
+            А: "KeyA", Б: "KeyB", В: "KeyW", Г: "KeyG", Д: "KeyD", Е: "KeyE",
+            Ж: "KeyV", З: "KeyZ", И: "KeyI", Й: "KeyJ", К: "KeyK", Л: "KeyL",
+            М: "KeyM", Н: "KeyN", О: "KeyO", П: "KeyP", Р: "KeyR", С: "KeyS",
+            Т: "KeyT", У: "KeyU", Ф: "KeyF", Х: "KeyH", Ц: "KeyC", Ч: "Quote",
+            Ш: "BracketLeft", Щ: "BracketRight", Ы: "KeyY", Ь: "KeyX",
+            Э: "Backslash", Ю: "F7", Я: "KeyQ", Ё: "KeyE",
+        };
+        for (const [ch, code] of Object.entries(cyr)) {
+            m[ch] = { code, rus: true };
+            m[ch.toLowerCase()] = { code, rus: true };
+        }
+        for (let c = 0x41; c <= 0x5a; c++) {
+            const u = String.fromCharCode(c);
+            m[u] = { code: "Key" + u, rus: false };
+            m[String.fromCharCode(c + 32)] = { code: "Key" + u, rus: false };
+        }
+        for (let d = 0; d <= 9; d++) m[String(d)] = { code: "Digit" + d };
+        const shifted: Record<string, string> = {
+            "!": "Digit1", '"': "Digit2", "#": "Digit3", $: "Digit4",
+            "%": "Digit5", "&": "Digit6", "'": "Digit7", "(": "Digit8",
+            ")": "Digit9", "+": "Semicolon", "=": "Minus",
+        };
+        for (const [ch, code] of Object.entries(shifted)) m[ch] = { code, shift: true };
+        Object.assign(m, {
+            " ": { code: "Space" } as Inject,
+            // Plain ASCII punctuation — RK uses Shift for the shifted glyph,
+            // mode doesn't matter for these keys.
+            ",": { code: "Comma" } as Inject,
+            ".": { code: "Period" } as Inject,
+            "/": { code: "Slash" } as Inject,
+            "<": { code: "Comma", shift: true } as Inject,
+            ">": { code: "Period", shift: true } as Inject,
+            "?": { code: "Slash", shift: true } as Inject,
+            ";": { code: "Semicolon" } as Inject,
+            "-": { code: "Minus" } as Inject,
+            // РУС/ЛАТ-distinguished keys: each position holds a Cyrillic
+            // glyph in РУС and a Latin/symbol glyph in ЛАТ.
+            "[": { code: "BracketLeft", rus: false } as Inject,
+            "]": { code: "BracketRight", rus: false } as Inject,
+            "\\": { code: "Backslash", rus: false } as Inject,
+            "@": { code: "F7", rus: false } as Inject,
+            ":": { code: "F6", rus: false } as Inject,
+            "*": { code: "F6", rus: true } as Inject,
+            "^": { code: "Quote", rus: false } as Inject,
+        });
+        return m;
+    })();
+
+    const QWERTY_PRESS_MS = 80;
+
+    function qwertyInject(inj: Inject) {
+        let t = 0;
+        if (inj.rus !== undefined && ui.rusLat !== inj.rus) {
+            setTimeout(() => emulatorKeyDown?.("F10"), t);
+            setTimeout(() => emulatorKeyUp?.("F10"), t + QWERTY_PRESS_MS);
+            t += QWERTY_PRESS_MS + 30;
+        }
+        if (inj.shift) {
+            setTimeout(() => emulatorKeyDown?.("ShiftLeft"), t);
+            t += 20;
+        }
+        setTimeout(() => emulatorKeyDown?.(inj.code), t);
+        setTimeout(() => emulatorKeyUp?.(inj.code), t + QWERTY_PRESS_MS);
+        t += QWERTY_PRESS_MS;
+        if (inj.shift) setTimeout(() => emulatorKeyUp?.("ShiftLeft"), t + 20);
+    }
+
+    const QWERTY_SWALLOW_MODIFIERS = ["Shift", "Control", "Alt", "Meta", "CapsLock"];
+
+    function toggleQwerty() {
+        qwertyMode = !qwertyMode;
+    }
     let hardwareIdMode = $state(false);
     let debuggerVisible = $state(false);
     let disassemblerRef = $state<Disassembler>();
@@ -572,6 +672,15 @@
                 onclick={toggleTurbo}
             >
                 <img class="icon" src="i/turbo.svg" alt="Турбо" />
+            </button>
+            <button
+                type="button"
+                class="icon"
+                class:active={qwertyMode}
+                data-text="Прямой ввод"
+                onclick={toggleQwerty}
+            >
+                <img class="icon" src="i/qwerty.svg" alt="QWERTY → ЙЦУКЕН" />
             </button>
             <button
                 type="button"
@@ -848,6 +957,7 @@
             <div><mark>x</mark> восстановить состояние</div>
             <div><mark>b</mark> помощь по клавиатуре</div>
             <div><mark>n</mark> кириллица → RK86</div>
+            <div><mark>j</mark> прямой ввод</div>
         </div>
     </div>
 </dialog>
@@ -1023,6 +1133,8 @@
         height: 100%;
         aspect-ratio: 78 / 50;
         object-fit: contain;
+        outline: 1px solid #666;
+        outline-offset: -1px;
     }
     .debugger-canvas-wrap:hover,
     .canvas-focused {

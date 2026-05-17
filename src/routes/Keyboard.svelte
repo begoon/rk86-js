@@ -73,6 +73,41 @@
         }
     }
 
+    // Classifies a row entry by subline semantics.
+    //   "function"    — single-purpose button (TAB, ENT, ⇧, CTRL, ПС, F10);
+    //                   both sublines just press the code.
+    //   "letter"      — top subline = РУС glyph, middle = ЛАТ glyph
+    //                   (letter rows + F6/F7 with РУС/ЛАТ-split symbols).
+    //   "shift"       — top subline = shifted glyph, middle = unshifted
+    //                   (plain ASCII punctuation in non-digit rows).
+    function classify(labels: string[]): "function" | "letter" | "shift" {
+        const code = labels[2];
+        if (!labels[1] || code === "F10") return "function";
+        if (/^F\d+$/.test(code)) return "letter";
+        if (/[А-Яа-яЁё]/.test(labels[0])) return "letter";
+        return "shift";
+    }
+
+    function clickSubline(labels: string[], rowIdx: number, isTop: boolean) {
+        const code = labels[2];
+        if (rowIdx === 0) {
+            // Digit row: top = unshifted, middle = shifted.
+            simulateKey(code, !isTop);
+            return;
+        }
+        switch (classify(labels)) {
+            case "function":
+                simulateKey(code, false);
+                return;
+            case "letter":
+                simulateLetterKey(code, isTop);
+                return;
+            case "shift":
+                simulateKey(code, isTop);
+                return;
+        }
+    }
+
     let panel = $state<HTMLDivElement>();
     let dragging = $state(false);
     let dragOffset = { x: 0, y: 0 };
@@ -190,23 +225,11 @@
                     {#each row as labels}
                         <div class="key">
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
-                            <div
-                                class="clickable"
-                                onclick={() =>
-                                    i === 0
-                                        ? simulateKey(labels[2], false)
-                                        : simulateLetterKey(labels[2], true)}
-                            >
+                            <div class="clickable" onclick={() => clickSubline(labels, i, true)}>
                                 {labels[0] || "\u00A0"}
                             </div>
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
-                            <div
-                                class="clickable"
-                                onclick={() =>
-                                    i === 0
-                                        ? simulateKey(labels[2], true)
-                                        : simulateLetterKey(labels[2], false)}
-                            >
+                            <div class="clickable" onclick={() => clickSubline(labels, i, false)}>
                                 {labels[1] || "\u00A0"}
                             </div>
                             <div class={/^F\d/.test(labels[2]) ? "fkey" : ""}>{labels[2] || "\u00A0"}</div>
