@@ -3,18 +3,11 @@
 .vscode
 node_modules
 
-# classic
-classic/build/
-classic/rk86_tape_catalog.js
-classic/catalog/index.html
-
-# kit
-kit/.svelte-kit/
-kit/build/
-kit/files.js
-kit/rk86.ts
-kit/src/lib/catalog_data.ts
-kit/src/lib/tape_catalog.ts
-kit/src/lib/rk86_version.ts
-kit/.claude/settings.local.json
+.svelte-kit/
+build/
+rk86.ts
+src/lib/catalog_data.ts
+src/lib/tape_catalog.ts
+src/lib/rk86_version.ts
+static/radio86-emulator.js
 .claude/settings.local.json

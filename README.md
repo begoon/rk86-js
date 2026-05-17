@@ -1,11 +1,12 @@
-![classic](https://github.com/begoon/rk86-js/actions/workflows/classic.yaml/badge.svg)
 ![kit](https://github.com/begoon/rk86-js/actions/workflows/kit.yaml/badge.svg)
 
 # Эмулятор Радио-86РК
 
 Эмулятор советского домашнего компьютера [Радио-86РК](https://ru.wikipedia.org/wiki/%D0%A0%D0%B0%D0%B4%D0%B8%D0%BE_86%D0%A0%D0%9A) (1986) на базе процессора Intel 8080 (КР580ВМ80А). Эмуляция на уровне команд процессора.
 
-Запустить можно сразу — [rk86.ru](https://rk86.ru/) (новая версия) или [классический вариант](https://rk86.ru/classic/).
+Запустить можно сразу — [rk86.ru](https://rk86.ru/).
+
+Историческая классическая версия (vanilla JS) удалена из `master`; последний рабочий снимок живёт в ветке [`classic`](https://github.com/begoon/rk86-js/tree/classic).
 
 Проект основан на [i8080-js](http://github.com/begoon/i8080-js/). [Пост с описанием](http://demin.ws/blog/russian/2012/10/04/rk86-js/). Немного [информации о семействе микросхем КР580](http://demin.ws/projects/radio86/info/kr580/).
 
@@ -29,15 +30,19 @@ cargo install just       # через Rust toolchain
 
 ## Быстрый старт
 
-Инструментарий — `just` + `bun`. Корневой [`Justfile`](Justfile) собирает и тестирует обе версии:
+Инструментарий — `just` + `bun`. Единый [`Justfile`](Justfile) в корне:
 
 ```bash
-just               # install + build + test (обе версии)
-just install       # bun install в classic/ и kit/
-just build         # сборка обеих версий
-just test          # тесты обеих версий
-just serve [port]  # локальный вебсервер из docs/ (по умолчанию :8000)
-just clean         # git clean -fdx (сохраняет .claude-директории)
+just                      # тесты + сборка (по умолчанию)
+just install              # bun install
+bun run dev               # dev-сервер на http://localhost:5173
+bun run build             # статическая сборка в build/
+just test                 # модульные тесты + тесты CPU
+just test-ci              # полный набор включая CPU Exerciser
+just release              # сборка + публикация в docs/ (production)
+just release-experimental # публикация в docs/beta
+just serve [port]         # локальный вебсервер из docs/ (по умолчанию :8000)
+just clean                # git clean -fdx (сохраняет .claude)
 ```
 
 Проверка с нуля:
@@ -46,56 +51,17 @@ just clean         # git clean -fdx (сохраняет .claude-директор
 just clean && just
 ```
 
-## Две версии
-
-Репозиторий содержит две реализации эмулятора, живущие бок о бок.
-
-| Версия | Каталог | Стек |
-|--------|---------|------|
-| **Классическая** | [`classic/`](classic/) | Vanilla JS + HTML, Bun, Twig, just |
-| **Новая** | [`kit/`](kit/) | SvelteKit 2 + Svelte 5 + TypeScript + Tailwind 4 + Bun, just |
-
-Обе версии независимы и сохраняют собственные команды.
-
-### Классическая версия (`classic/`)
-
-Исходная реализация на чистом JavaScript. Тестировалась в Google Chrome и Safari под Mac и Windows.
-
-```bash
-cd classic
-just               # тесты + сборка
-just test          # тесты (bun test)
-just release       # сборка + публикация в ../docs/classic/
-just watch         # пересборка при изменении файлов
-```
-
-### Новая версия (`kit/`)
-
-SvelteKit-реализация. Доступна как веб-компонент `<radio86-emulator>` и как CLI-пакет [`rk86`](https://www.npmjs.com/package/rk86) для терминала.
-
-```bash
-cd kit
-bun install
-bun run dev               # dev-сервер на http://localhost:5173
-bun run build             # статическая сборка в kit/build/
-just test                 # модульные тесты + тесты CPU
-just test-ci              # полный набор включая CPU Exerciser
-just release              # сборка + публикация в ../docs/ (production)
-just release-experimental # публикация в ../docs/beta
-```
-
 ## Деплой
 
 GitHub Pages публикует [`docs/`](docs/) на <https://rk86.ru>.
 
-| Путь | Источник | Команда сборки |
-|------|----------|----------------|
-| `docs/` (root) | `kit/` (production) | `cd kit && just release` |
-| `docs/classic/` | `classic/src/` | `cd classic && just release` |
-| `docs/beta/` | `kit/` (экспериментальный) | `cd kit && just release-beta` |
-| `docs/monitor/` | поддерживается вручную | коммитится напрямую |
+| Путь | Команда сборки |
+|------|----------------|
+| `docs/` (root) — production | `just release` |
+| `docs/beta/` — экспериментальный (`BASE_PATH=/beta`) | `just release-beta` |
+| `docs/monitor/` — поддерживается вручную | коммитится напрямую |
 
-`docs/beta/` зарезервирован для экспериментальных деплоев `kit/` (с `BASE_PATH=/beta`).
+Маршрут `/classic/` остаётся как HTML-редирект на корень (`src/routes/classic/+page.svelte`), чтобы старые ссылки не давали 404.
 
 ## Возможности
 
@@ -221,13 +187,13 @@ PC всегда центрируется на ~½ высоты code-пейна �
 
 Под `/c8080/` развёрнут [c8080-js playground](https://github.com/begoon/c8080-js) — компилятор подмножества C в ассемблер Intel 8080 прямо в браузере. Кнопка «Компилятор C» в тулбаре открывает его в новой вкладке. Кнопка «run» компилирует, ассемблирует итоговый `.asm`, упаковывает в `.rk` и передаёт эмулятору через handoff — тем же путём, что и асcемблер.
 
-Обновить playground из локальной копии `c8080-js`: `just update-c8080` из `kit/`.
+Обновить playground из локальной копии `c8080-js`: `just update-c8080`.
 
 ## Компилятор PL/M-80
 
 Под `/plm80/` развёрнут [plm80 playground](https://github.com/begoon/plm80) — компилятор PL/M-80 (язык системного программирования Intel, 1973) в ассемблер i8080. Кнопка «Компилятор PL/M-80» в тулбаре открывает его в новой вкладке; «run» доставляет результат эмулятору через тот же handoff-протокол.
 
-Примеры — `static/plm80/examples/*.plm` (hello, counter, greeting, literally, strlen, sum, videomem). Обновить playground: `just update-plm80` из `kit/`.
+Примеры — `static/plm80/examples/*.plm` (hello, counter, greeting, literally, strlen, sum, videomem). Обновить playground: `just update-plm80`.
 
 ## Визуализатор WAV-лент
 
@@ -287,27 +253,20 @@ bunx rk86 --headless --turbo --exit-halt \
 ## Структура репозитория
 
 ```
-classic/                — классическая версия (vanilla JS)
-  src/                  — исходники
-  tests/                — bun-тесты
-  tools/                — скрипты сборки каталога и магнитофона
-  Justfile              — сборка, тесты, публикация
-kit/                    — новая версия (SvelteKit)
-  src/lib/core/         — ядро эмулятора (CPU, память, экран, клавиатура, звук, runner)
-  src/lib/web/          — браузерный слой
-  src/lib/terminal/     — терминальный эмулятор
-  src/lib/component/    — веб-компонент <radio86-emulator>
-  src/routes/           — SvelteKit страницы
-  static/files/         — бинарные файлы программ (180+)
-  static/catalog/       — метаданные и скриншоты
-  tests/                — bun-тесты (166 тестов, 1.7M проверок)
-  packages/rk86/        — npm-пакет для терминала
+src/lib/core/           — ядро эмулятора (CPU, память, экран, клавиатура, звук, runner)
+src/lib/web/            — браузерный слой
+src/lib/terminal/       — терминальный эмулятор
+src/lib/component/      — веб-компонент <radio86-emulator>
+src/routes/             — SvelteKit страницы
+static/files/           — бинарные файлы программ (180+)
+static/catalog/         — метаданные и скриншоты
+tests/                  — bun-тесты (166 тестов, 1.7M проверок)
+packages/rk86/          — npm-пакет для терминала
 docs/                   — публикуемый сайт (GH Pages, rk86.ru)
-  (root)                — новая версия (production)
-  classic/              — классическая версия
-  beta/                 — новая версия (экспериментальный слот)
+  (root)                — production-сборка
+  beta/                 — экспериментальный слот (BASE_PATH=/beta)
   monitor/              — просмотрщик ROM-монитора (отдельный артефакт)
-info/                   — общая документация и ассемблерные примеры
+info/                   — документация и ассемблерные примеры
   RK86.md               — справочник программиста (память, периферия, монитор, видео, клавиатура)
   MIKROSHA.md           — заметки по Микроше
   SNAPSHOT.md           — формат JSON-снимков
