@@ -165,6 +165,7 @@ function preprocess(source) {
   const out = [];
   const stack = [];
   let counter = 0;
+  let procCounter = 0;
   let proc = null;
   for (let i = 0;i < lines.length; i++) {
     const line = lines[i];
@@ -223,7 +224,14 @@ function preprocess(source) {
           regs.push(up);
         }
       }
-      proc = { regs, line: orig, source: line };
+      const id = procCounter++;
+      proc = {
+        regs,
+        line: orig,
+        source: line,
+        exitLabel: `__proc_${id}_exit`,
+        returnUsed: false
+      };
       out.push({ text: `${name}:`, orig });
       for (const r of regs) {
         out.push({ text: `	PUSH ${r}`, orig });
@@ -237,6 +245,9 @@ function preprocess(source) {
       if (!proc) {
         throw new AsmError(".endp without .proc", orig, line, firstNonSpaceCol(line));
       }
+      if (proc.returnUsed) {
+        out.push({ text: `${proc.exitLabel}:`, orig });
+      }
       out.push(...popsAndRet(proc.regs, orig));
       proc = null;
       continue;
@@ -245,7 +256,12 @@ function preprocess(source) {
       if (!proc) {
         throw new AsmError(".return outside .proc", orig, line, firstNonSpaceCol(line));
       }
-      out.push(...popsAndRet(proc.regs, orig));
+      if (proc.regs.length === 0) {
+        out.push({ text: `	RET`, orig });
+      } else {
+        proc.returnUsed = true;
+        out.push({ text: `	JMP ${proc.exitLabel}`, orig });
+      }
       continue;
     }
     out.push({ text: line, orig });
@@ -742,6 +758,7 @@ function countDb(operands) {
 function asm(source) {
   const pp = preprocess(source);
   const symbols = new Map;
+  const pending = [];
   let pc = 0;
   let lastLabel = "";
   let ended = false;
@@ -760,7 +777,7 @@ function asm(source) {
             lastLabel = parts.label;
           }
           if (parts.isEqu) {
-            symbols.set(labelName.toUpperCase(), evalExpr(parts.operands[0], symbols, pc, lastLabel));
+            tryDefineEqu(symbols, pending, labelName, parts.operands[0], pc, lastLabel, orig, line);
             continue;
           }
           symbols.set(labelName.toUpperCase(), pc);
@@ -800,6 +817,7 @@ function asm(source) {
       throw new AsmError(e.message, orig, line, firstNonSpaceCol(line));
     }
   }
+  resolvePendingEqus(symbols, pending);
   const sections = [];
   let current = null;
   const sectionNames = new Set;
@@ -861,6 +879,50 @@ function asm(source) {
   }
   return sections;
 }
+function isUnknownSymbolErr(e) {
+  return e instanceof Error && /^unknown symbol:/.test(e.message);
+}
+function tryDefineEqu(symbols, pending, name, expr, pc, lastLabel, orig, line) {
+  try {
+    symbols.set(name.toUpperCase(), evalExpr(expr, symbols, pc, lastLabel));
+  } catch (e) {
+    if (isUnknownSymbolErr(e)) {
+      pending.push({ name, expr, pc, lastLabel, orig, line });
+    } else {
+      throw e;
+    }
+  }
+}
+function resolvePendingEqus(symbols, pending) {
+  while (pending.length > 0) {
+    let progress = false;
+    const next = [];
+    for (const p of pending) {
+      try {
+        symbols.set(p.name.toUpperCase(), evalExpr(p.expr, symbols, p.pc, p.lastLabel));
+        progress = true;
+      } catch (e) {
+        if (isUnknownSymbolErr(e)) {
+          next.push(p);
+        } else {
+          throw new AsmError(e.message, p.orig, p.line, firstNonSpaceCol(p.line));
+        }
+      }
+    }
+    if (!progress) {
+      const p = next[0];
+      try {
+        evalExpr(p.expr, symbols, p.pc, p.lastLabel);
+      } catch (e) {
+        throw new AsmError(e.message, p.orig, p.line, firstNonSpaceCol(p.line));
+      }
+      return;
+    }
+    pending.length = 0;
+    pending.push(...next);
+  }
+}
+var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
 if (false) {}
 
 // src/lib/terminal/rk86_terminal.ts
@@ -871,7 +933,7 @@ import { basename } from "path";
 // packages/rk86/package.json
 var package_default = {
   name: "rk86",
-  version: "2.0.29",
+  version: "2.0.30",
   description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
   bin: {
     rk86: "rk86.js"
@@ -889,7 +951,7 @@ var package_default = {
   license: "MIT",
   repository: {
     type: "git",
-    url: "https://github.com/begoon/rk86-js-web"
+    url: "https://github.com/begoon/rk86-js"
   }
 };
 
@@ -2261,6 +2323,8 @@ class Memory {
       return;
     }
     if (vg75_reg === 49152 && this.vg75_c001_00_cmd === 3) {
+      this.machine.screen.set_char_height((byte & 15) + 1);
+      this.machine.screen.underline_scanline = byte >> 4 & 15;
       this.vg75_c001_00_cmd += 1;
       return;
     }
@@ -2354,6 +2418,9 @@ class Memory {
 // src/lib/core/rk86_runner.ts
 class Runner {
   paused = false;
+  turbo = false;
+  hardware_id_enabled = false;
+  stc_streak = 0;
   tracer = null;
   last_instructions = [];
   previous_batch_time = 0;
@@ -2375,7 +2442,7 @@ class Runner {
     this.machine.cpu.jump(63488);
   }
   interrupt(iff) {
-    if (!this.sound)
+    if (!this.sound || this.turbo)
       return;
     if (this.last_iff == iff)
       return;
@@ -2400,8 +2467,11 @@ class Runner {
     }
   }
   execute(options = {}) {
-    const { terminate_address, on_terminate, exit_on_halt, on_halt, on_batch_complete, turbo } = options;
+    const { terminate_address, on_terminate, exit_on_halt, on_halt, on_batch_complete } = options;
+    if (options.turbo !== undefined)
+      this.turbo = options.turbo;
     clearTimeout(this.execute_timer);
+    const turbo = this.turbo;
     const bursts = turbo ? 100 : 1;
     for (let burst = 0;burst < bursts; burst++) {
       if (this.paused)
@@ -2418,10 +2488,21 @@ class Runner {
         if (this.last_instructions.length > 5) {
           this.last_instructions.shift();
         }
+        const opcode_pc = this.machine.cpu.pc;
         this.machine.memory.invalidate_access_variables();
         const instruction_ticks = this.machine.cpu.instruction();
         batch_ticks += instruction_ticks;
         this.total_ticks += instruction_ticks;
+        if (this.hardware_id_enabled) {
+          if (this.machine.memory.read_raw(opcode_pc) === 55) {
+            if (++this.stc_streak >= 4) {
+              this.stc_streak = 0;
+              this.fire_hardware_id();
+            }
+          } else {
+            this.stc_streak = 0;
+          }
+        }
         if (this.tracer) {
           this.tracer("after");
           if (this.paused)
@@ -2464,6 +2545,13 @@ class Runner {
     this.machine.cpu.jump(63488);
     this.machine.keyboard.reset();
   }
+  fire_hardware_id() {
+    const colorIdx = COLOR_MODES.indexOf(this.machine.screen.color_mode);
+    this.machine.cpu.set_a(1);
+    this.machine.cpu.set_b(colorIdx < 0 ? 0 : colorIdx);
+    this.machine.cpu.set_c(this.turbo ? 1 : 0);
+    this.machine.cpu.cf = 0;
+  }
 }
 
 // src/lib/core/rk86_screen.ts
@@ -2484,6 +2572,8 @@ class Screen {
   video_memory_base = 0;
   video_memory_size = 0;
   transparent_attr = false;
+  char_height = 10;
+  underline_scanline = 7;
   color_mode = DEFAULT_COLOR_MODE;
   ready = false;
   renderer;
@@ -2544,6 +2634,11 @@ class Screen {
   }
   last_flip_ticks = 0;
   tick_cursor(total_ticks, ticks_per_flip) {
+    if (this.machine.runner.turbo) {
+      this.cursor_state = true;
+      this.last_flip_ticks = total_ticks;
+      return;
+    }
     while (total_ticks - this.last_flip_ticks >= ticks_per_flip) {
       this.cursor_state = !this.cursor_state;
       this.last_flip_ticks += ticks_per_flip;
@@ -2560,7 +2655,7 @@ class Screen {
     this.width = width;
     this.height = height;
     this.video_memory_size = width * height;
-    this.machine.ui.update_screen_geometry(this.width, this.height);
+    this.machine.ui.update_screen_geometry(this.width, this.height, this.char_height);
     if (this.last_width === this.width && this.last_height === this.height)
       return;
     this.machine.log(`\u0443\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D \u0440\u0430\u0437\u043C\u0435\u0440 \u044D\u043A\u0440\u0430\u043D\u0430: ${width} x ${height}`);
@@ -2568,6 +2663,12 @@ class Screen {
     this.last_height = this.height;
     if (this.last_video_memory_base !== -1)
       this.ready = true;
+  }
+  set_char_height(char_height) {
+    if (this.char_height === char_height)
+      return;
+    this.char_height = char_height;
+    this.machine.ui.update_screen_geometry(this.width, this.height, this.char_height);
   }
   last_video_memory_base = -1;
   set_video_memory(base) {
@@ -2992,21 +3093,34 @@ class TerminalRenderer {
         addr += w;
       }
       let prevAnsi = -1;
+      let prevReverse = false;
+      let prevUnderline = false;
       for (let x = 0;x < w; x++) {
         const cell = cells[x];
         const ch = cell.blink && blinkOff ? 0 : cell.ch;
         const glyph = rk86char(ch);
-        let attrs = cell.attrs;
+        let colorAttrs = cell.attrs;
         if (offset && x + 1 < w && cells[x + 1].isFA) {
-          attrs = cells[x + 1].attrs;
+          colorAttrs = cells[x + 1].attrs;
         }
-        const ansi = rgbToAnsiBaseFg(attrToRgb(mode, attrs));
+        const ansi = rgbToAnsiBaseFg(attrToRgb(mode, colorAttrs));
+        const reverse = !cell.isFA && (cell.attrs & 16) !== 0;
+        const underline = !cell.isFA && (cell.attrs & 32) !== 0;
         if (ansi !== prevAnsi) {
           line += `\x1B[${ansi}m`;
           prevAnsi = ansi;
         }
+        if (reverse !== prevReverse) {
+          line += reverse ? `\x1B[7m` : `\x1B[27m`;
+          prevReverse = reverse;
+        }
+        if (underline !== prevUnderline) {
+          line += underline ? `\x1B[4m` : `\x1B[24m`;
+          prevUnderline = underline;
+        }
         if (x === screen.cursor_x && y === screen.cursor_y) {
           line += `\x1B[4m${glyph}\x1B[24m`;
+          prevUnderline = false;
         } else {
           line += glyph;
         }
@@ -3299,6 +3413,8 @@ async function main() {
   const machine = machineBuilder;
   machine.ui = new TerminalUI;
   machine.memory = new Memory(machine);
+  io.input = (port) => machine.memory.read(port | port << 8);
+  io.output = (port, w8) => machine.memory.write(port | port << 8, w8);
   machine.cpu = new I8080(machine);
   machine.screen = new Screen(machine);
   machine.screen.color_mode = colorMode;

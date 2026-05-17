@@ -15,6 +15,7 @@ import { Screen } from "../core/rk86_screen.js";
 import { rk86_snapshot_restore } from "../core/rk86_snapshot.js";
 import { CanvasRenderer } from "../web/renderer.js";
 import { Tape } from "../web/tape.js";
+import { EMBEDDED_MONITORS } from "./embedded_monitors.js";
 
 class MinimalUI {
     canvas: HTMLCanvasElement;
@@ -59,6 +60,19 @@ async function fetchFile(base: string, name: string): Promise<number[] | undefin
     } catch (error) {
         console.error(`radio86-emulator: failed to fetch ${url}:`, error);
     }
+}
+
+function decodeBase64(b64: string): number[] {
+    const bin = atob(b64);
+    const out = new Array<number>(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+}
+
+async function loadMonitor(base: string, name: string): Promise<number[] | undefined> {
+    const embedded = EMBEDDED_MONITORS[name];
+    if (embedded) return decodeBase64(embedded);
+    return fetchFile(base, name);
 }
 
 function commandInjector(keyboard: Keyboard, sequence: SequenceAction[], i: number): void {
@@ -134,8 +148,8 @@ export class Radio86Emulator extends HTMLElement {
 
         machine.memory.update_ruslat = machine.ui.update_ruslat;
 
-        // Load monitor ROM
-        const monitorContent = await fetchFile(filesPath, monitor);
+        // Load monitor ROM (inlined for known names, fetched otherwise)
+        const monitorContent = await loadMonitor(filesPath, monitor);
         if (!monitorContent) {
             console.error("radio86-emulator: failed to load monitor ROM");
             return;

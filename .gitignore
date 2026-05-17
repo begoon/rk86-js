@@ -9,5 +9,7 @@ rk86.ts
 src/lib/catalog_data.ts
 src/lib/tape_catalog.ts
 src/lib/rk86_version.ts
+src/lib/component/embedded_monitors.ts
 static/radio86-emulator.js
+packages/radio86-emulator/radio86-emulator.js
 .claude/settings.local.json

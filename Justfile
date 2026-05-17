@@ -74,6 +74,18 @@ terminal-publish: terminal-build terminal-bump
 
 #
 
+component-build:
+    bun tools/build_embedded_monitors.ts
+    bun build src/lib/component/radio86-emulator.ts --outfile packages/radio86-emulator/radio86-emulator.js --minify
+
+component-bump:
+    cd packages/radio86-emulator && npm version patch
+
+component-publish: component-build component-bump
+    cd packages/radio86-emulator && npm publish
+
+#
+
 build-asm: build-claude build-exiter
 
 build-claude:
