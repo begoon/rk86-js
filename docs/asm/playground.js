@@ -1520,7 +1520,7 @@ var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
 if (false) {}
 
 // docs/build-info.ts
-var BUILD_TIME = "2026-05-16 15:04:39";
+var BUILD_TIME = "2026-05-17 11:19:44";
 
 // docs/playground.ts
 var fetchExample = (f) => fetch(`examples/${f}`).then((r) => r.text());
@@ -1547,7 +1547,14 @@ var ACTIVE_KEY = "asm8-playground:active";
 var THEME_KEY = "asm8-playground:theme";
 var FORMAT_KEY = "asm8-playground:format";
 var DEFAULT_FILENAME = "program.asm";
-var OUTPUT_FORMATS = ["asm", "bin", "rk", "rkr", "pki", "gam"];
+var OUTPUT_FORMATS = [
+  "asm",
+  "bin",
+  "rk",
+  "rkr",
+  "pki",
+  "gam"
+];
 var DEFAULT_FORMAT = "asm";
 var tabs = [];
 var active = 0;
@@ -1570,6 +1577,7 @@ function saveTheme(t) {
 var source = document.getElementById("source");
 var gutter = document.getElementById("gutter");
 var highlight = document.getElementById("highlight");
+var hlText = document.getElementById("hl-text");
 var errorEl = document.getElementById("error");
 var select = document.getElementById("example");
 var modal = document.getElementById("modal");
@@ -1796,9 +1804,12 @@ function renderGutter(info, totalLines) {
     else
       groups.set(r.orig, [r]);
   }
+  const width = String(Math.max(totalLines, 1)).length;
   const out = [];
   for (let i = 1;i <= totalLines; i++) {
-    out.push(fmtGutterGroup(groups.get(i)));
+    const num = String(i).padStart(width, " ");
+    const body = fmtGutterGroup(groups.get(i));
+    out.push(`<span class="lineno">${num}</span>` + (body ? body : ""));
   }
   gutter.innerHTML = out.join(`
 `);
@@ -1812,9 +1823,224 @@ function renderHighlight(errLine) {
   div.style.position = "absolute";
   div.style.left = "0";
   div.style.right = "0";
-  div.style.top = `${PAD_TOP + (errLine - 1) * LINE_HEIGHT - source.scrollTop}px`;
+  div.style.top = `${PAD_TOP + (errLine - 1) * LINE_HEIGHT}px`;
   div.style.height = `${LINE_HEIGHT}px`;
   highlight.appendChild(div);
+}
+var MNEMONICS = new Set([
+  "mov",
+  "mvi",
+  "lxi",
+  "lda",
+  "sta",
+  "lhld",
+  "shld",
+  "ldax",
+  "stax",
+  "xchg",
+  "push",
+  "pop",
+  "xthl",
+  "sphl",
+  "add",
+  "adc",
+  "sub",
+  "sbb",
+  "ana",
+  "ora",
+  "xra",
+  "cmp",
+  "adi",
+  "aci",
+  "sui",
+  "sbi",
+  "ani",
+  "ori",
+  "xri",
+  "cpi",
+  "inr",
+  "dcr",
+  "inx",
+  "dcx",
+  "dad",
+  "daa",
+  "rlc",
+  "rrc",
+  "ral",
+  "rar",
+  "cma",
+  "cmc",
+  "stc",
+  "jmp",
+  "jnz",
+  "jz",
+  "jnc",
+  "jc",
+  "jpo",
+  "jpe",
+  "jp",
+  "jm",
+  "pchl",
+  "call",
+  "cnz",
+  "cz",
+  "cnc",
+  "cc",
+  "cpo",
+  "cpe",
+  "cp",
+  "cm",
+  "ret",
+  "rnz",
+  "rz",
+  "rnc",
+  "rc",
+  "rpo",
+  "rpe",
+  "rp",
+  "rm",
+  "rst",
+  "ei",
+  "di",
+  "nop",
+  "hlt",
+  "in",
+  "out"
+]);
+var REGISTERS = new Set([
+  "a",
+  "b",
+  "c",
+  "d",
+  "e",
+  "h",
+  "l",
+  "m",
+  "sp",
+  "psw"
+]);
+var DIRECTIVES2 = new Set([
+  "org",
+  "equ",
+  "db",
+  "dw",
+  "ds",
+  "end",
+  "section",
+  "include",
+  "if",
+  "else",
+  "endif",
+  "proc",
+  "endp",
+  "return",
+  "low",
+  "high"
+]);
+function highlightLine(line) {
+  let out = "";
+  let i = 0;
+  let firstTok = true;
+  const n = line.length;
+  while (i < n) {
+    const c = line[i];
+    if (c === " " || c === "\t") {
+      let j = i;
+      while (j < n && (line[j] === " " || line[j] === "\t"))
+        j++;
+      out += esc(line.slice(i, j));
+      i = j;
+      continue;
+    }
+    if (c === ";") {
+      out += `<span class="tok-comment">${esc(line.slice(i))}</span>`;
+      return out;
+    }
+    if (c === "'" || c === '"') {
+      let j = i + 1;
+      while (j < n) {
+        if (line[j] === "\\" && j + 1 < n) {
+          j += 2;
+          continue;
+        }
+        if (line[j] === c) {
+          j++;
+          break;
+        }
+        j++;
+      }
+      out += `<span class="tok-string">${esc(line.slice(i, j))}</span>`;
+      i = j;
+      firstTok = false;
+      continue;
+    }
+    if (c === "$" && !/[A-Za-z0-9_]/.test(line[i + 1] ?? "")) {
+      out += `<span class="tok-number">$</span>`;
+      i++;
+      firstTok = false;
+      continue;
+    }
+    if (c >= "0" && c <= "9") {
+      const nm = /^(?:0[xX][0-9a-fA-F]+|[0-9][0-9a-fA-F]*[hH]|[01]+[bB]|[0-9]+)/.exec(line.slice(i));
+      if (nm) {
+        out += `<span class="tok-number">${esc(nm[0])}</span>`;
+        i += nm[0].length;
+        firstTok = false;
+        continue;
+      }
+    }
+    const idm = /^[@.]?[A-Za-z_][A-Za-z0-9_]*/.exec(line.slice(i));
+    if (idm) {
+      const word = idm[0];
+      const after = i + word.length;
+      const lower = word.toLowerCase();
+      const stripped = lower.replace(/^[.@]/, "");
+      if (line[after] === ":") {
+        out += `<span class="tok-label">${esc(word + ":")}</span>`;
+        i = after + 1;
+        firstTok = false;
+        continue;
+      }
+      let cls;
+      if (word.startsWith(".") && DIRECTIVES2.has(stripped))
+        cls = "tok-directive";
+      else if (MNEMONICS.has(lower))
+        cls = "tok-mnemonic";
+      else if (firstTok && DIRECTIVES2.has(stripped))
+        cls = "tok-directive";
+      else if (DIRECTIVES2.has(stripped))
+        cls = "tok-directive";
+      else if (REGISTERS.has(lower))
+        cls = "tok-register";
+      else if (word.startsWith("@") || word.startsWith("."))
+        cls = "tok-label";
+      else if (firstTok)
+        cls = "tok-label";
+      else
+        cls = "tok-ident";
+      out += `<span class="${cls}">${esc(word)}</span>`;
+      i += word.length;
+      firstTok = false;
+      continue;
+    }
+    const pm = /^[<>=!&|^~+\-*/%(),:\[\]\\]/.exec(line.slice(i));
+    if (pm) {
+      out += `<span class="tok-punct">${esc(pm[0])}</span>`;
+      i += pm[0].length;
+      firstTok = false;
+      continue;
+    }
+    out += esc(c);
+    i++;
+    firstTok = false;
+  }
+  return out;
+}
+function renderHighlightText(src) {
+  const lines = src.split(`
+`);
+  hlText.innerHTML = lines.map(highlightLine).join(`
+`);
 }
 var errLine = null;
 var lastSections = null;
@@ -1822,6 +2048,7 @@ function compile() {
   const src = source.value;
   const totalLines = src.length === 0 ? 1 : src.split(`
 `).length;
+  renderHighlightText(src);
   try {
     const info = lineInfo(src);
     lastSections = asm(src);
@@ -1845,7 +2072,7 @@ function compile() {
       errorEl.classList.add("visible");
       errorEl.textContent = e.message;
     }
-    gutter.innerHTML = "";
+    renderGutter([], totalLines);
     renderHighlight(errLine);
   }
 }
@@ -1985,9 +2212,11 @@ filenameInput.addEventListener("change", () => {
   renderTabs();
 });
 function syncScroll() {
-  gutter.style.transform = `translateY(${-source.scrollTop}px)`;
-  if (errLine !== null)
-    renderHighlight(errLine);
+  const dx = -source.scrollLeft;
+  const dy = -source.scrollTop;
+  gutter.style.transform = `translateY(${dy}px)`;
+  hlText.style.transform = `translate(${dx}px, ${dy}px)`;
+  highlight.style.transform = `translateY(${dy}px)`;
 }
 function onChange() {
   save();

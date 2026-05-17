@@ -30,6 +30,17 @@
   --modal-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
   --kbd-bg: rgba(255, 255, 255, 0.18);
   --kbd-border: rgba(255, 255, 255, 0.25);
+  --tok-comment: #6a9955;
+  --tok-string: #ce9178;
+  --tok-number: #b5cea8;
+  --tok-mnemonic: #569cd6;
+  --tok-directive: #c586c0;
+  --tok-register: #4fc1ff;
+  --tok-label: #dcdcaa;
+  --tok-punct: #d4d4d4;
+  --tok-ident: #d4d4d4;
+  --lineno-fg: #5a5a5a;
+  --selection-bg: rgba(120, 180, 230, 0.32);
   color-scheme: dark;
 }
 
@@ -65,6 +76,17 @@ body.theme-light {
   --modal-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   --kbd-bg: rgba(0, 0, 0, 0.08);
   --kbd-border: rgba(0, 0, 0, 0.18);
+  --tok-comment: #6a737d;
+  --tok-string: #032f62;
+  --tok-number: #005cc5;
+  --tok-mnemonic: #d73a49;
+  --tok-directive: #6f42c1;
+  --tok-register: #e36209;
+  --tok-label: #22863a;
+  --tok-punct: #24292e;
+  --tok-ident: #24292e;
+  --lineno-fg: #bbbbbb;
+  --selection-bg: rgba(3, 102, 214, 0.22);
   color-scheme: light;
 }
 
@@ -307,7 +329,7 @@ main {
 .gutter {
   flex: 0 0 auto;
   align-self: flex-start;
-  min-width: 180px;
+  min-width: 240px;
   padding: 8px 10px 8px 12px;
   background: var(--gutter-bg);
   color: var(--muted);
@@ -319,6 +341,11 @@ main {
   border-right: 1px solid var(--gutter-border);
   user-select: none;
   pointer-events: none;
+}
+
+.gutter .lineno {
+  color: var(--lineno-fg);
+  margin-right: 8px;
 }
 
 .gutter .addr {
@@ -428,6 +455,7 @@ main {
   overflow: hidden;
 }
 
+.hl-text,
 .highlight,
 #source {
   position: absolute;
@@ -444,11 +472,46 @@ main {
   tab-size: 4;
 }
 
+.hl-text {
+  pointer-events: none;
+  background: transparent;
+  color: var(--tok-ident);
+  overflow: visible;
+  will-change: transform;
+}
+
+.hl-text .tok-comment {
+  color: var(--tok-comment);
+  font-style: italic;
+}
+.hl-text .tok-string {
+  color: var(--tok-string);
+}
+.hl-text .tok-number {
+  color: var(--tok-number);
+}
+.hl-text .tok-mnemonic {
+  color: var(--tok-mnemonic);
+}
+.hl-text .tok-directive {
+  color: var(--tok-directive);
+}
+.hl-text .tok-register {
+  color: var(--tok-register);
+}
+.hl-text .tok-label {
+  color: var(--tok-label);
+}
+.hl-text .tok-punct {
+  color: var(--tok-punct);
+}
+
 .highlight {
   pointer-events: none;
   color: transparent;
   background: transparent;
-  overflow: hidden;
+  overflow: visible;
+  will-change: transform;
 }
 
 .highlight .err-line {
@@ -457,11 +520,15 @@ main {
 }
 
 #source {
-  color: var(--fg);
+  color: transparent;
   background: transparent;
   resize: none;
   outline: none;
   caret-color: var(--fg);
+}
+
+#source::selection {
+  background: var(--selection-bg);
 }
 
 .error {
