@@ -3,10 +3,12 @@
         onclose,
         onkeydown,
         onkeyup,
+        rusLat = false,
     }: {
         onclose: () => void;
         onkeydown?: (code: string) => void;
         onkeyup?: (code: string) => void;
+        rusLat?: boolean;
     } = $props();
 
     const PRESS_DURATION = 100;
@@ -53,6 +55,19 @@
                 press(code);
                 setTimeout(() => onkeyup?.("ShiftLeft"), PRESS_DURATION);
             }, 50);
+        } else {
+            press(code);
+        }
+    }
+
+    // For letter rows: ensure РУС/ЛАТ matches the subline clicked, toggling
+    // F10 first if needed. Cyrillic subline → wants rusLat=true; Latin → false.
+    function simulateLetterKey(label: string, wantRus: boolean) {
+        const code = labelToCode[label];
+        if (!code) return;
+        if (rusLat !== wantRus) {
+            press("F10");
+            setTimeout(() => press(code), PRESS_DURATION + 30);
         } else {
             press(code);
         }
@@ -175,11 +190,23 @@
                     {#each row as labels}
                         <div class="key">
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
-                            <div class="clickable" onclick={() => simulateKey(labels[2], false)}>
+                            <div
+                                class="clickable"
+                                onclick={() =>
+                                    i === 0
+                                        ? simulateKey(labels[2], false)
+                                        : simulateLetterKey(labels[2], true)}
+                            >
                                 {labels[0] || "\u00A0"}
                             </div>
                             <!-- svelte-ignore a11y_click_events_have_key_events -->
-                            <div class="clickable" onclick={() => simulateKey(labels[2], i === 0)}>
+                            <div
+                                class="clickable"
+                                onclick={() =>
+                                    i === 0
+                                        ? simulateKey(labels[2], true)
+                                        : simulateLetterKey(labels[2], false)}
+                            >
                                 {labels[1] || "\u00A0"}
                             </div>
                             <div class={/^F\d/.test(labels[2]) ? "fkey" : ""}>{labels[2] || "\u00A0"}</div>

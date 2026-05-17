@@ -854,6 +854,7 @@
 
 {#if keyboardVisible}
     <Keyboard
+        rusLat={ui.rusLat}
         onclose={() => (keyboardVisible = false)}
         onkeydown={(code) => emulatorKeyDown?.(code)}
         onkeyup={(code) => emulatorKeyUp?.(code)}
