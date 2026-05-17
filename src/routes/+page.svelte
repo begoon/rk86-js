@@ -24,12 +24,14 @@
     import Keyboard from "./Keyboard.svelte";
     import MemoryMap from "./MemoryMap.svelte";
     import CursorInfo from "./CursorInfo.svelte";
+    import RkTextConverter from "./RkTextConverter.svelte";
     import { debuggerState, ui } from "./state.svelte";
     import Visualizer from "./Visualizer.svelte";
 
     let keyboardVisible = $state(false);
     let catalogDialog = $state<HTMLDialogElement>();
     let catalogSelector = $state<CatalogSelector>();
+    let textConverterDialog = $state<HTMLDialogElement>();
 
     const FREEZE_CAP = 20;
     let freezes = $state<Freeze[]>([]);
@@ -225,6 +227,7 @@
         w: () => machine?.ui.emulator_snapshot(),
         z: freezeNow,
         x: openFreezeSelector,
+        n: () => textConverterDialog?.showModal(),
     };
 
     function onKeyDown(e: KeyboardEvent) {
@@ -556,6 +559,14 @@
             <button
                 type="button"
                 class="icon"
+                data-text="Кириллица → RK86"
+                onclick={() => textConverterDialog?.showModal()}
+            >
+                <img class="icon" src="i/koi7.svg" alt="Кириллица → RK86" />
+            </button>
+            <button
+                type="button"
+                class="icon"
                 class:active={turboMode}
                 data-text="Турбо-режим"
                 onclick={toggleTurbo}
@@ -836,6 +847,7 @@
             <div><mark>z</mark> заморозить состояние</div>
             <div><mark>x</mark> восстановить состояние</div>
             <div><mark>b</mark> помощь по клавиатуре</div>
+            <div><mark>n</mark> кириллица → RK86</div>
         </div>
     </div>
 </dialog>
@@ -892,6 +904,17 @@
         ondelete={deleteFreeze}
         onclose={() => freezeDialog?.close()}
     />
+</dialog>
+
+<dialog
+    id="text-converter-dialog"
+    bind:this={textConverterDialog}
+    onclick={(e) => {
+        if (e.target === e.currentTarget) textConverterDialog?.close();
+    }}
+    onclose={() => (document.activeElement as HTMLElement)?.blur()}
+>
+    <RkTextConverter onclose={() => textConverterDialog?.close()} />
 </dialog>
 
 <style>
@@ -1070,11 +1093,13 @@
     }
     #shortcuts::backdrop,
     #catalog-dialog::backdrop,
-    #freeze-dialog::backdrop {
+    #freeze-dialog::backdrop,
+    #text-converter-dialog::backdrop {
         background-color: rgba(0, 0, 0, 0.5);
     }
     #catalog-dialog,
-    #freeze-dialog {
+    #freeze-dialog,
+    #text-converter-dialog {
         position: fixed;
         top: 50%;
         left: 50%;
