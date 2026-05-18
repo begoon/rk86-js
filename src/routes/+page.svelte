@@ -911,7 +911,7 @@
                 class="color-mode"
                 tabindex={-1}
                 onclick={cycleRenderMode}
-                title={ui.renderMode === "vg75" ? "ВГ75 (~50 Гц) — клик: переключить на монитор (rAF)" : "Монитор (rAF) — клик: переключить на ВГ75"}
+                title={ui.renderMode === "vg75" ? "ВГ75 (~50 Гц) — клик: переключить на монитор (requestAnimationFrame)" : "Монитор (requestAnimationFrame) — клик: переключить на ВГ75"}
             >
                 {ui.renderMode === "vg75" ? "ВГ75" : "МОНИТОР"}
             </button>
