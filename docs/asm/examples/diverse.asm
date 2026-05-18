@@ -2,8 +2,8 @@
         section diverse
 
 ; ---- RK86 monitor ROM entry points (F800h-FFFFh) ----
-; Public jump-table slots are documented in ../rk86-js-kit/info/RK86.md
-; and in the monitor source at ../rk86-monitor/monitor.asm. FD27h is
+; Public jump-table slots are documented in rk86-js/info/RK86.md
+; and in the monitor source at rk86-monitor/monitor.asm. FD27h is
 ; the internal SOUND routine (see CLAUDE.md); FAE0h is the tail of
 ; entry_video (status poll + DMA setup), reused to inject a custom
 ; SCN4 byte while keeping the rest of the monitor's video init.
