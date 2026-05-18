@@ -783,7 +783,16 @@
                 onmouseleave={clearHover}
                 data-text={canvasFocused ? "" : "Кликнуть для ввода"}
                 bind:this={debuggerCanvasSlot}
-            ></div>
+            >
+                {#if hoverCharX != null && hoverCharY != null}
+                    {@const w = machine.memory.video_screen_size_x || 1}
+                    {@const h = machine.memory.video_screen_size_y || 1}
+                    <div
+                        class="light-pen-marker"
+                        style="left: {(hoverCharX / w) * 100}%; top: {(hoverCharY / h) * 100}%; width: {100 / w}%; height: {100 / h}%;"
+                    ></div>
+                {/if}
+            </div>
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div class="debugger-map" onclick={() => (canvasFocused = false)}>
@@ -830,6 +839,7 @@
                 <CursorInfo
                     bind:this={cursorInfoRef}
                     memory={machine.memory}
+                    screen={machine.screen}
                     hoverX={hoverCharX}
                     hoverY={hoverCharY}
                     ongotodata={(addr) => disassemblerRef?.gotoDataCentered(addr)}
@@ -837,8 +847,23 @@
             </div>
         </div>
     {/if}
-    <div bind:this={canvasPlaceholder} class="canvas-placeholder" style={debuggerVisible ? "display: none" : ""}>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div
+        bind:this={canvasPlaceholder}
+        class="canvas-placeholder"
+        style={debuggerVisible ? "display: none" : ""}
+        onmousemove={updateHover}
+        onmouseleave={clearHover}
+    >
         <canvas bind:this={canvas}></canvas>
+        {#if !debuggerVisible && machine && hoverCharX != null && hoverCharY != null}
+            {@const w = machine.memory.video_screen_size_x || 1}
+            {@const h = machine.memory.video_screen_size_y || 1}
+            <div
+                class="light-pen-marker"
+                style="left: {(hoverCharX / w) * 100}%; top: {(hoverCharY / h) * 100}%; width: {100 / w}%; height: {100 / h}%;"
+            ></div>
+        {/if}
     </div>
     {#if visualizerVisible}
         <Visualizer onclose={toggleVisualizer} />
@@ -1108,6 +1133,13 @@
         height: fit-content;
         cursor: pointer;
         border: 2px solid #333;
+        position: relative;
+    }
+    .light-pen-marker {
+        position: absolute;
+        border: 2px solid red;
+        box-sizing: border-box;
+        pointer-events: none;
     }
     .debugger-map {
         grid-row: 1;
@@ -1127,6 +1159,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        position: relative;
     }
     .canvas-placeholder canvas {
         width: 100%;
