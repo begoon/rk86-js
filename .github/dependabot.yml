@@ -5,7 +5,7 @@ updates:
   # for a static site with no user data, where transitive CVEs are
   # not a real threat model.
   - package-ecosystem: npm
-    directory: /kit/packages/rk86
+    directory: packages/rk86
     schedule:
       interval: monthly
     groups:

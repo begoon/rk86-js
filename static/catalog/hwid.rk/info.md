@@ -9,4 +9,4 @@
 В эмуляторе хук по умолчанию выключен в — включите его иконкой «чип» в тулбаре
 рядом с «Турбо» или URL-параметром "?hwid=1".
 
-Исходный код программы <a href="https://github.com/begoon/rk86-js/blob/master/kit/static/asm/examples/hwid.asm">hwid.asm</a>.
+Исходный код программы <a href="https://github.com/begoon/rk86-js/blob/master/static/asm/examples/hwid.asm">hwid.asm</a>.
