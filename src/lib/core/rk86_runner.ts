@@ -27,7 +27,6 @@ export class Runner {
     last_instructions: number[] = [];
     previous_batch_time = 0;
     total_ticks = 0;
-    last_iff_raise_ticks = 0;
     last_iff = 0;
     sound: SoundAdapter | null = null;
     sound_factory?: () => SoundAdapter;
@@ -49,16 +48,8 @@ export class Runner {
     interrupt(iff: number) {
         if (!this.sound || this.turbo) return;
         if (this.last_iff == iff) return;
-        if (this.last_iff == 0 && iff == 1) {
-            this.last_iff_raise_ticks = this.total_ticks;
-        }
-        if (this.last_iff == 1 && iff == 0) {
-            const tone_ticks = this.total_ticks - this.last_iff_raise_ticks;
-            const tone = this.FREQ / (tone_ticks * 2);
-            const duration = 1 / tone;
-            this.sound.play(tone, duration);
-        }
         this.last_iff = iff;
+        this.sound.out(iff, this.total_ticks);
     }
 
     init_sound(enabled: boolean) {
@@ -66,6 +57,7 @@ export class Runner {
             this.sound = this.sound_factory();
             this.machine.log("звук включен");
         } else if (!enabled) {
+            this.sound?.done?.();
             this.sound = null;
             this.machine.log("звук выключен");
         }
