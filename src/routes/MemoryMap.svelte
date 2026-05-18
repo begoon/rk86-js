@@ -16,18 +16,41 @@
 
     const hex = (v: number, w: number) => v.toString(16).toUpperCase().padStart(w, "0");
 
+    const MONITOR_ROM_BASE = 0xf800;
+    const MONITOR_ROM_END = 0x10000;
+
+    function regionOf(addr: number): string | null {
+        const vbase = memory.video_memory_base;
+        const vsize = memory.video_memory_size;
+        if (vsize > 0 && addr >= vbase && addr < vbase + vsize) return "видеопамять";
+        if (addr >= MONITOR_ROM_BASE && addr < MONITOR_ROM_END) return "ROM монитора";
+        return null;
+    }
+
     export function refresh() {
         if (!canvas) return;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
         const img = ctx.createImageData(256, 256);
         const data = img.data;
+        const vbase = memory.video_memory_base;
+        const vsize = memory.video_memory_size;
+        const vend = vbase + vsize;
         for (let addr = 0; addr < 0x10000; addr++) {
             const v = memory.read_raw(addr) & 0xff;
+            const hi = v >> 4;
+            const lo = v & 0x0f;
             const i = addr * 4;
-            data[i] = (v >> 4) * 17;
-            data[i + 1] = (v & 0x0f) * 17;
-            data[i + 2] = v;
+            if (vsize > 0 && addr >= vbase && addr < vend) {
+                // Видеопамять — зелёный оттенок, яркость по значению байта.
+                data[i] = lo * 4;
+                data[i + 1] = 80 + (v >> 1);
+                data[i + 2] = hi * 4;
+            } else {
+                data[i] = hi * 17;
+                data[i + 1] = lo * 17;
+                data[i + 2] = v;
+            }
             data[i + 3] = 255;
         }
         ctx.putImageData(img, 0, 0);
@@ -67,7 +90,15 @@
 </script>
 
 <div class="mem-map-wrap">
-    <div class="label">Карта памяти</div>
+    <div class="label">
+        <button type="button" class="refresh" onclick={refresh} title="Обновить карту памяти">Карта памяти</button>
+        {#if hoverAddr !== null}
+            {@const region = regionOf(hoverAddr)}
+            {#if region}
+                <span class="region">— {region}</span>
+            {/if}
+        {/if}
+    </div>
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <canvas
@@ -106,6 +137,14 @@
         font-size: small;
         color: #888;
     }
+    .label .refresh {
+        all: unset;
+        cursor: pointer;
+        color: inherit;
+    }
+    .label .refresh:hover {
+        color: #ddd;
+    }
     canvas.mem-map {
         width: 256px;
         height: 256px;
@@ -125,5 +164,8 @@
     .readout .hl {
         color: #ffcc00;
         font-weight: bold;
+    }
+    .label .region {
+        color: #66dd88;
     }
 </style>
