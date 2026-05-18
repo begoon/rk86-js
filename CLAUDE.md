@@ -233,14 +233,15 @@ on every build/dev.
   like ALIAZ1.
 - Deterministic execution: `runner.execute()` is a wall-clock-paced
   «fair»-scheduler — each `setTimeout(0)` quantum runs CPU for at
-  most `dt_ms × TICK_PER_MS` ticks (i.e. real-time pacing at 1.78 МГц)
-  capped by a 5 ms main-thread budget. Turbo skips the wall-clock cap
-  and just runs as many instructions as fit in the 5 ms budget per
-  quantum, yielding with `setTimeout(0)` between them. Regardless of
-  mode, `on_batch_complete` and `tick_cursor` fire on strict
-  `TICK_PER_MS`-aligned CPU-tick boundaries — that's what keeps the
-  terminal's `--input` injection (which schedules by `at_ticks`)
-  bit-identical across runs and across turbo-on/turbo-off.
+  most `dt_ms × (FREQ / 1000)` ticks (i.e. real-time pacing at
+  1.78 МГц) capped by a 5 ms main-thread budget. Turbo skips the
+  wall-clock cap and just runs as many instructions as fit in a
+  50 ms quantum, yielding with `setTimeout(0)` between them.
+  Regardless of mode, `on_batch_complete` and `tick_cursor` fire on
+  strict `BATCH_TICKS`-aligned CPU-tick boundaries (`BATCH_TICKS =
+  FREQ / 100` ≈ 10 ms эмуляции) — что и держит терминальное
+  `--input`-вмешательство (которое планируется по `at_ticks`)
+  bit-identical между прогонами и между turbo-on/turbo-off.
 - Cursor blink is CPU-tick-driven too (`screen.tick_cursor`, called
   from the runner) — wall-clock `setTimeout` would desync with
   turbo.

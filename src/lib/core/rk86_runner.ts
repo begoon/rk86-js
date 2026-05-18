@@ -11,7 +11,7 @@ export interface ExecuteOptions {
     // is expected to have paused the runner); return false/void to keep
     // running (HLT will pin PC and effectively spin in place).
     on_halt?: () => boolean | void;
-    // Fires every TICK_PER_MS-tick CPU boundary (≈10 мс эмулируемого
+    // Fires every BATCH_TICKS-tick CPU boundary (≈10 мс эмулируемого
     // времени). Намеренно НЕ зависит от wall-clock: терминал/e2e-тесты
     // диспатчат `--input`-события сравнивая `at_ticks <= total_ticks`,
     // что должно совпадать tick-в-tick между прогонами.
@@ -31,19 +31,28 @@ export class Runner {
     tracer: ((when: string) => void) | null = null;
     last_instructions: number[] = [];
     total_ticks = 0;
+    total_instructions = 0;
     last_iff = 0;
     sound: SoundAdapter | null = null;
     sound_factory?: () => SoundAdapter;
     instructions_per_millisecond = 0;
     ticks_per_millisecond = 0;
     FREQ = 1780000;
-    TICK_PER_MS: number;
     execute_timer: ReturnType<typeof setTimeout> | undefined;
     machine: Machine;
 
+    // Гранулярность on_batch_complete / tick_cursor: тиков, после
+    // которых дёргаются хуки. Исторически = FREQ/100 ≈ 10 мс эмуляции;
+    // e2e-тесты диспатчат `--input`-события на этих границах, поэтому
+    // менять без необходимости нельзя.
+    BATCH_TICKS: number;
+    // Тиков на 1 мс wall-clock при real-time-пэйсинге (1.78 МГц CPU).
+    TICKS_PER_WALL_MS: number;
+
     constructor(machine: Machine) {
         this.machine = machine;
-        this.TICK_PER_MS = this.FREQ / 100;
+        this.BATCH_TICKS = this.FREQ / 100;
+        this.TICKS_PER_WALL_MS = this.FREQ / 1000;
 
         this.machine.io.interrupt = (iff: number) => this.interrupt(iff);
         this.machine.cpu.jump(0xf800);
@@ -82,7 +91,7 @@ export class Runner {
     // Чтобы не сломать детерминизм e2e-тестов (которые диспатчат
     // клавиатурные события по `at_ticks <= total_ticks`), хуки
     // `on_batch_complete` и `tick_cursor` дёргаются строго по
-    // CPU-тиковым границам кратным TICK_PER_MS — независимо от того,
+    // CPU-тиковым границам кратным BATCH_TICKS — независимо от того,
     // сколько микро-квантов прошло.
     execute(options: ExecuteOptions = {}) {
         const { terminate_address, on_terminate, exit_on_halt, on_halt, on_batch_complete } = options;
@@ -90,18 +99,24 @@ export class Runner {
         clearTimeout(this.execute_timer);
 
         const QUANTUM_BUDGET_MS = 5;
-        const TURBO_BUDGET_MS = 5;
+        const TURBO_BUDGET_MS = 50; // даёт ~30-50× от real-time, как старое «100 батчей за макротаск»
         const MAX_DT_MS = 100; // огр. catch-up после tab-suspend
         const PAUSED_TICK_MS = 50;
-        const PERF_ALPHA = 0.1;
+        const PERF_WINDOW_MS = 500; // окно для замера IPS/TPS (wall-clock)
 
-        let next_batch_boundary = this.total_ticks + this.TICK_PER_MS;
+        let next_batch_boundary = this.total_ticks + this.BATCH_TICKS;
         let last_call_time = performance.now();
+        let perf_window_start_wall = last_call_time;
+        let perf_window_start_instructions = this.total_instructions;
+        let perf_window_start_ticks = this.total_ticks;
 
         const tick = (): void => {
             if (this.paused) {
                 last_call_time = performance.now();
-                next_batch_boundary = this.total_ticks + this.TICK_PER_MS;
+                perf_window_start_wall = last_call_time;
+                perf_window_start_instructions = this.total_instructions;
+                perf_window_start_ticks = this.total_ticks;
+                next_batch_boundary = this.total_ticks + this.BATCH_TICKS;
                 this.execute_timer = setTimeout(tick, PAUSED_TICK_MS);
                 return;
             }
@@ -112,11 +127,9 @@ export class Runner {
 
             const target_total = this.turbo
                 ? Number.POSITIVE_INFINITY
-                : this.total_ticks + dt_ms * this.TICK_PER_MS;
+                : this.total_ticks + dt_ms * this.TICKS_PER_WALL_MS;
             const deadline = call_start + (this.turbo ? TURBO_BUDGET_MS : QUANTUM_BUDGET_MS);
 
-            let quantum_instructions = 0;
-            let quantum_ticks = 0;
             let terminated = false;
 
             while (
@@ -136,8 +149,7 @@ export class Runner {
                 this.machine.memory.invalidate_access_variables();
                 const instruction_ticks = this.machine.cpu.instruction();
                 this.total_ticks += instruction_ticks;
-                quantum_ticks += instruction_ticks;
-                quantum_instructions += 1;
+                this.total_instructions += 1;
 
                 if (this.hardware_id_enabled) {
                     if (this.machine.memory.read_raw(opcode_pc) === 0x37) {
@@ -172,28 +184,30 @@ export class Runner {
                     }
                 }
 
-                // Хуки на TICK_PER_MS-выровненных границах — даёт
-                // детерминизм для e2e-тестов и стабильный курсор-мерцания.
+                // Хуки на BATCH_TICKS-выровненных границах — даёт
+                // детерминизм для e2e-тестов и стабильный мерцание курсора.
                 if (this.total_ticks >= next_batch_boundary) {
                     this.machine.screen.tick_cursor(
                         this.total_ticks,
                         this.FREQ * (this.machine.screen.cursor_rate / 1000),
                     );
                     on_batch_complete?.();
-                    next_batch_boundary += this.TICK_PER_MS;
+                    next_batch_boundary += this.BATCH_TICKS;
                 }
             }
 
-            const elapsed = performance.now() - call_start;
-            if (elapsed > 0 && quantum_instructions > 0) {
-                const ips_now = quantum_instructions / elapsed;
-                const tps_now = quantum_ticks / elapsed;
-                this.instructions_per_millisecond = this.instructions_per_millisecond
-                    ? (1 - PERF_ALPHA) * this.instructions_per_millisecond + PERF_ALPHA * ips_now
-                    : ips_now;
-                this.ticks_per_millisecond = this.ticks_per_millisecond
-                    ? (1 - PERF_ALPHA) * this.ticks_per_millisecond + PERF_ALPHA * tps_now
-                    : tps_now;
+            // Скользящее окно метрик: считаем по wall-clock, а не по
+            // времени работы внутри кванта — иначе при коротких квантах
+            // с большими yield-перерывами IPS получится завышенным.
+            const window_elapsed = performance.now() - perf_window_start_wall;
+            if (window_elapsed >= PERF_WINDOW_MS) {
+                this.instructions_per_millisecond =
+                    (this.total_instructions - perf_window_start_instructions) / window_elapsed;
+                this.ticks_per_millisecond =
+                    (this.total_ticks - perf_window_start_ticks) / window_elapsed;
+                perf_window_start_wall = performance.now();
+                perf_window_start_instructions = this.total_instructions;
+                perf_window_start_ticks = this.total_ticks;
             }
 
             this.execute_timer = setTimeout(tick, 0);
