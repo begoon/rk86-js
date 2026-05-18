@@ -43,6 +43,9 @@ export class Sound {
     }
 
     out(level: number, cpu_ticks: number): void {
+        // браузер мог авто-suspend-нуть контекст в фоновой вкладке;
+        // resume() после первого жеста уже не требует нового жеста.
+        if (this.audioCtx.state === "suspended") this.audioCtx.resume();
         this.gain.gain.setValueAtTime(level ? ON_GAIN : 0, this.when(cpu_ticks));
     }
 
