@@ -231,12 +231,16 @@ on every build/dev.
   rather than `cpu.jump` — the direct jump leaves the monitor mid-
   prompt-loop with inconsistent keyboard state that broke programs
   like ALIAZ1.
-- Deterministic execution: `runner.execute()` takes
-  `on_batch_complete` (fires at end of every `TICK_PER_MS`-tick
-  batch) and `turbo` (runs 100 batches per macrotask, yields with
-  `setTimeout(…, 0)`). The terminal's `--input` injection is
-  scheduled in CPU ticks (not wall-clock ms), so golden-snapshot e2e
-  tests are bit-identical across runs and turbo-on vs turbo-off.
+- Deterministic execution: `runner.execute()` is a wall-clock-paced
+  «fair»-scheduler — each `setTimeout(0)` quantum runs CPU for at
+  most `dt_ms × TICK_PER_MS` ticks (i.e. real-time pacing at 1.78 МГц)
+  capped by a 5 ms main-thread budget. Turbo skips the wall-clock cap
+  and just runs as many instructions as fit in the 5 ms budget per
+  quantum, yielding with `setTimeout(0)` between them. Regardless of
+  mode, `on_batch_complete` and `tick_cursor` fire on strict
+  `TICK_PER_MS`-aligned CPU-tick boundaries — that's what keeps the
+  terminal's `--input` injection (which schedules by `at_ticks`)
+  bit-identical across runs and across turbo-on/turbo-off.
 - Cursor blink is CPU-tick-driven too (`screen.tick_cursor`, called
   from the runner) — wall-clock `setTimeout` would desync with
   turbo.
