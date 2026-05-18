@@ -142,6 +142,15 @@
         } catch {}
     }
 
+    function cycleRenderMode() {
+        const next = ui.renderMode === "vg75" ? "monitor" : "vg75";
+        ui.renderMode = next;
+        machine?.screen.set_render_mode(next);
+        try {
+            localStorage.setItem("rk86:render-mode", next);
+        } catch {}
+    }
+
     function toggleFullscreen() {
         if (!document.fullscreenElement) {
             canvas?.requestFullscreen();
@@ -413,6 +422,7 @@
     let canvasPlaceholder = $state<HTMLDivElement>();
     let hoverCharX = $state<number | null>(null);
     let hoverCharY = $state<number | null>(null);
+    let hoverHideTimer: ReturnType<typeof setTimeout> | undefined;
 
     function updateHover(e: MouseEvent) {
         if (!canvas || !machine) return;
@@ -424,17 +434,20 @@
         const px = (e.clientX - box.left) / box.width;
         const py = (e.clientY - box.top) / box.height;
         if (px < 0 || px >= 1 || py < 0 || py >= 1) {
-            hoverCharX = null;
-            hoverCharY = null;
+            clearHover();
             return;
         }
         hoverCharX = Math.floor(px * width);
         hoverCharY = Math.floor(py * height);
+        clearTimeout(hoverHideTimer);
+        hoverHideTimer = setTimeout(clearHover, 2000);
     }
 
     function clearHover() {
         hoverCharX = null;
         hoverCharY = null;
+        clearTimeout(hoverHideTimer);
+        hoverHideTimer = undefined;
     }
 
     function onCanvasWrapClick() {
@@ -889,6 +902,18 @@
             <span class="dimmed">ЦВЕТ</span>
             <button type="button" class="color-mode" tabindex={-1} onclick={cycleColorMode} title="Переключить режим цвета">
                 {COLOR_MODE_LABELS[ui.colorMode]}
+            </button>
+        </div>
+        <div class="gauge">
+            <span class="dimmed">СИНХР</span>
+            <button
+                type="button"
+                class="color-mode"
+                tabindex={-1}
+                onclick={cycleRenderMode}
+                title={ui.renderMode === "vg75" ? "ВГ75 (~50 Гц) — клик: переключить на монитор (rAF)" : "Монитор (rAF) — клик: переключить на ВГ75"}
+            >
+                {ui.renderMode === "vg75" ? "ВГ75" : "МОНИТОР"}
             </button>
         </div>
         <div class="gauge">

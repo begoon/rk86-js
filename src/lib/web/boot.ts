@@ -386,6 +386,12 @@ export async function main(host: HostCallbacks) {
         const stored = (typeof localStorage !== "undefined" && localStorage.getItem("rk86:color-mode")) || "";
         if (isColorMode(stored)) machine.screen.color_mode = stored;
         ui.colorMode = machine.screen.color_mode;
+
+        const storedRender = (typeof localStorage !== "undefined" && localStorage.getItem("rk86:render-mode")) || "";
+        if (storedRender === "vg75" || storedRender === "monitor") {
+            machine.screen.set_render_mode(storedRender);
+        }
+        ui.renderMode = machine.screen.render_mode;
     }
     console.log("экран инициализирован");
 

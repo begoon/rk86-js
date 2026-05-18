@@ -292,6 +292,10 @@ export class Memory {
 
         if (vg75_reg === 0xc000 && this.vg75_c001_00_cmd === 2) {
             this.video_screen_size_y_buf = (byte & 0x3f) + 1;
+            // Старшие 2 бита SCN2 — V (VRTC rows count - 1). У РК86
+            // монитор пишет 1 → 2 строки VRTC. Нужно для расчёта
+            // FramePeriod (см. screen.frame_period_ms).
+            this.machine.screen.vrtc_rows = ((byte >> 6) & 0x03) + 1;
             this.vg75_c001_00_cmd += 1;
             return;
         }
@@ -318,6 +322,10 @@ export class Memory {
             // (FA byte's cell shows a FIFO char), 1 = visible (FA cell is
             // blanked). Per Intel 8275 datasheet / MAME / Emu80 / 86rk.
             this.machine.screen.transparent_attr = (byte & 0x40) === 0;
+            // Младшие 4 бита SCN4 — H (HRTC char count): фактическое
+            // число «горизонтально-обратных» символов = ((v & 0x0F) + 1)
+            // × 2. У РК86 = 12. Нужно для расчёта FramePeriod.
+            this.machine.screen.hrtc_chars = ((byte & 0x0f) + 1) * 2;
             return;
         }
 
