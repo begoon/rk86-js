@@ -287,12 +287,12 @@ on every build/dev.
   cache invalidates on change. РАЗМЕР gauge shows `WxH:char_height`.
 - FA byte attributes are implemented as follows:
   - Colour (HGLT D0 + GPA0 D2 + GPA1 D3) via `attrToRgb`. One-cell offset
-    (Emu80 `m_hgltOffset` / `m_gpaOffset`) in `mono`/`color1`/`color2`
-    visible mode — cell N reads colour from cell N+1's FA when N+1 is FA.
+    in `mono`/`color1`/`color2` visible mode — cell N reads colour from
+    cell N+1's FA when N+1 is FA.
   - Blink (D1) via wall-clock 320 ms sample. No offset.
   - Reverse (D4) — canvas `globalCompositeOperation = "difference"` over
-    a colour-filled cell. **No offset** (no `m_rvvOffset` in Emu80) and
-    suppressed on FA cells (VSP blanks them).
+    a colour-filled cell. **No offset** (RVV has no offset counterpart)
+    and suppressed on FA cells (VSP blanks them).
   - Underline (D5) — `scale_y`-tall bar at `screen.underline_scanline`.
     No offset, suppressed on FA cells.
 - Drag-n-drop on the canvas (`onDrop` in `+page.svelte`) auto-runs:

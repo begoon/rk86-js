@@ -143,12 +143,11 @@ export class Screen {
         // не требуется.
     }
 
-    // Период кадра ВГ75 в миллисекундах. Формула совпадает с 86rk.ru
-    // (`august_crt_8275.calc_frame_period`):
+    // Период кадра ВГ75 в миллисекундах. Стандартная формула i8275:
     //   chs = (CharsPerRow + HRTCCharCount) × (RowsNo + VRTCRowCount) × LinesNo
     //   period_ms = 1000 × chs / char_clock_hz
-    // У РК86 со штатным монитором: (78+12) × (30+2) × 10 / 1.333МГц ≈ 21.6 мс
-    // (≈ 46 Гц).
+    // У РК86 со штатным монитором (H=8, V=1): (78+8) × (30+1) × 10
+    // / 1.333МГц ≈ 20 мс (≈ 50 Гц), как у реального железа.
     frame_period_ms(): number {
         const chars = (this.width + this.hrtc_chars) * (this.height + this.vrtc_rows) * this.char_height;
         return (1000 * chars) / Screen.CHAR_CLOCK_HZ;

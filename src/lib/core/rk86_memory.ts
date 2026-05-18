@@ -236,7 +236,7 @@ export class Memory {
         //   VT57 (E000-FFFF, write):    A0..A3 used     → mask 0xE00F
         // (For VT57 this also covers F-range mirrors that some programs use,
         //  e.g. F808 ≡ E008. Reads from F800-FFFF still fall through to ROM.)
-        const ppi_reg  = addr & 0xe003;
+        const ppi_reg = addr & 0xe003;
         const vg75_reg = addr & 0xe001;
         const vt57_reg = addr & 0xe00f;
 
@@ -320,7 +320,7 @@ export class Memory {
             }
             // Byte 4 bit 6 = F (Field Attribute mode). 0 = transparent
             // (FA byte's cell shows a FIFO char), 1 = visible (FA cell is
-            // blanked). Per Intel 8275 datasheet / MAME / Emu80 / 86rk.
+            // blanked). Per Intel 8275 datasheet.
             this.machine.screen.transparent_attr = (byte & 0x40) === 0;
             // Младшие 4 бита SCN4 — H (HRTC char count): фактическое
             // число «горизонтально-обратных» символов = ((v & 0x0F) + 1)
@@ -386,7 +386,7 @@ export class Memory {
                 this.video_memory_size_buf = byte;
                 this.ik57_ff = 1;
             } else {
-                this.video_memory_size = (((this.video_memory_size_buf | (byte << 8)) & 0x3fff) + 1);
+                this.video_memory_size = ((this.video_memory_size_buf | (byte << 8)) & 0x3fff) + 1;
                 this.video_memory_size_buf = this.video_memory_size;
                 this.ik57_ff = 0;
             }

@@ -76,7 +76,7 @@ export class Runner {
         }
     }
 
-    // «Fair»-планировщик в стиле 86rk.ru: каждый квант через
+    // «Fair»-планировщик: каждый квант через
     // `setTimeout(0)` догоняет CPU по фактически прошедшему wall-clock,
     // а не работает фиксированными 10-мс батчами со сном между ними.
     // Зачем: между батчами в старой модели был ровно 10 мс зазор без
@@ -132,12 +132,7 @@ export class Runner {
 
             let terminated = false;
 
-            while (
-                !this.paused &&
-                !terminated &&
-                this.total_ticks < target_total &&
-                performance.now() < deadline
-            ) {
+            while (!this.paused && !terminated && this.total_ticks < target_total && performance.now() < deadline) {
                 if (this.tracer) {
                     this.tracer("before");
                     if (this.paused) break;
@@ -203,8 +198,7 @@ export class Runner {
             if (window_elapsed >= PERF_WINDOW_MS) {
                 this.instructions_per_millisecond =
                     (this.total_instructions - perf_window_start_instructions) / window_elapsed;
-                this.ticks_per_millisecond =
-                    (this.total_ticks - perf_window_start_ticks) / window_elapsed;
+                this.ticks_per_millisecond = (this.total_ticks - perf_window_start_ticks) / window_elapsed;
                 perf_window_start_wall = performance.now();
                 perf_window_start_instructions = this.total_instructions;
                 perf_window_start_ticks = this.total_ticks;

@@ -8,11 +8,7 @@
 - При первом же кадре после старта игры срабатывает «огонь»,
   и удерживается «залипшим» бесконечно — игра ведёт огонь сама.
 
-В эмуляторе [86rk.ru](https://86rk.ru)
-([radio-86rk/86rk.ru](https://github.com/radio-86rk/86rk.ru)) та
-же программа `NALET.RK` играется нормально.
-
-Каталожная пометка `kit/static/catalog/NALET.RK/info.md` сейчас
+Каталожная пометка `static/catalog/NALET.RK/info.md` сейчас
 говорит «возможно, от другого клона РК» — это неверно. Игра использует
 обычную аппаратуру Радио-86РК, просто читает клавиатуру не через карту
 памяти, а через команды `IN`/`OUT` процессора.
@@ -21,7 +17,7 @@
 
 Загружается с `0x0000`, инициализирует ППА `i8255` и таймер `i8253`,
 после чего читает клавиатуру через порты ввода-вывода. Разбор бинарника
-(`kit/static/files/NALET.RK`, заголовок `start=0x0000 end=0x2400`):
+(`static/files/NALET.RK`, заголовок `start=0x0000 end=0x2400`):
 
 ### Старт
 
@@ -89,14 +85,14 @@
 
 В CPU при выполнении `IN`/`OUT` обращение идёт в объект `io`:
 
-`kit/src/lib/core/i8080.ts:1013-1026`
+`src/lib/core/i8080.ts:1013-1026`
 
 ```ts
 case 0xd3: this.io.output(this.next_pc_byte(), this.a()); break;
 case 0xdb: this.set_a(this.io.input(this.next_pc_byte()));  break;
 ```
 
-Этот `io` — заглушка из `kit/test/test_machine.ts:15-25`:
+Этот `io` — заглушка из `test/test_machine.ts:15-25`:
 
 ```ts
 this.input  = (port: number): number => 0;
@@ -104,9 +100,9 @@ this.output = (port: number, w8: number): void => {};
 ```
 
 И именно эта заглушка подключается в продакшн-сборках:
-`kit/src/lib/web/boot.ts:363`,
-`kit/src/lib/terminal/rk86_terminal.ts:739`,
-`kit/src/lib/component/radio86-emulator.ts:115`. У классики симметричная
+`src/lib/web/boot.ts:363`,
+`src/lib/terminal/rk86_terminal.ts:739`,
+`src/lib/component/radio86-emulator.ts:115`. У классики симметричная
 ситуация: `classic/src/main.js:22-28`.
 
 Что это даёт NALET:
@@ -123,7 +119,7 @@ this.output = (port: number, w8: number): void => {};
 
 Большинство других программ для РК-86 читают клавиатуру через карту
 памяти (`LDA 8001` / `STA 8000`), и эти обращения у нас правильно
-обрабатываются в `kit/src/lib/core/rk86_memory.ts:181-189`:
+обрабатываются в `src/lib/core/rk86_memory.ts:181-189`:
 
 ```ts
 if (ppi_reg === 0x8001) {
@@ -138,40 +134,35 @@ if (ppi_reg === 0x8001) {
 NALET отличается тем, что использует именно `IN`/`OUT`. У нас этот
 путь оборван.
 
-## Как делает 86rk.ru
+## Как это правильно сделать
 
-В референсном эмуляторе порт-ввод-вывод явно пробрасывается на шину
-памяти. `86rk/emulator/js/app.js:1496-1518`:
+Эмулировать поведение реального 8080 на цикле `IN port` / `OUT port`:
+во время обращения процессор кладёт номер порта на **обе** половины
+адресной шины, то есть видимый адрес — `port | (port << 8)`.
+Поэтому `IN 81` даёт ровно тот же бус-цикл, что и `LDA 8181`,
+а декодер chip-select на K555ИД7 (A13..A15) уже сам направляет
+обращение к нужной микросхеме (PPI клавиатуры, ленты, VG75, …).
+
+Если оформить это в виде явного `io`-объекта, который для I/O-операций
+просто переадресуется в шину памяти, выглядит так (псевдокод):
 
 ```js
-get class_io () {
-    return class extends august_io {
-        constructor (comp, mem) {
-            super (0x100, { rw: [{ addr: 0x00, size: 0x100, area: new class {
-                get length () { return 0x100 }
-                get (a)    { return mem.get (a | a.shl8) }
-                set (a, v) { return mem.set (a | a.shl8, v) }
-            }}]})
-        }
-    }
-}
+io.read  = port => memory.read (port | (port << 8))
+io.write = (port, v) => memory.write (port | (port << 8), v)
 ```
 
-То есть `IN port` идёт в `memory.read(port | (port << 8))`, `OUT port` —
-в `memory.write(port | (port << 8), v)`. Это совпадает с реальным
-поведением 8080: процессор кладёт номер порта на **обе** половины
-адресной шины во время IN/OUT, и `IN 81` даёт ровно тот же бус-цикл,
-что и `LDA 8181`. Декодер chip-select на K555ИД7 (A13..A15) дальше
-сам направляет обращение к нужной микросхеме.
+После этого `IN`/`OUT`-инструкции попадают в тот же путь чтения/записи,
+что и обычные обращения к памяти по зеркальным адресам, — и NALET
+видит клавиатуру через `IN 81` так же, как видел бы через `LDA 8181h`.
 
 ## Что нужно изменить
 
 1. **kit** — в трёх местах, где создаётся машина, заменить заглушечный
    `io` на проброс через `machine.memory`:
 
-   - `kit/src/lib/web/boot.ts:363`
-   - `kit/src/lib/terminal/rk86_terminal.ts:739`
-   - `kit/src/lib/component/radio86-emulator.ts:115`
+   - `src/lib/web/boot.ts:363`
+   - `src/lib/terminal/rk86_terminal.ts:739`
+   - `src/lib/component/radio86-emulator.ts:115`
 
    ```ts
    io.input  = (port) => machine.memory.read(port | (port << 8));
@@ -181,8 +172,8 @@ get class_io () {
    Назначать после `new Memory(machine)` — там `machine.memory` уже
    существует.
 
-   `kit/test/test_machine.ts` **не трогать**: тот же `IO` используется
-   в i8080-диагностиках (`kit/test/test_executor.ts`), где никакого
+   `test/test_machine.ts` **не трогать**: тот же `IO` используется
+   в i8080-диагностиках (`test/test_executor.ts`), где никакого
    PPA нет и заглушка-ноп — это правильно.
 
 2. **classic** — аналогично, `classic/src/main.js:22-39`:
@@ -193,7 +184,7 @@ get class_io () {
    ```
 
 3. **Каталог** — после фикса обновить
-   `kit/static/catalog/NALET.RK/info.md` и
+   `static/catalog/NALET.RK/info.md` и
    `classic/src/catalog/NALET.RK/info.md`: убрать «возможно, от другого
    клона РК», заменить кратко на «использует команды `IN`/`OUT` вместо
    обращения через карту памяти; работает после фикса проброса

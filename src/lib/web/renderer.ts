@@ -212,10 +212,9 @@ export class CanvasRenderer implements Renderer {
             // mode), cell N's display *colour* comes from cell N+1's
             // attrs when N+1 is an FA cell (last cell of the row uses
             // its own). The offset applies only to HGLT/GPA bits —
-            // matching Emu80's m_hgltOffset/m_gpaOffset, which have no
-            // counterpart for RVV or LTEN. R and U use the cell's own
-            // latched attrs unconditionally. RVV is suppressed on FA
-            // cells (chip's VSP signal blanks them).
+            // RVV and LTEN have no offset counterpart. R and U use
+            // the cell's own latched attrs unconditionally. RVV is
+            // suppressed on FA cells (chip's VSP signal blanks them).
             for (let x = 0; x < screen.width; ++x) {
                 const cell = cells[x];
                 const ch = cell.blink && blinkOff ? 0 : cell.ch;

@@ -1,8 +1,8 @@
 // Color modes for the RK86 i8275 field-attribute byte.
 //
-// Reference: Emu80 v4 (vpyk/emu80v4), src/Rk86.cpp Rk86Renderer::getCurFgColor
-// + setColorMode. The four modes are user-selectable; default is "color1"
-// (Толкалин), matching Emu80's default.
+// Four historical RK86 colour mappings are supported, user-selectable
+// via the "ЦВЕТ" gauge: "mono" (b/w), "color1" (Толкалин, default),
+// "color2" (Акименко), "color3" (Апогей БК-01Ц).
 //
 // FA byte bit layout (Intel 8275 datasheet, visible/transparent both):
 //   D7 D6 = 1 0   FA marker
@@ -68,7 +68,9 @@ export function attrToRgb(mode: ColorMode, attrs: number): number {
 }
 
 // True if the mode reads FA attrs from the cell after the current one
-// (offset semantics — see emu80 m_hgltOffset/m_gpaOffset).
+// (one-cell offset semantics: cell N takes its colour from cell N+1's
+// FA byte, so the new colour visually appears one cell *before* the
+// FA byte that defined it).
 export function hasCellOffset(mode: ColorMode): boolean {
     return mode !== "color3";
 }
