@@ -2,6 +2,8 @@
     import { resolve, base } from "$app/paths";
     import { tape_catalog } from "$lib/tape_catalog";
     import { catalog } from "$lib/catalog_data";
+    import { parse_rk86_binary, file_ext } from "$lib/core/rk86_file_parser.js";
+    import { emit_rk86_binary, replace_ext, RK86_EXTENSIONS } from "$lib/core/rk86_file_emit.js";
     import { onMount } from "svelte";
 
     let {
@@ -102,7 +104,39 @@
     const selectedName = $derived(filtered[selectedIndex]);
     const selectedEntry = $derived(selectedName ? byName.get(selectedName) : undefined);
 
+    const selectedExt = $derived(selectedName ? file_ext(selectedName).toLowerCase() : "");
+
+    let downloadExt = $state("");
+    $effect(() => {
+        downloadExt = selectedExt;
+    });
+
     const hex4 = (n: number) => n.toString(16).toUpperCase().padStart(4, "0");
+
+    async function downloadAs(name: string, targetExt: string) {
+        const sourceExt = file_ext(name).toLowerCase();
+        const outName = replace_ext(name, targetExt);
+        if (targetExt === sourceExt) {
+            triggerDownload(`${base}/files/${name}`, outName);
+            return;
+        }
+        const response = await fetch(`${base}/files/${name}`);
+        const buf = await response.arrayBuffer();
+        const file = parse_rk86_binary(name, Array.from(new Uint8Array(buf)));
+        const bytes = emit_rk86_binary(targetExt, file.start, file.end, file.image);
+        const url = URL.createObjectURL(new Blob([bytes.buffer as ArrayBuffer], { type: "application/octet-stream" }));
+        triggerDownload(url, outName);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function triggerDownload(href: string, name: string) {
+        const a = document.createElement("a");
+        a.href = href;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }
 
     function handleKeydown(e: KeyboardEvent) {
         e.stopPropagation();
@@ -201,10 +235,15 @@
                 <div class="actions">
                     <button type="button" class="run-button" onclick={() => runFile(selectedName)}>Запустить</button>
                     <button type="button" class="load-button" onclick={() => loadFile(selectedName)}>Загрузить</button>
-                    <a class="download-button" href="{base}/files/{selectedName}" download={selectedName}>Скачать</a>
                     {#if selectedEntry}
                         <button type="button" class="debug-button" onclick={() => debugFile(selectedName, selectedEntry.entry)}>Отладка</button>
                     {/if}
+                    <button type="button" class="download-button" onclick={() => downloadAs(selectedName, downloadExt)}>Скачать</button>
+                    <select class="format-select" bind:value={downloadExt} title="Формат файла">
+                        {#each RK86_EXTENSIONS as ext}
+                            <option value={ext}>.{ext}</option>
+                        {/each}
+                    </select>
                 </div>
             {/if}
             {#if selectedEntry}
@@ -388,6 +427,17 @@
     }
     .download-button:hover {
         background: #999;
+    }
+    .format-select {
+        background: #444;
+        color: white;
+        border: 1px solid #666;
+        border-radius: 4px;
+        padding: 3px 6px;
+        font-size: 0.9em;
+        font-family: inherit;
+        cursor: pointer;
+        margin-left: -4px;
     }
     .debug-button {
         background: #b85;
