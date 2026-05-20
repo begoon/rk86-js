@@ -79,6 +79,47 @@
         return "↻";
     }
 
+    type InstrGroup = "control" | "move" | "arith" | "logic" | "stack" | "io" | "cpu";
+
+    function instrGroup(cmd: string): InstrGroup {
+        switch (cmd) {
+            case "JMP": case "JNZ": case "JZ": case "JNC": case "JC":
+            case "JPO": case "JPE": case "JP": case "JM":
+            case "CALL": case "CC": case "CM": case "CNC": case "CNZ":
+            case "CP": case "CPE": case "CPO": case "CZ":
+            case "RET": case "RC": case "RM": case "RNC": case "RNZ":
+            case "RP": case "RPE": case "RPO": case "RZ":
+            case "RST": case "PCHL":
+                return "control";
+            case "MOV": case "MVI": case "LDA": case "LDAX":
+            case "LHLD": case "LXI": case "SHLD": case "STA":
+            case "STAX": case "XCHG": case "XTHL": case "SPHL":
+                return "move";
+            case "ADD": case "ADI": case "ADC": case "ACI":
+            case "SUB": case "SUI": case "SBB": case "SBI":
+            case "INR": case "DCR": case "INX": case "DCX":
+            case "DAD": case "DAA": case "CMP": case "CPI":
+                return "arith";
+            case "ANA": case "ANI": case "ORA": case "ORI":
+            case "XRA": case "XRI": case "CMA": case "CMC": case "STC":
+            case "RAL": case "RAR": case "RLC": case "RRC":
+                return "logic";
+            case "PUSH": case "POP":
+                return "stack";
+            case "IN": case "OUT":
+                return "io";
+            case "NOP": case "HLT": case "DI": case "EI":
+                return "cpu";
+            default:
+                return "cpu";
+        }
+    }
+
+    function byteColor(b: number): string {
+        if (b === 0) return "#ffffff";
+        return `hsl(${(b * 360 / 256) | 0}, 70%, 72%)`;
+    }
+
     function hasImm8(cmd: string): boolean {
         switch (cmd) {
             case "MVI": case "ADI": case "ACI": case "SUI": case "SBI":
@@ -635,7 +676,7 @@
                     {/if}
                 {/each}
                 <span class="chars">&nbsp;{line.chars}{" ".repeat(3 - line.bytes.length)}&nbsp;</span>
-                <span class="cmd" class:bad={line.instr.bad}>{line.instr.cmd}</span>
+                <span class="cmd cmd-{instrGroup(line.instr.cmd)}" class:bad={line.instr.bad}>{line.instr.cmd}</span>
                 <span class="args">
                     {#if line.instr.arg1}
                         {#if line.instr.code}
@@ -780,9 +821,10 @@
                         <!-- svelte-ignore a11y_click_events_have_key_events -->
                         <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <span
-                            class="hex-cell"
+                            class="hex-cell hex-cell-tinted"
                             class:flash-ok={editFlash?.key === cellKey && editFlash.ok}
                             class:flash-bad={editFlash?.key === cellKey && !editFlash.ok}
+                            style="color: {byteColor(b)}"
                             onclick={() => startEdit("data", line.addr + j, b)}
                         >{hex8(b)}</span>
                     {/if}
@@ -1079,6 +1121,16 @@
     }
     .cmd.bad {
         color: red;
+    }
+    .cmd.cmd-control { color: #ffcc66; }
+    .cmd.cmd-move    { color: #88c0d0; }
+    .cmd.cmd-arith   { color: #c0d080; }
+    .cmd.cmd-logic   { color: #d8a0d8; }
+    .cmd.cmd-stack   { color: #b0c0e8; }
+    .cmd.cmd-io      { color: #ff9080; }
+    .cmd.cmd-cpu     { color: #888; }
+    .hex-cell-tinted:hover {
+        background-color: #222;
     }
     .arg-code {
         color: lightgreen;
