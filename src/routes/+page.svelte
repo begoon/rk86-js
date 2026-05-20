@@ -17,6 +17,8 @@
         trimFreezes,
         type Freeze,
     } from "$lib/web/freeze_store";
+    import { saveAs } from "$lib/web/saver";
+    import { emit_rk86_binary, RK86_EXTENSIONS } from "$lib/core/rk86_file_emit";
     import BreakpointEditor from "./BreakpointEditor.svelte";
     import CatalogSelector from "./CatalogSelector.svelte";
     import Disassembler from "./Disassembler.svelte";
@@ -32,6 +34,46 @@
     let catalogDialog = $state<HTMLDialogElement>();
     let catalogSelector = $state<CatalogSelector>();
     let textConverterDialog = $state<HTMLDialogElement>();
+    let memorySaveDialog = $state<HTMLDialogElement>();
+    let memSaveStart = $state("0000");
+    let memSaveEnd = $state("FFFF");
+    let memSaveExt = $state("bin");
+
+    const memSaveSize = $derived.by(() => {
+        const s = parseInt(memSaveStart, 16);
+        const e = parseInt(memSaveEnd, 16);
+        if (isNaN(s) || isNaN(e) || s > e || s < 0 || e > 0xffff) return 0;
+        return e - s + 1;
+    });
+
+    function openMemorySaveDialog() {
+        memorySaveDialog?.showModal();
+    }
+
+    function doMemorySave() {
+        if (!machine) return;
+        const s = parseInt(memSaveStart, 16);
+        const e = parseInt(memSaveEnd, 16);
+        if (isNaN(s) || isNaN(e) || s > e || s < 0 || e > 0xffff) return;
+        const size = e - s + 1;
+        const snapshot = machine.memory.snapshot(s, size);
+        const ext = memSaveExt.toLowerCase();
+        const bytes = ext === "bin"
+            ? new Uint8Array(snapshot)
+            : emit_rk86_binary(ext, s, e, snapshot);
+        const base = ui.selectedFileName ? `${ui.selectedFileName}-memory` : "rk86-memory";
+        const range = `${s.toString(16).toUpperCase().padStart(4, "0")}-${e.toString(16).toUpperCase().padStart(4, "0")}`;
+        const filename = `${base}-${range}.${ext}`;
+        saveAs(new Blob([bytes.buffer as ArrayBuffer], { type: "application/octet-stream" }), filename);
+        memorySaveDialog?.close();
+    }
+
+    function onMemSaveKey(e: KeyboardEvent) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            doMemorySave();
+        }
+    }
 
     const FREEZE_CAP = 20;
     let freezes = $state<Freeze[]>([]);
@@ -748,7 +790,7 @@
                 type="button"
                 class="icon"
                 data-text="Сохранить память в файл"
-                onclick={() => machine?.ui.memory_snapshot()}
+                onclick={openMemorySaveDialog}
             >
                 <img class="icon" src="i/memory.svg" alt="Сохранить память в файл" />
             </button>
@@ -1089,6 +1131,41 @@
     <RkTextConverter onclose={() => textConverterDialog?.close()} />
 </dialog>
 
+<dialog
+    id="memory-save-dialog"
+    bind:this={memorySaveDialog}
+    onclick={(e) => {
+        if (e.target === e.currentTarget) memorySaveDialog?.close();
+    }}
+    onclose={() => (document.activeElement as HTMLElement)?.blur()}
+>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="mem-save" onkeydown={onMemSaveKey}>
+        <h3>Сохранить память</h3>
+        <div class="row">
+            <label for="mem-save-start">Начало:</label>
+            <input id="mem-save-start" type="text" maxlength="4" bind:value={memSaveStart} />
+            <label for="mem-save-end">Конец:</label>
+            <input id="mem-save-end" type="text" maxlength="4" bind:value={memSaveEnd} />
+        </div>
+        <div class="row">
+            <span class="label">Длина:</span>
+            <span class="value">{memSaveSize > 0 ? memSaveSize.toString(16).toUpperCase().padStart(4, "0") + ` (${memSaveSize})` : "—"}</span>
+        </div>
+        <div class="row">
+            <label for="mem-save-fmt">Формат:</label>
+            <select id="mem-save-fmt" bind:value={memSaveExt}>
+                {#each RK86_EXTENSIONS as ext}
+                    <option value={ext}>.{ext}</option>
+                {/each}
+            </select>
+        </div>
+        <div class="actions">
+            <button type="button" class="save" onclick={doMemorySave} disabled={memSaveSize <= 0}>Сохранить</button>
+        </div>
+    </div>
+</dialog>
+
 <style>
     :global(body) {
         margin: 0;
@@ -1276,12 +1353,14 @@
     #shortcuts::backdrop,
     #catalog-dialog::backdrop,
     #freeze-dialog::backdrop,
-    #text-converter-dialog::backdrop {
+    #text-converter-dialog::backdrop,
+    #memory-save-dialog::backdrop {
         background-color: rgba(0, 0, 0, 0.5);
     }
     #catalog-dialog,
     #freeze-dialog,
-    #text-converter-dialog {
+    #text-converter-dialog,
+    #memory-save-dialog {
         position: fixed;
         top: 50%;
         left: 50%;
@@ -1293,6 +1372,63 @@
         border: none;
         outline: none;
         border-radius: 8px;
+    }
+    .mem-save h3 {
+        margin: 0 0 12px;
+        font-size: 1em;
+        font-weight: 600;
+    }
+    .mem-save .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+        font-family: monospace;
+    }
+    .mem-save label, .mem-save .label {
+        color: #b0b6c0;
+    }
+    .mem-save .row > .label {
+        width: 7ch;
+    }
+    .mem-save input[type="text"] {
+        background: #2c333d;
+        color: white;
+        border: 1px solid #3a424d;
+        border-radius: 4px;
+        padding: 4px 6px;
+        font-family: monospace;
+        width: 6ch;
+        text-transform: uppercase;
+    }
+    .mem-save select {
+        background: #2c333d;
+        color: white;
+        border: 1px solid #3a424d;
+        border-radius: 4px;
+        padding: 4px 6px;
+        font-family: monospace;
+    }
+    .mem-save .value {
+        color: #b0d8ff;
+    }
+    .mem-save .actions {
+        margin-top: 12px;
+        text-align: right;
+    }
+    .mem-save .save {
+        background: #4a6dbe;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 14px;
+        cursor: pointer;
+        font: inherit;
+    }
+    .mem-save .save:hover { background: #5b7fcf; }
+    .mem-save .save:disabled {
+        background: #444;
+        cursor: not-allowed;
     }
     #shortcut-hint {
         all: unset;
