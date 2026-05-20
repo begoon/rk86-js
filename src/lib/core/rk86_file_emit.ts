@@ -1,6 +1,6 @@
 import { rk86_check_sum } from "./rk86_check_sum.js";
 
-export const RK86_EXTENSIONS = ["rk", "rkr", "gam", "pki", "bin"] as const;
+export const RK86_EXTENSIONS = ["rk", "rkr", "gam", "pki", "rki", "bin"] as const;
 export type Rk86Ext = (typeof RK86_EXTENSIONS)[number];
 
 export function emit_rk86_binary(
@@ -12,7 +12,7 @@ export function emit_rk86_binary(
     const data = payload instanceof Uint8Array ? Array.from(payload) : payload.slice();
     const e = ext.toLowerCase();
     if (e === "bin") return new Uint8Array(data);
-    if (e !== "rk" && e !== "rkr" && e !== "pki" && e !== "gam") {
+    if (e !== "rk" && e !== "rkr" && e !== "pki" && e !== "gam" && e !== "rki") {
         throw new Error(`неизвестное расширение: ${ext}`);
     }
     const header = [
@@ -23,7 +23,7 @@ export function emit_rk86_binary(
     ];
     const sum = rk86_check_sum(data);
     const trailer = [0xe6, (sum >> 8) & 0xff, sum & 0xff];
-    const prefix = e === "pki" || e === "gam" ? [0xe6] : [];
+    const prefix = e === "pki" || e === "gam" || e === "rki" ? [0xe6] : [];
     return new Uint8Array([...prefix, ...header, ...data, ...trailer]);
 }
 

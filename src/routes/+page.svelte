@@ -184,6 +184,9 @@
     function openTape() {
         window.open(asset("/tape/"), "_blank", "noopener");
     }
+    function openFileAnalyzer() {
+        window.open(asset("/file/"), "_blank", "noopener");
+    }
 
     function toggleVisualizer() {
         visualizerVisible = !visualizerVisible;
@@ -672,10 +675,10 @@
             <button
                 type="button"
                 class="icon"
-                data-text="Кириллица → RK86"
+                data-text="Кириллица → РК"
                 onclick={() => textConverterDialog?.showModal()}
             >
-                <img class="icon" src="i/koi7.svg" alt="Кириллица → RK86" />
+                <img class="icon" src="i/koi7.svg" alt="Кириллица → РК" />
             </button>
             <button
                 type="button"
@@ -720,6 +723,14 @@
                 onclick={openTape}
             >
                 <img class="icon" src="i/tape.svg" alt="Визуализатор WAV-лент" />
+            </button>
+            <button
+                type="button"
+                class="icon"
+                data-text="Анализатор РК-файла"
+                onclick={openFileAnalyzer}
+            >
+                <img class="icon" src="i/file-analyzer.svg" alt="Анализатор РК-файла" />
             </button>
             <button
                 type="button"
