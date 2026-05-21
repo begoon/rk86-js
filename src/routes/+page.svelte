@@ -46,8 +46,21 @@
         return e - s + 1;
     });
 
+    let pausedBeforeMemSave: boolean | null = null;
+
     function openMemorySaveDialog() {
+        if (memorySaveDialog?.open) return;
+        pausedBeforeMemSave = paused;
+        if (!paused) machine?.pause(true);
         memorySaveDialog?.showModal();
+    }
+
+    function onMemorySaveClose() {
+        (document.activeElement as HTMLElement)?.blur();
+        if (pausedBeforeMemSave !== null && paused !== pausedBeforeMemSave) {
+            machine?.pause(pausedBeforeMemSave);
+        }
+        pausedBeforeMemSave = null;
     }
 
     function doMemorySave() {
@@ -211,6 +224,23 @@
         }
     }
 
+    let pausedBeforeShortcuts: boolean | null = null;
+
+    function openShortcuts() {
+        if (shortcutsDialog?.open) return;
+        pausedBeforeShortcuts = paused;
+        if (!paused) machine?.pause(true);
+        shortcutsDialog?.showModal();
+    }
+
+    function onShortcutsClose() {
+        (document.activeElement as HTMLElement)?.blur();
+        if (pausedBeforeShortcuts !== null && paused !== pausedBeforeShortcuts) {
+            machine?.pause(pausedBeforeShortcuts);
+        }
+        pausedBeforeShortcuts = null;
+    }
+
     function openAssembler() {
         window.open(asset("/asm/"), "_blank", "noopener");
     }
@@ -291,7 +321,7 @@
             if (shortcutsDialog?.open) {
                 shortcutsDialog.close();
             } else {
-                shortcutsDialog?.showModal();
+                openShortcuts();
             }
             return;
         }
@@ -997,7 +1027,7 @@
                 <span class="dimmed">G{ui.selectedFileEntry.toString(16).toUpperCase().padStart(4, "0")}</span>
             </div>
         {/if}
-        <button type="button" id="shortcut-hint" onclick={() => shortcutsDialog?.showModal()}>CMD/CTRL-K</button>
+        <button type="button" id="shortcut-hint" onclick={openShortcuts}>CMD/CTRL-K</button>
     </div>
     {#if dragActive}
         <div id="drop-overlay">Перетащите файл сюда</div>
@@ -1010,7 +1040,7 @@
     onclick={(e) => {
         if (e.target === e.currentTarget) shortcutsDialog?.close();
     }}
-    onclose={() => (document.activeElement as HTMLElement)?.blur()}
+    onclose={onShortcutsClose}
 >
     <div>
         <h1 style="font-weight: bold">CMD-k + ...</h1>
@@ -1137,7 +1167,7 @@
     onclick={(e) => {
         if (e.target === e.currentTarget) memorySaveDialog?.close();
     }}
-    onclose={() => (document.activeElement as HTMLElement)?.blur()}
+    onclose={onMemorySaveClose}
 >
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="mem-save" onkeydown={onMemSaveKey}>
