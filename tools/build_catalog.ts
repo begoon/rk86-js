@@ -43,6 +43,22 @@ function rk86_check_sum(v: Uint8Array): number {
 const skip_check_sum = new Set(["I8080TST.GAM", "OilsWell.rkr"]);
 
 function extract_metadata(name: string, image: Uint8Array) {
+    if (name.endsWith(".json")) {
+        // Emulator snapshot (info/SNAPSHOT.md) — metadata comes from the
+        // JSON itself, the entry point is the restored PC.
+        const json = JSON.parse(new TextDecoder().decode(image));
+        const start = parseInt(json.start) || 0;
+        const end = parseInt(json.end) || 0xffff;
+        return {
+            start,
+            end,
+            size: end - start + 1,
+            entry: parseInt(json.cpu?.pc) || 0,
+            checkSum: rk86_check_sum(image),
+            leadingE6: false,
+        };
+    }
+
     if (name.endsWith(".bin")) {
         let start = 0;
         let entry = 0;
