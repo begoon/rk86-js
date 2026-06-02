@@ -497,6 +497,7 @@
     let canvasPlaceholder = $state<HTMLDivElement>();
     let hoverCharX = $state<number | null>(null);
     let hoverCharY = $state<number | null>(null);
+    let hoverMarker = $state<{ left: number; top: number; width: number; height: number } | null>(null);
     let hoverHideTimer: ReturnType<typeof setTimeout> | undefined;
 
     function updateHover(e: MouseEvent) {
@@ -505,15 +506,38 @@
         const height = machine.memory.video_screen_size_y;
         if (!width || !height) return;
         const box = canvas.getBoundingClientRect();
-        if (box.width === 0 || box.height === 0) return;
-        const px = (e.clientX - box.left) / box.width;
-        const py = (e.clientY - box.top) / box.height;
+        if (box.width === 0 || box.height === 0 || !canvas.width || !canvas.height) return;
+        // object-fit: contain letterboxes the bitmap inside the canvas
+        // element — map the mouse to the rendered content rect, not the
+        // element box (in debugger mode the canvas is unscaled, fit = 1
+        // and the content rect equals the element box).
+        const fit = Math.min(box.width / canvas.width, box.height / canvas.height);
+        const contentWidth = canvas.width * fit;
+        const contentHeight = canvas.height * fit;
+        const contentLeft = box.left + (box.width - contentWidth) / 2;
+        const contentTop = box.top + (box.height - contentHeight) / 2;
+        const px = (e.clientX - contentLeft) / contentWidth;
+        const py = (e.clientY - contentTop) / contentHeight;
         if (px < 0 || px >= 1 || py < 0 || py >= 1) {
             clearHover();
             return;
         }
         hoverCharX = Math.floor(px * width);
         hoverCharY = Math.floor(py * height);
+        // Marker rect in pixels relative to the container's padding box
+        // (absolute positioning origin).
+        const container = e.currentTarget as HTMLElement;
+        const containerBox = container.getBoundingClientRect();
+        const originX = containerBox.left + container.clientLeft;
+        const originY = containerBox.top + container.clientTop;
+        const cellWidth = contentWidth / width;
+        const cellHeight = contentHeight / height;
+        hoverMarker = {
+            left: contentLeft - originX + hoverCharX * cellWidth,
+            top: contentTop - originY + hoverCharY * cellHeight,
+            width: cellWidth,
+            height: cellHeight,
+        };
         clearTimeout(hoverHideTimer);
         hoverHideTimer = setTimeout(clearHover, 2000);
     }
@@ -521,6 +545,7 @@
     function clearHover() {
         hoverCharX = null;
         hoverCharY = null;
+        hoverMarker = null;
         clearTimeout(hoverHideTimer);
         hoverHideTimer = undefined;
     }
@@ -880,12 +905,10 @@
                 data-text={canvasFocused ? "" : "Кликнуть для ввода"}
                 bind:this={debuggerCanvasSlot}
             >
-                {#if hoverCharX != null && hoverCharY != null}
-                    {@const w = machine.memory.video_screen_size_x || 1}
-                    {@const h = machine.memory.video_screen_size_y || 1}
+                {#if hoverMarker}
                     <div
                         class="light-pen-marker"
-                        style="left: {(hoverCharX / w) * 100}%; top: {(hoverCharY / h) * 100}%; width: {100 / w}%; height: {100 / h}%;"
+                        style="left: {hoverMarker.left}px; top: {hoverMarker.top}px; width: {hoverMarker.width}px; height: {hoverMarker.height}px;"
                     ></div>
                 {/if}
             </div>
@@ -952,12 +975,10 @@
         onmouseleave={clearHover}
     >
         <canvas bind:this={canvas}></canvas>
-        {#if !debuggerVisible && machine && hoverCharX != null && hoverCharY != null}
-            {@const w = machine.memory.video_screen_size_x || 1}
-            {@const h = machine.memory.video_screen_size_y || 1}
+        {#if !debuggerVisible && hoverMarker}
             <div
                 class="light-pen-marker"
-                style="left: {(hoverCharX / w) * 100}%; top: {(hoverCharY / h) * 100}%; width: {100 / w}%; height: {100 / h}%;"
+                style="left: {hoverMarker.left}px; top: {hoverMarker.top}px; width: {hoverMarker.width}px; height: {hoverMarker.height}px;"
             ></div>
         {/if}
     </div>

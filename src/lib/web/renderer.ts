@@ -325,12 +325,18 @@ export class CanvasRenderer implements Renderer {
     private handleMousemove(event: MouseEvent): void {
         const canvas = this.machine.ui.canvas;
         const box = canvas.getBoundingClientRect();
+        if (box.width === 0 || box.height === 0 || !canvas.width || !canvas.height) return;
 
-        const scaleX = canvas.width / box.width;
-        const scaleY = canvas.height / box.height;
+        // object-fit: contain letterboxes the bitmap inside the canvas
+        // element — map the mouse to the rendered content rect, not the
+        // element box (at 1:1 in debugger mode fit = 1 and they coincide).
+        const fit = Math.min(box.width / canvas.width, box.height / canvas.height);
+        const contentLeft = box.left + (box.width - canvas.width * fit) / 2;
+        const contentTop = box.top + (box.height - canvas.height * fit) / 2;
 
-        const mouseX = (event.clientX - box.left) * scaleX;
-        const mouseY = (event.clientY - box.top) * scaleY;
+        const clamp = (v: number, max: number) => Math.min(Math.max(v, 0), max);
+        const mouseX = clamp((event.clientX - contentLeft) / fit, canvas.width - 1);
+        const mouseY = clamp((event.clientY - contentTop) / fit, canvas.height - 1);
 
         const { scale_x, scale_y, char_height } = this.machine.screen;
         this.machine.screen.light_pen_x = Math.floor(mouseX / (CHAR_WIDTH * scale_x));
