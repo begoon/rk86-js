@@ -996,7 +996,7 @@
     }
 
     function load_source() {
-      var source = localStorage.getItem('source');
+      var source = localStorage.getItem('rk86:i8080asm:source');
       document.getElementById('source').innerHTML = source ?
         source :
         document.getElementById('default_source').innerHTML;
@@ -1005,7 +1005,7 @@
 
     function save_source() {
       var source = document.getElementById('source').value;
-      localStorage.setItem('source', source);
+      localStorage.setItem('rk86:i8080asm:source', source);
       return source;
     }
 
@@ -1013,7 +1013,7 @@
       if (confirm("Are you sure to reset the source to default?")) {
         document.getElementById('source').innerHTML =
           document.getElementById('default_source').innerHTML;
-        localStorage.removeItem('source');
+        localStorage.removeItem('rk86:i8080asm:source');
         cock(500);
       }
     }
