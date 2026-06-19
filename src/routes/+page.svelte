@@ -35,6 +35,7 @@
     let catalogSelector = $state<CatalogSelector>();
     let textConverterDialog = $state<HTMLDialogElement>();
     let memorySaveDialog = $state<HTMLDialogElement>();
+    let iasmDialog = $state<HTMLDialogElement>();
     let memSaveStart = $state("0000");
     let memSaveEnd = $state("FFFF");
     let memSaveExt = $state("bin");
@@ -179,6 +180,18 @@
                 if (!debuggerVisible) toggleDebugger();
             };
             machine = m;
+            // The classic assembler iframe (static/i8080asm/) calls
+            // window.rk86.focusEmulator() after "Run"/"Upload"; close its
+            // dialog and route the keyboard back to the emulator canvas.
+            const bridge = (window as unknown as { rk86?: { focusEmulator: () => void } }).rk86;
+            if (bridge) {
+                const focusCanvas = bridge.focusEmulator;
+                bridge.focusEmulator = () => {
+                    iasmDialog?.close();
+                    canvasFocused = true;
+                    focusCanvas();
+                };
+            }
             hardwareIdMode = m.runner.hardware_id_enabled;
             dbg = new Debugger(machine);
             dbg.subscribe((bps) => {
@@ -243,6 +256,10 @@
 
     function openAssembler() {
         window.open(asset("/asm/"), "_blank", "noopener");
+    }
+
+    function openIasm() {
+        iasmDialog?.showModal();
     }
 
     function openC8080() {
@@ -756,6 +773,14 @@
             <button
                 type="button"
                 class="icon"
+                data-text="Классический ассемблер"
+                onclick={openIasm}
+            >
+                <img class="icon" src="i/iasm.svg" alt="Классический ассемблер" />
+            </button>
+            <button
+                type="button"
+                class="icon"
                 data-text="Компилятор C"
                 onclick={openC8080}
             >
@@ -1217,6 +1242,20 @@
     </div>
 </dialog>
 
+<dialog
+    id="iasm-dialog"
+    bind:this={iasmDialog}
+    onclick={(e) => {
+        if (e.target === e.currentTarget) iasmDialog?.close();
+    }}
+    onclose={() => (document.activeElement as HTMLElement)?.blur()}
+>
+    <div class="iasm">
+        <button type="button" class="iasm-close" title="Закрыть" onclick={() => iasmDialog?.close()}>✕</button>
+        <iframe class="iasm-frame" title="Классический ассемблер" src={asset("/i8080asm/")}></iframe>
+    </div>
+</dialog>
+
 <style>
     :global(body) {
         margin: 0;
@@ -1405,13 +1444,15 @@
     #catalog-dialog::backdrop,
     #freeze-dialog::backdrop,
     #text-converter-dialog::backdrop,
-    #memory-save-dialog::backdrop {
+    #memory-save-dialog::backdrop,
+    #iasm-dialog::backdrop {
         background-color: rgba(0, 0, 0, 0.5);
     }
     #catalog-dialog,
     #freeze-dialog,
     #text-converter-dialog,
-    #memory-save-dialog {
+    #memory-save-dialog,
+    #iasm-dialog {
         position: fixed;
         top: 50%;
         left: 50%;
@@ -1423,6 +1464,44 @@
         border: none;
         outline: none;
         border-radius: 8px;
+    }
+    #iasm-dialog {
+        padding: 0;
+        width: 90vw;
+        height: 90vh;
+        max-width: 90vw;
+        max-height: 90vh;
+        overflow: hidden;
+    }
+    .iasm {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+    .iasm-frame {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+        background: white;
+    }
+    .iasm-close {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        z-index: 1;
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 4px;
+        background: rgba(34, 34, 34, 0.85);
+        color: white;
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+    }
+    .iasm-close:hover {
+        background: #444;
     }
     .mem-save h3 {
         margin: 0 0 12px;

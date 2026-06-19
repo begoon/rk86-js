@@ -14,6 +14,7 @@ const staticIndexFallback = {
 			if (req.url === '/plm80' || req.url === '/plm80/') req.url = '/plm80/index.html';
 			if (req.url === '/tape' || req.url === '/tape/') req.url = '/tape/index.html';
 			if (req.url === '/web' || req.url === '/web/') req.url = '/web/index.html';
+			if (req.url === '/i8080asm' || req.url === '/i8080asm/') req.url = '/i8080asm/index.html';
 			next();
 		});
 	},

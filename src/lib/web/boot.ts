@@ -525,12 +525,12 @@ export async function main(host: HostCallbacks) {
         parseAndPlaceFile(machine, simulate_keyboard, name, content);
     };
 
-    machine.runLoadedFile = () => {
-        if (!ui.selectedFile) return;
-        // Route through the monitor's G command instead of jumping the CPU
-        // directly: a direct jump can leave the monitor mid-prompt-loop with
-        // inconsistent keyboard state that the program then inherits.
-        const hex = ui.selectedFile.entry.toString(16).toUpperCase();
+    // Start execution at `address` via the monitor's G command instead of
+    // jumping the CPU directly: a direct jump can leave the monitor mid-
+    // prompt-loop with inconsistent keyboard state that the program then
+    // inherits (broke programs like ALIAZ1).
+    function runAtAddress(address: number) {
+        const hex = address.toString(16).toUpperCase();
         const digitKeys = [...hex].map((c) => (c >= "0" && c <= "9" ? `Digit${c}` : `Key${c}`));
         const sequence: SequenceAction[] = [
             { keys: "KeyG", duration: 100, action: "press" },
@@ -538,6 +538,11 @@ export async function main(host: HostCallbacks) {
             { keys: "Enter", duration: 100, action: "press" },
         ];
         simulate_keyboard(sequence);
+    }
+
+    machine.runLoadedFile = () => {
+        if (!ui.selectedFile) return;
+        runAtAddress(ui.selectedFile.entry);
     };
 
     machine.uploadFile = async (file: File) => {
@@ -561,6 +566,23 @@ export async function main(host: HostCallbacks) {
         updateModifiers();
     });
 
+    // Bridge for the vendored classic assembler (static/i8080asm/index.html),
+    // which runs in an iframe and reaches the live engine via `parent.rk86`.
+    // `focusEmulator` defaults to focusing the canvas; the host page may
+    // override it (e.g. to close the assembler dialog).
+    const rk86bridge: Rk86Bridge = {
+        writeRaw: (address, value) => machine.memory.write_raw(address & 0xffff, value & 0xff),
+        runAt: (address) => runAtAddress(address & 0xffff),
+        focusEmulator: () => machine.ui.canvas?.focus(),
+    };
+    (window as unknown as { rk86: Rk86Bridge }).rk86 = rk86bridge;
+
     machine.ui.start_update_perf();
     return machine;
+}
+
+export interface Rk86Bridge {
+    writeRaw: (address: number, value: number) => void;
+    runAt: (address: number) => void;
+    focusEmulator: () => void;
 }
