@@ -933,7 +933,7 @@ import { basename } from "path";
 // packages/rk86/package.json
 var package_default = {
   name: "rk86",
-  version: "2.0.30",
+  version: "2.0.31",
   description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
   bin: {
     rk86: "rk86.js"
@@ -1898,7 +1898,10 @@ var parse = (binary) => {
 };
 var convert_hex_to_binary = function(text) {
   const lines = text.split(`
-`).filter((line) => line.trim().length).filter((line) => !line.startsWith(";") && !line.startsWith("#"));
+`).filter((line) => line.trim().length).filter((line) => {
+    const c = line.trim()[0];
+    return c !== ";" && c !== "#" && c !== "!";
+  });
   const image = [];
   for (const line of lines) {
     const hex_line = line.slice(5).trim();
@@ -2268,7 +2271,7 @@ class Memory {
     this.last_access_address = addr;
     this.last_access_operation = "write";
     this.tracer?.("write", addr);
-    if (addr < 63488)
+    if (addr < 57344)
       this.buf[addr] = byte;
     const ppi_reg = addr & 57347;
     const vg75_reg = addr & 57345;
@@ -2319,6 +2322,7 @@ class Memory {
     }
     if (vg75_reg === 49152 && this.vg75_c001_00_cmd === 2) {
       this.video_screen_size_y_buf = (byte & 63) + 1;
+      this.machine.screen.vrtc_rows = (byte >> 6 & 3) + 1;
       this.vg75_c001_00_cmd += 1;
       return;
     }
@@ -2336,6 +2340,7 @@ class Memory {
         this.machine.screen.set_geometry(this.video_screen_size_x, this.video_screen_size_y);
       }
       this.machine.screen.transparent_attr = (byte & 64) === 0;
+      this.machine.screen.hrtc_chars = ((byte & 15) + 1) * 2;
       return;
     }
     if (vt57_reg === 57352 && byte === 128) {
@@ -2423,21 +2428,22 @@ class Runner {
   stc_streak = 0;
   tracer = null;
   last_instructions = [];
-  previous_batch_time = 0;
   total_ticks = 0;
-  last_iff_raise_ticks = 0;
+  total_instructions = 0;
   last_iff = 0;
   sound = null;
   sound_factory;
   instructions_per_millisecond = 0;
   ticks_per_millisecond = 0;
   FREQ = 1780000;
-  TICK_PER_MS;
   execute_timer;
   machine;
+  BATCH_TICKS;
+  TICKS_PER_WALL_MS;
   constructor(machine) {
     this.machine = machine;
-    this.TICK_PER_MS = this.FREQ / 100;
+    this.BATCH_TICKS = this.FREQ / 100;
+    this.TICKS_PER_WALL_MS = this.FREQ / 1000;
     this.machine.io.interrupt = (iff) => this.interrupt(iff);
     this.machine.cpu.jump(63488);
   }
@@ -2446,22 +2452,15 @@ class Runner {
       return;
     if (this.last_iff == iff)
       return;
-    if (this.last_iff == 0 && iff == 1) {
-      this.last_iff_raise_ticks = this.total_ticks;
-    }
-    if (this.last_iff == 1 && iff == 0) {
-      const tone_ticks = this.total_ticks - this.last_iff_raise_ticks;
-      const tone = this.FREQ / (tone_ticks * 2);
-      const duration = 1 / tone;
-      this.sound.play(tone, duration);
-    }
     this.last_iff = iff;
+    this.sound.out(iff, this.total_ticks);
   }
   init_sound(enabled) {
     if (enabled && this.sound == null && this.sound_factory) {
       this.sound = this.sound_factory();
       this.machine.log("\u0437\u0432\u0443\u043A \u0432\u043A\u043B\u044E\u0447\u0435\u043D");
     } else if (!enabled) {
+      this.sound?.done?.();
       this.sound = null;
       this.machine.log("\u0437\u0432\u0443\u043A \u0432\u044B\u043A\u043B\u044E\u0447\u0435\u043D");
     }
@@ -2471,28 +2470,46 @@ class Runner {
     if (options.turbo !== undefined)
       this.turbo = options.turbo;
     clearTimeout(this.execute_timer);
-    const turbo = this.turbo;
-    const bursts = turbo ? 100 : 1;
-    for (let burst = 0;burst < bursts; burst++) {
-      if (this.paused)
-        break;
-      let batch_ticks = 0;
-      let batch_instructions = 0;
-      while (batch_ticks < this.TICK_PER_MS) {
+    const QUANTUM_BUDGET_MS = 5;
+    const TURBO_BUDGET_MS = 50;
+    const MAX_DT_MS = 100;
+    const PAUSED_TICK_MS = 50;
+    const PERF_WINDOW_MS = 500;
+    let next_batch_boundary = this.total_ticks + this.BATCH_TICKS;
+    let last_call_time = performance.now();
+    let perf_window_start_wall = last_call_time;
+    let perf_window_start_instructions = this.total_instructions;
+    let perf_window_start_ticks = this.total_ticks;
+    const tick = () => {
+      if (this.paused) {
+        last_call_time = performance.now();
+        perf_window_start_wall = last_call_time;
+        perf_window_start_instructions = this.total_instructions;
+        perf_window_start_ticks = this.total_ticks;
+        next_batch_boundary = this.total_ticks + this.BATCH_TICKS;
+        this.execute_timer = setTimeout(tick, PAUSED_TICK_MS);
+        return;
+      }
+      const call_start = performance.now();
+      const dt_ms = Math.min(call_start - last_call_time, MAX_DT_MS);
+      last_call_time = call_start;
+      const target_total = this.turbo ? Number.POSITIVE_INFINITY : this.total_ticks + dt_ms * this.TICKS_PER_WALL_MS;
+      const deadline = call_start + (this.turbo ? TURBO_BUDGET_MS : QUANTUM_BUDGET_MS);
+      let terminated = false;
+      while (!this.paused && !terminated && this.total_ticks < target_total && performance.now() < deadline) {
         if (this.tracer) {
           this.tracer("before");
           if (this.paused)
             break;
         }
         this.last_instructions.push(this.machine.cpu.pc);
-        if (this.last_instructions.length > 5) {
+        if (this.last_instructions.length > 5)
           this.last_instructions.shift();
-        }
         const opcode_pc = this.machine.cpu.pc;
         this.machine.memory.invalidate_access_variables();
         const instruction_ticks = this.machine.cpu.instruction();
-        batch_ticks += instruction_ticks;
         this.total_ticks += instruction_ticks;
+        this.total_instructions += 1;
         if (this.hardware_id_enabled) {
           if (this.machine.memory.read_raw(opcode_pc) === 55) {
             if (++this.stc_streak >= 4) {
@@ -2511,7 +2528,6 @@ class Runner {
         if (this.machine.ui.visualizer_visible && this.machine.ui.on_visualizer_hit) {
           this.machine.ui.on_visualizer_hit(this.machine.memory.read_raw(this.machine.cpu.pc));
         }
-        batch_instructions += 1;
         if (terminate_address !== undefined && this.machine.cpu.pc === terminate_address) {
           on_terminate?.();
           return;
@@ -2521,19 +2537,28 @@ class Runner {
             on_terminate?.();
             return;
           }
-          if (on_halt && on_halt())
-            return;
+          if (on_halt && on_halt()) {
+            terminated = true;
+            break;
+          }
+        }
+        if (this.total_ticks >= next_batch_boundary) {
+          this.machine.screen.tick_cursor(this.total_ticks, this.FREQ * (this.machine.screen.cursor_rate / 1000));
+          on_batch_complete?.();
+          next_batch_boundary += this.BATCH_TICKS;
         }
       }
-      const now = performance.now();
-      const elapsed = now - this.previous_batch_time;
-      this.previous_batch_time = now;
-      this.instructions_per_millisecond = batch_instructions / elapsed;
-      this.ticks_per_millisecond = batch_ticks / elapsed;
-      this.machine.screen.tick_cursor(this.total_ticks, this.FREQ * (this.machine.screen.cursor_rate / 1000));
-      on_batch_complete?.();
-    }
-    this.execute_timer = setTimeout(() => this.execute(options), turbo ? 0 : 10);
+      const window_elapsed = performance.now() - perf_window_start_wall;
+      if (window_elapsed >= PERF_WINDOW_MS) {
+        this.instructions_per_millisecond = (this.total_instructions - perf_window_start_instructions) / window_elapsed;
+        this.ticks_per_millisecond = (this.total_ticks - perf_window_start_ticks) / window_elapsed;
+        perf_window_start_wall = performance.now();
+        perf_window_start_instructions = this.total_instructions;
+        perf_window_start_ticks = this.total_ticks;
+      }
+      this.execute_timer = setTimeout(tick, 0);
+    };
+    tick();
   }
   pause() {
     this.paused = true;
@@ -2556,7 +2581,8 @@ class Runner {
 
 // src/lib/core/rk86_screen.ts
 class Screen {
-  static #update_rate = 40;
+  static CHAR_CLOCK_HZ = 8000000 / 6;
+  static #IDLE_RENDER_MS = 40;
   machine;
   cursor_rate;
   scale_x;
@@ -2576,6 +2602,9 @@ class Screen {
   underline_scanline = 7;
   color_mode = DEFAULT_COLOR_MODE;
   ready = false;
+  hrtc_chars = 8;
+  vrtc_rows = 1;
+  render_mode = "vg75";
   renderer;
   constructor(machine) {
     this.machine = machine;
@@ -2630,7 +2659,16 @@ class Screen {
   start(renderer) {
     this.renderer = renderer;
     this.renderer.connect(this.machine);
-    this.render_loop();
+    this.schedule_next_render();
+  }
+  set_render_mode(mode) {
+    if (this.render_mode === mode)
+      return;
+    this.render_mode = mode;
+  }
+  frame_period_ms() {
+    const chars = (this.width + this.hrtc_chars) * (this.height + this.vrtc_rows) * this.char_height;
+    return 1000 * chars / Screen.CHAR_CLOCK_HZ;
   }
   last_flip_ticks = 0;
   tick_cursor(total_ticks, ticks_per_flip) {
@@ -2644,10 +2682,21 @@ class Screen {
       this.last_flip_ticks += ticks_per_flip;
     }
   }
-  render_loop() {
+  render_loop = () => {
     if (this.ready)
       this.renderer.update();
-    setTimeout(() => this.render_loop(), Screen.#update_rate);
+    this.schedule_next_render();
+  };
+  schedule_next_render() {
+    if (!this.ready) {
+      setTimeout(this.render_loop, Screen.#IDLE_RENDER_MS);
+      return;
+    }
+    if (this.render_mode === "monitor" && typeof requestAnimationFrame !== "undefined") {
+      requestAnimationFrame(this.render_loop);
+      return;
+    }
+    setTimeout(this.render_loop, this.frame_period_ms());
   }
   last_width = -1;
   last_height = -1;
@@ -3439,7 +3488,7 @@ async function main() {
       for (const section of sections) {
         const data = section.data;
         for (let i = 0;i < data.length; i++) {
-          machine.memory.write(section.start + i, data[i]);
+          machine.memory.write_raw(section.start + i, data[i]);
         }
         const name = section.name ? ` [${section.name}]` : "";
         lines.push(`${hex16(section.start)}-${hex16(section.end)}${name} (${data.length} \u0431\u0430\u0439\u0442)`);
