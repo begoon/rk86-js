@@ -442,33 +442,35 @@ export async function main(host: HostCallbacks) {
     const auto_run = (match = url.match(/(file|run)=([^&]+)/)) ? decodeURIComponent(match[2]) : null;
     const auto_load = (match = url.match(/load=([^&]+)/)) ? decodeURIComponent(match[1]) : null;
     const handoff_id = (match = url.match(/handoff=([^&]+)/)) ? decodeURIComponent(match[1]) : null;
+    const loadoff_id = (match = url.match(/loadoff=([^&]+)/)) ? decodeURIComponent(match[1]) : null;
     const hwid_match = url.match(/hwid=([01])/);
     if (hwid_match) machine.runner.hardware_id_enabled = hwid_match[1] === "1";
 
-    // `handoff=<uuid>` is a same-origin handoff from a playground (asm8, c8080,
-    // plm80): the playground writes `{ts, url}` JSON to localStorage under
-    // `<prefix>-handoff:<uuid>` (url = data-URL carrying the assembled .rk)
-    // to avoid URL-length limits, then opens us with the id. We probe each
-    // known prefix, read + delete, and treat as a regular auto-run.
-    let handoff_url: string | null = null;
-    if (handoff_id) {
+    // `handoff=<uuid>` / `loadoff=<uuid>` is a same-origin handoff from a
+    // playground (asm8, c8080, plm80): the playground writes `{ts, url}` JSON
+    // to localStorage under `<prefix>-handoff:<uuid>` (url = data-URL carrying
+    // the assembled .rk) to avoid URL-length limits, then opens us with the
+    // id. `handoff` auto-runs; `loadoff` loads without running. We probe each
+    // known prefix, read + delete the key, and return the stashed data-URL.
+    function resolveHandoff(id: string): string | null {
         const prefixes = ["asm8-handoff:", "c8080-handoff:", "plm80-handoff:"];
         for (const prefix of prefixes) {
-            const key = `${prefix}${handoff_id}`;
+            const key = `${prefix}${id}`;
             try {
                 const raw = localStorage.getItem(key);
                 if (raw) {
                     localStorage.removeItem(key);
                     const payload = JSON.parse(raw);
-                    if (typeof payload?.url === "string") {
-                        handoff_url = payload.url;
-                        break;
-                    }
+                    if (typeof payload?.url === "string") return payload.url;
                 }
             } catch {}
         }
-        if (!handoff_url) console.warn(`handoff ключ не найден или повреждён: ${handoff_id}`);
+        console.warn(`handoff ключ не найден или повреждён: ${id}`);
+        return null;
     }
+
+    const handoff_url = handoff_id ? resolveHandoff(handoff_id) : null;
+    const loadoff_url = loadoff_id ? resolveHandoff(loadoff_id) : null;
 
     if (handoff_url) {
         console.log(`автозагрузка и запуск handoff ${handoff_id}`);
@@ -476,6 +478,9 @@ export async function main(host: HostCallbacks) {
     } else if (auto_run) {
         console.log(`автозагрузка и запуск файла ${auto_run}`);
         await loadAutoexecFile(auto_run);
+    } else if (loadoff_url) {
+        console.log(`автозагрузка handoff (без запуска) ${loadoff_id}`);
+        await loadAutoexecFile(loadoff_url);
     } else if (auto_load) {
         console.log(`автозагрузка файла (без запуска) ${auto_load}`);
         await loadAutoexecFile(auto_load);

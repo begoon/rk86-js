@@ -1,5 +1,5 @@
 // asm8.ts
-var { readFileSync, writeFileSync, mkdirSync } = () => ({});
+var {readFileSync, writeFileSync, mkdirSync} = (() => ({}));
 
 // node:path
 function assertPath(path) {
@@ -7,154 +7,167 @@ function assertPath(path) {
     throw TypeError("Path must be a string. Received " + JSON.stringify(path));
 }
 function normalizeStringPosix(path, allowAboveRoot) {
-  var res = "",
-    lastSegmentLength = 0,
-    lastSlash = -1,
-    dots = 0,
-    code;
-  for (var i = 0; i <= path.length; ++i) {
-    if (i < path.length) code = path.charCodeAt(i);
-    else if (code === 47) break;
-    else code = 47;
+  var res = "", lastSegmentLength = 0, lastSlash = -1, dots = 0, code;
+  for (var i = 0;i <= path.length; ++i) {
+    if (i < path.length)
+      code = path.charCodeAt(i);
+    else if (code === 47)
+      break;
+    else
+      code = 47;
     if (code === 47) {
-      if (lastSlash === i - 1 || dots === 1);
+      if (lastSlash === i - 1 || dots === 1)
+        ;
       else if (lastSlash !== i - 1 && dots === 2) {
-        if (
-          res.length < 2 ||
-          lastSegmentLength !== 2 ||
-          res.charCodeAt(res.length - 1) !== 46 ||
-          res.charCodeAt(res.length - 2) !== 46
-        ) {
+        if (res.length < 2 || lastSegmentLength !== 2 || res.charCodeAt(res.length - 1) !== 46 || res.charCodeAt(res.length - 2) !== 46) {
           if (res.length > 2) {
             var lastSlashIndex = res.lastIndexOf("/");
             if (lastSlashIndex !== res.length - 1) {
-              if (lastSlashIndex === -1) ((res = ""), (lastSegmentLength = 0));
+              if (lastSlashIndex === -1)
+                res = "", lastSegmentLength = 0;
               else
-                ((res = res.slice(0, lastSlashIndex)),
-                  (lastSegmentLength = res.length - 1 - res.lastIndexOf("/")));
-              ((lastSlash = i), (dots = 0));
+                res = res.slice(0, lastSlashIndex), lastSegmentLength = res.length - 1 - res.lastIndexOf("/");
+              lastSlash = i, dots = 0;
               continue;
             }
           } else if (res.length === 2 || res.length === 1) {
-            ((res = ""), (lastSegmentLength = 0), (lastSlash = i), (dots = 0));
+            res = "", lastSegmentLength = 0, lastSlash = i, dots = 0;
             continue;
           }
         }
         if (allowAboveRoot) {
-          if (res.length > 0) res += "/..";
-          else res = "..";
+          if (res.length > 0)
+            res += "/..";
+          else
+            res = "..";
           lastSegmentLength = 2;
         }
       } else {
-        if (res.length > 0) res += "/" + path.slice(lastSlash + 1, i);
-        else res = path.slice(lastSlash + 1, i);
+        if (res.length > 0)
+          res += "/" + path.slice(lastSlash + 1, i);
+        else
+          res = path.slice(lastSlash + 1, i);
         lastSegmentLength = i - lastSlash - 1;
       }
-      ((lastSlash = i), (dots = 0));
-    } else if (code === 46 && dots !== -1) ++dots;
-    else dots = -1;
+      lastSlash = i, dots = 0;
+    } else if (code === 46 && dots !== -1)
+      ++dots;
+    else
+      dots = -1;
   }
   return res;
 }
 function _format(sep, pathObject) {
-  var dir = pathObject.dir || pathObject.root,
-    base = pathObject.base || (pathObject.name || "") + (pathObject.ext || "");
-  if (!dir) return base;
-  if (dir === pathObject.root) return dir + base;
+  var dir = pathObject.dir || pathObject.root, base = pathObject.base || (pathObject.name || "") + (pathObject.ext || "");
+  if (!dir)
+    return base;
+  if (dir === pathObject.root)
+    return dir + base;
   return dir + sep + base;
 }
 function resolve() {
-  var resolvedPath = "",
-    resolvedAbsolute = false,
-    cwd;
-  for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
+  var resolvedPath = "", resolvedAbsolute = false, cwd;
+  for (var i = arguments.length - 1;i >= -1 && !resolvedAbsolute; i--) {
     var path;
-    if (i >= 0) path = arguments[i];
+    if (i >= 0)
+      path = arguments[i];
     else {
-      if (cwd === undefined) cwd = process.cwd();
+      if (cwd === undefined)
+        cwd = process.cwd();
       path = cwd;
     }
-    if ((assertPath(path), path.length === 0)) continue;
-    ((resolvedPath = path + "/" + resolvedPath),
-      (resolvedAbsolute = path.charCodeAt(0) === 47));
+    if (assertPath(path), path.length === 0)
+      continue;
+    resolvedPath = path + "/" + resolvedPath, resolvedAbsolute = path.charCodeAt(0) === 47;
   }
-  if (
-    ((resolvedPath = normalizeStringPosix(resolvedPath, !resolvedAbsolute)),
-    resolvedAbsolute)
-  )
-    if (resolvedPath.length > 0) return "/" + resolvedPath;
-    else return "/";
-  else if (resolvedPath.length > 0) return resolvedPath;
-  else return ".";
+  if (resolvedPath = normalizeStringPosix(resolvedPath, !resolvedAbsolute), resolvedAbsolute)
+    if (resolvedPath.length > 0)
+      return "/" + resolvedPath;
+    else
+      return "/";
+  else if (resolvedPath.length > 0)
+    return resolvedPath;
+  else
+    return ".";
 }
 function normalize(path) {
-  if ((assertPath(path), path.length === 0)) return ".";
-  var isAbsolute = path.charCodeAt(0) === 47,
-    trailingSeparator = path.charCodeAt(path.length - 1) === 47;
-  if (
-    ((path = normalizeStringPosix(path, !isAbsolute)),
-    path.length === 0 && !isAbsolute)
-  )
+  if (assertPath(path), path.length === 0)
+    return ".";
+  var isAbsolute = path.charCodeAt(0) === 47, trailingSeparator = path.charCodeAt(path.length - 1) === 47;
+  if (path = normalizeStringPosix(path, !isAbsolute), path.length === 0 && !isAbsolute)
     path = ".";
-  if (path.length > 0 && trailingSeparator) path += "/";
-  if (isAbsolute) return "/" + path;
+  if (path.length > 0 && trailingSeparator)
+    path += "/";
+  if (isAbsolute)
+    return "/" + path;
   return path;
 }
 function isAbsolute(path) {
-  return (assertPath(path), path.length > 0 && path.charCodeAt(0) === 47);
+  return assertPath(path), path.length > 0 && path.charCodeAt(0) === 47;
 }
 function join() {
-  if (arguments.length === 0) return ".";
+  if (arguments.length === 0)
+    return ".";
   var joined;
-  for (var i = 0; i < arguments.length; ++i) {
+  for (var i = 0;i < arguments.length; ++i) {
     var arg = arguments[i];
-    if ((assertPath(arg), arg.length > 0))
-      if (joined === undefined) joined = arg;
-      else joined += "/" + arg;
+    if (assertPath(arg), arg.length > 0)
+      if (joined === undefined)
+        joined = arg;
+      else
+        joined += "/" + arg;
   }
-  if (joined === undefined) return ".";
+  if (joined === undefined)
+    return ".";
   return normalize(joined);
 }
 function relative(from, to) {
-  if ((assertPath(from), assertPath(to), from === to)) return "";
-  if (((from = resolve(from)), (to = resolve(to)), from === to)) return "";
+  if (assertPath(from), assertPath(to), from === to)
+    return "";
+  if (from = resolve(from), to = resolve(to), from === to)
+    return "";
   var fromStart = 1;
-  for (; fromStart < from.length; ++fromStart)
-    if (from.charCodeAt(fromStart) !== 47) break;
-  var fromEnd = from.length,
-    fromLen = fromEnd - fromStart,
-    toStart = 1;
-  for (; toStart < to.length; ++toStart)
-    if (to.charCodeAt(toStart) !== 47) break;
-  var toEnd = to.length,
-    toLen = toEnd - toStart,
-    length = fromLen < toLen ? fromLen : toLen,
-    lastCommonSep = -1,
-    i = 0;
-  for (; i <= length; ++i) {
+  for (;fromStart < from.length; ++fromStart)
+    if (from.charCodeAt(fromStart) !== 47)
+      break;
+  var fromEnd = from.length, fromLen = fromEnd - fromStart, toStart = 1;
+  for (;toStart < to.length; ++toStart)
+    if (to.charCodeAt(toStart) !== 47)
+      break;
+  var toEnd = to.length, toLen = toEnd - toStart, length = fromLen < toLen ? fromLen : toLen, lastCommonSep = -1, i = 0;
+  for (;i <= length; ++i) {
     if (i === length) {
       if (toLen > length) {
-        if (to.charCodeAt(toStart + i) === 47) return to.slice(toStart + i + 1);
-        else if (i === 0) return to.slice(toStart + i);
+        if (to.charCodeAt(toStart + i) === 47)
+          return to.slice(toStart + i + 1);
+        else if (i === 0)
+          return to.slice(toStart + i);
       } else if (fromLen > length) {
-        if (from.charCodeAt(fromStart + i) === 47) lastCommonSep = i;
-        else if (i === 0) lastCommonSep = 0;
+        if (from.charCodeAt(fromStart + i) === 47)
+          lastCommonSep = i;
+        else if (i === 0)
+          lastCommonSep = 0;
       }
       break;
     }
-    var fromCode = from.charCodeAt(fromStart + i),
-      toCode = to.charCodeAt(toStart + i);
-    if (fromCode !== toCode) break;
-    else if (fromCode === 47) lastCommonSep = i;
+    var fromCode = from.charCodeAt(fromStart + i), toCode = to.charCodeAt(toStart + i);
+    if (fromCode !== toCode)
+      break;
+    else if (fromCode === 47)
+      lastCommonSep = i;
   }
   var out = "";
-  for (i = fromStart + lastCommonSep + 1; i <= fromEnd; ++i)
+  for (i = fromStart + lastCommonSep + 1;i <= fromEnd; ++i)
     if (i === fromEnd || from.charCodeAt(i) === 47)
-      if (out.length === 0) out += "..";
-      else out += "/..";
-  if (out.length > 0) return out + to.slice(toStart + lastCommonSep);
+      if (out.length === 0)
+        out += "..";
+      else
+        out += "/..";
+  if (out.length > 0)
+    return out + to.slice(toStart + lastCommonSep);
   else {
-    if (((toStart += lastCommonSep), to.charCodeAt(toStart) === 47)) ++toStart;
+    if (toStart += lastCommonSep, to.charCodeAt(toStart) === 47)
+      ++toStart;
     return to.slice(toStart);
   }
 }
@@ -162,35 +175,33 @@ function _makeLong(path) {
   return path;
 }
 function dirname(path) {
-  if ((assertPath(path), path.length === 0)) return ".";
-  var code = path.charCodeAt(0),
-    hasRoot = code === 47,
-    end = -1,
-    matchedSlash = true;
-  for (var i = path.length - 1; i >= 1; --i)
-    if (((code = path.charCodeAt(i)), code === 47)) {
+  if (assertPath(path), path.length === 0)
+    return ".";
+  var code = path.charCodeAt(0), hasRoot = code === 47, end = -1, matchedSlash = true;
+  for (var i = path.length - 1;i >= 1; --i)
+    if (code = path.charCodeAt(i), code === 47) {
       if (!matchedSlash) {
         end = i;
         break;
       }
-    } else matchedSlash = false;
-  if (end === -1) return hasRoot ? "/" : ".";
-  if (hasRoot && end === 1) return "//";
+    } else
+      matchedSlash = false;
+  if (end === -1)
+    return hasRoot ? "/" : ".";
+  if (hasRoot && end === 1)
+    return "//";
   return path.slice(0, end);
 }
 function basename(path, ext) {
   if (ext !== undefined && typeof ext !== "string")
     throw TypeError('"ext" argument must be a string');
   assertPath(path);
-  var start = 0,
-    end = -1,
-    matchedSlash = true,
-    i;
+  var start = 0, end = -1, matchedSlash = true, i;
   if (ext !== undefined && ext.length > 0 && ext.length <= path.length) {
-    if (ext.length === path.length && ext === path) return "";
-    var extIdx = ext.length - 1,
-      firstNonSlashEnd = -1;
-    for (i = path.length - 1; i >= 0; --i) {
+    if (ext.length === path.length && ext === path)
+      return "";
+    var extIdx = ext.length - 1, firstNonSlashEnd = -1;
+    for (i = path.length - 1;i >= 0; --i) {
       var code = path.charCodeAt(i);
       if (code === 47) {
         if (!matchedSlash) {
@@ -199,36 +210,38 @@ function basename(path, ext) {
         }
       } else {
         if (firstNonSlashEnd === -1)
-          ((matchedSlash = false), (firstNonSlashEnd = i + 1));
+          matchedSlash = false, firstNonSlashEnd = i + 1;
         if (extIdx >= 0)
           if (code === ext.charCodeAt(extIdx)) {
-            if (--extIdx === -1) end = i;
-          } else ((extIdx = -1), (end = firstNonSlashEnd));
+            if (--extIdx === -1)
+              end = i;
+          } else
+            extIdx = -1, end = firstNonSlashEnd;
       }
     }
-    if (start === end) end = firstNonSlashEnd;
-    else if (end === -1) end = path.length;
+    if (start === end)
+      end = firstNonSlashEnd;
+    else if (end === -1)
+      end = path.length;
     return path.slice(start, end);
   } else {
-    for (i = path.length - 1; i >= 0; --i)
+    for (i = path.length - 1;i >= 0; --i)
       if (path.charCodeAt(i) === 47) {
         if (!matchedSlash) {
           start = i + 1;
           break;
         }
-      } else if (end === -1) ((matchedSlash = false), (end = i + 1));
-    if (end === -1) return "";
+      } else if (end === -1)
+        matchedSlash = false, end = i + 1;
+    if (end === -1)
+      return "";
     return path.slice(start, end);
   }
 }
 function extname(path) {
   assertPath(path);
-  var startDot = -1,
-    startPart = 0,
-    end = -1,
-    matchedSlash = true,
-    preDotState = 0;
-  for (var i = path.length - 1; i >= 0; --i) {
+  var startDot = -1, startPart = 0, end = -1, matchedSlash = true, preDotState = 0;
+  for (var i = path.length - 1;i >= 0; --i) {
     var code = path.charCodeAt(i);
     if (code === 47) {
       if (!matchedSlash) {
@@ -237,99 +250,76 @@ function extname(path) {
       }
       continue;
     }
-    if (end === -1) ((matchedSlash = false), (end = i + 1));
+    if (end === -1)
+      matchedSlash = false, end = i + 1;
     if (code === 46) {
-      if (startDot === -1) startDot = i;
-      else if (preDotState !== 1) preDotState = 1;
-    } else if (startDot !== -1) preDotState = -1;
+      if (startDot === -1)
+        startDot = i;
+      else if (preDotState !== 1)
+        preDotState = 1;
+    } else if (startDot !== -1)
+      preDotState = -1;
   }
-  if (
-    startDot === -1 ||
-    end === -1 ||
-    preDotState === 0 ||
-    (preDotState === 1 && startDot === end - 1 && startDot === startPart + 1)
-  )
+  if (startDot === -1 || end === -1 || preDotState === 0 || preDotState === 1 && startDot === end - 1 && startDot === startPart + 1)
     return "";
   return path.slice(startDot, end);
 }
 function format(pathObject) {
   if (pathObject === null || typeof pathObject !== "object")
-    throw TypeError(
-      'The "pathObject" argument must be of type Object. Received type ' +
-        typeof pathObject,
-    );
+    throw TypeError('The "pathObject" argument must be of type Object. Received type ' + typeof pathObject);
   return _format("/", pathObject);
 }
 function parse(path) {
   assertPath(path);
   var ret = { root: "", dir: "", base: "", ext: "", name: "" };
-  if (path.length === 0) return ret;
-  var code = path.charCodeAt(0),
-    isAbsolute2 = code === 47,
-    start;
-  if (isAbsolute2) ((ret.root = "/"), (start = 1));
-  else start = 0;
-  var startDot = -1,
-    startPart = 0,
-    end = -1,
-    matchedSlash = true,
-    i = path.length - 1,
-    preDotState = 0;
-  for (; i >= start; --i) {
-    if (((code = path.charCodeAt(i)), code === 47)) {
+  if (path.length === 0)
+    return ret;
+  var code = path.charCodeAt(0), isAbsolute2 = code === 47, start;
+  if (isAbsolute2)
+    ret.root = "/", start = 1;
+  else
+    start = 0;
+  var startDot = -1, startPart = 0, end = -1, matchedSlash = true, i = path.length - 1, preDotState = 0;
+  for (;i >= start; --i) {
+    if (code = path.charCodeAt(i), code === 47) {
       if (!matchedSlash) {
         startPart = i + 1;
         break;
       }
       continue;
     }
-    if (end === -1) ((matchedSlash = false), (end = i + 1));
+    if (end === -1)
+      matchedSlash = false, end = i + 1;
     if (code === 46) {
-      if (startDot === -1) startDot = i;
-      else if (preDotState !== 1) preDotState = 1;
-    } else if (startDot !== -1) preDotState = -1;
+      if (startDot === -1)
+        startDot = i;
+      else if (preDotState !== 1)
+        preDotState = 1;
+    } else if (startDot !== -1)
+      preDotState = -1;
   }
-  if (
-    startDot === -1 ||
-    end === -1 ||
-    preDotState === 0 ||
-    (preDotState === 1 && startDot === end - 1 && startDot === startPart + 1)
-  ) {
+  if (startDot === -1 || end === -1 || preDotState === 0 || preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
     if (end !== -1)
       if (startPart === 0 && isAbsolute2)
         ret.base = ret.name = path.slice(1, end);
-      else ret.base = ret.name = path.slice(startPart, end);
+      else
+        ret.base = ret.name = path.slice(startPart, end);
   } else {
     if (startPart === 0 && isAbsolute2)
-      ((ret.name = path.slice(1, startDot)), (ret.base = path.slice(1, end)));
+      ret.name = path.slice(1, startDot), ret.base = path.slice(1, end);
     else
-      ((ret.name = path.slice(startPart, startDot)),
-        (ret.base = path.slice(startPart, end)));
+      ret.name = path.slice(startPart, startDot), ret.base = path.slice(startPart, end);
     ret.ext = path.slice(startDot, end);
   }
-  if (startPart > 0) ret.dir = path.slice(0, startPart - 1);
-  else if (isAbsolute2) ret.dir = "/";
+  if (startPart > 0)
+    ret.dir = path.slice(0, startPart - 1);
+  else if (isAbsolute2)
+    ret.dir = "/";
   return ret;
 }
 var sep = "/";
 var delimiter = ":";
-var posix = ((p) => ((p.posix = p), p))({
-  resolve,
-  normalize,
-  isAbsolute,
-  join,
-  relative,
-  _makeLong,
-  dirname,
-  basename,
-  extname,
-  format,
-  parse,
-  sep,
-  delimiter,
-  win32: null,
-  posix: null,
-});
+var posix = ((p) => (p.posix = p, p))({ resolve, normalize, isAbsolute, join, relative, _makeLong, dirname, basename, extname, format, parse, sep, delimiter, win32: null, posix: null });
 
 // asm8.ts
 class AsmError extends Error {
@@ -358,19 +348,19 @@ var REG8 = {
   H: 4,
   L: 5,
   M: 6,
-  A: 7,
+  A: 7
 };
 var REG_PAIR = {
   B: 0,
   D: 1,
   H: 2,
-  SP: 3,
+  SP: 3
 };
 var REG_PAIR_PUSH = {
   B: 0,
   D: 1,
   H: 2,
-  PSW: 3,
+  PSW: 3
 };
 var IMPLIED = {
   NOP: 0,
@@ -397,7 +387,7 @@ var IMPLIED = {
   RPO: 224,
   RPE: 232,
   RP: 240,
-  RM: 248,
+  RM: 248
 };
 var ALU_REG = {
   ADD: 128,
@@ -407,7 +397,7 @@ var ALU_REG = {
   ANA: 160,
   XRA: 168,
   ORA: 176,
-  CMP: 184,
+  CMP: 184
 };
 var ALU_IMM = {
   ADI: 198,
@@ -417,7 +407,7 @@ var ALU_IMM = {
   ANI: 230,
   XRI: 238,
   ORI: 246,
-  CPI: 254,
+  CPI: 254
 };
 var ADDR16 = {
   JMP: 195,
@@ -441,7 +431,7 @@ var ADDR16 = {
   LDA: 58,
   STA: 50,
   LHLD: 42,
-  SHLD: 34,
+  SHLD: 34
 };
 var ALL_MNEMONICS = new Set([
   ...Object.keys(IMPLIED),
@@ -469,7 +459,7 @@ var ALL_MNEMONICS = new Set([
   "ORG",
   "SECTION",
   "END",
-  "EQU",
+  "EQU"
 ]);
 var INVERT_JUMP = {
   Z: "JNZ",
@@ -481,12 +471,12 @@ var INVERT_JUMP = {
   P: "JM",
   M: "JP",
   "==": "JNZ",
-  "<>": "JZ",
+  "<>": "JZ"
 };
 var VALID_PROC_REGS = new Set(["PSW", "B", "D", "H"]);
 function popsAndRet(regs, orig, file) {
   const out = [];
-  for (let k = regs.length - 1; k >= 0; k--) {
+  for (let k = regs.length - 1;k >= 0; k--) {
     out.push({ text: `	POP ${regs[k]}`, orig, file });
   }
   out.push({ text: `	RET`, orig, file });
@@ -497,7 +487,7 @@ function preprocess(source, opts) {
     counter: { n: 0 },
     procCounter: { n: 0 },
     includeStack: opts?.file ? [opts.file] : [],
-    readInclude: opts?.readInclude,
+    readInclude: opts?.readInclude
   };
   return preprocessImpl(source, opts?.file, ctx);
 }
@@ -507,7 +497,7 @@ function preprocessImpl(source, file, ctx) {
   const out = [];
   const stack = [];
   let proc = null;
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = 0;i < lines.length; i++) {
     const line = lines[i];
     const orig = i + 1;
     const bare = stripComment(line).trim();
@@ -518,44 +508,20 @@ function preprocessImpl(source, file, ctx) {
       const m2 = arg.match(/^'([^']*)'$/);
       const path = m1?.[1] ?? m2?.[1];
       if (path === undefined) {
-        throw new AsmError(
-          'include requires a quoted filename, e.g. include "foo.inc"',
-          orig,
-          line,
-          firstNonSpaceCol(line),
-          file,
-        );
+        throw new AsmError('include requires a quoted filename, e.g. include "foo.inc"', orig, line, firstNonSpaceCol(line), file);
       }
       if (!ctx.readInclude) {
-        throw new AsmError(
-          "include is not supported in this environment",
-          orig,
-          line,
-          firstNonSpaceCol(line),
-          file,
-        );
+        throw new AsmError("include is not supported in this environment", orig, line, firstNonSpaceCol(line), file);
       }
       let result;
       try {
         result = ctx.readInclude(path, file);
       } catch (e) {
-        throw new AsmError(
-          `cannot read include "${path}": ${e.message}`,
-          orig,
-          line,
-          firstNonSpaceCol(line),
-          file,
-        );
+        throw new AsmError(`cannot read include "${path}": ${e.message}`, orig, line, firstNonSpaceCol(line), file);
       }
       if (ctx.includeStack.includes(result.resolvedFile)) {
         const chain = [...ctx.includeStack, result.resolvedFile].join(" -> ");
-        throw new AsmError(
-          `circular include: ${chain}`,
-          orig,
-          line,
-          firstNonSpaceCol(line),
-          file,
-        );
+        throw new AsmError(`circular include: ${chain}`, orig, line, firstNonSpaceCol(line), file);
       }
       ctx.includeStack.push(result.resolvedFile);
       const nested = preprocessImpl(result.source, result.resolvedFile, ctx);
@@ -568,13 +534,7 @@ function preprocessImpl(source, file, ctx) {
       const cond = ifMatch[1].toUpperCase();
       const jmp = INVERT_JUMP[cond];
       if (!jmp) {
-        throw new AsmError(
-          `unknown .if condition: ${ifMatch[1]}`,
-          orig,
-          line,
-          firstNonSpaceCol(line),
-          file,
-        );
+        throw new AsmError(`unknown .if condition: ${ifMatch[1]}`, orig, line, firstNonSpaceCol(line), file);
       }
       const id = ctx.counter.n++;
       stack.push({ id, sawElse: false, line: orig, source: line });
@@ -584,22 +544,10 @@ function preprocessImpl(source, file, ctx) {
     if (/^\.?else\s*$/i.test(bare)) {
       const top = stack[stack.length - 1];
       if (!top) {
-        throw new AsmError(
-          ".else without .if",
-          orig,
-          line,
-          firstNonSpaceCol(line),
-          file,
-        );
+        throw new AsmError(".else without .if", orig, line, firstNonSpaceCol(line), file);
       }
       if (top.sawElse) {
-        throw new AsmError(
-          "duplicate .else",
-          orig,
-          line,
-          firstNonSpaceCol(line),
-          file,
-        );
+        throw new AsmError("duplicate .else", orig, line, firstNonSpaceCol(line), file);
       }
       top.sawElse = true;
       out.push({ text: `	JMP @_if_${top.id}_exit`, orig, file });
@@ -609,13 +557,7 @@ function preprocessImpl(source, file, ctx) {
     if (/^\.?endif\s*$/i.test(bare)) {
       const top = stack.pop();
       if (!top) {
-        throw new AsmError(
-          ".endif without .if",
-          orig,
-          line,
-          firstNonSpaceCol(line),
-          file,
-        );
+        throw new AsmError(".endif without .if", orig, line, firstNonSpaceCol(line), file);
       }
       const suffix = top.sawElse ? "exit" : "else";
       out.push({ text: `@_if_${top.id}_${suffix}:`, orig, file });
@@ -624,29 +566,18 @@ function preprocessImpl(source, file, ctx) {
     const procMatch = bare.match(/^([A-Za-z_]\w*):?\s+\.?proc\b\s*(.*)$/i);
     if (procMatch && !ALL_MNEMONICS.has(procMatch[1].toUpperCase())) {
       if (proc) {
-        throw new AsmError(
-          "nested .proc not allowed",
-          orig,
-          line,
-          firstNonSpaceCol(line),
-          file,
-        );
+        throw new AsmError("nested .proc not allowed", orig, line, firstNonSpaceCol(line), file);
       }
       const name = procMatch[1];
       const regsRaw = procMatch[2].trim();
       const regs = [];
       if (regsRaw) {
         for (const r of regsRaw.split(/[,\s]+/)) {
-          if (!r) continue;
+          if (!r)
+            continue;
           const up = r.toUpperCase();
           if (!VALID_PROC_REGS.has(up)) {
-            throw new AsmError(
-              `invalid .proc register: ${r} (expected PSW, B, D, or H)`,
-              orig,
-              line,
-              firstNonSpaceCol(line),
-              file,
-            );
+            throw new AsmError(`invalid .proc register: ${r} (expected PSW, B, D, or H)`, orig, line, firstNonSpaceCol(line), file);
           }
           regs.push(up);
         }
@@ -657,7 +588,7 @@ function preprocessImpl(source, file, ctx) {
         line: orig,
         source: line,
         exitLabel: `__proc_${id}_exit`,
-        returnUsed: false,
+        returnUsed: false
       };
       out.push({ text: `${name}:`, orig, file });
       for (const r of regs) {
@@ -666,23 +597,11 @@ function preprocessImpl(source, file, ctx) {
       continue;
     }
     if (/^\.proc(\s|$)/i.test(bare) || /^proc\s+\S/i.test(bare)) {
-      throw new AsmError(
-        ".proc requires a label",
-        orig,
-        line,
-        firstNonSpaceCol(line),
-        file,
-      );
+      throw new AsmError(".proc requires a label", orig, line, firstNonSpaceCol(line), file);
     }
     if (/^\.?endp\s*$/i.test(bare)) {
       if (!proc) {
-        throw new AsmError(
-          ".endp without .proc",
-          orig,
-          line,
-          firstNonSpaceCol(line),
-          file,
-        );
+        throw new AsmError(".endp without .proc", orig, line, firstNonSpaceCol(line), file);
       }
       if (proc.returnUsed) {
         out.push({ text: `${proc.exitLabel}:`, orig, file });
@@ -693,13 +612,7 @@ function preprocessImpl(source, file, ctx) {
     }
     if (/^\.?return\s*$/i.test(bare)) {
       if (!proc) {
-        throw new AsmError(
-          ".return outside .proc",
-          orig,
-          line,
-          firstNonSpaceCol(line),
-          file,
-        );
+        throw new AsmError(".return outside .proc", orig, line, firstNonSpaceCol(line), file);
       }
       if (proc.regs.length === 0) {
         out.push({ text: `	RET`, orig, file });
@@ -713,22 +626,10 @@ function preprocessImpl(source, file, ctx) {
   }
   if (stack.length) {
     const top = stack[stack.length - 1];
-    throw new AsmError(
-      ".if without .endif",
-      top.line,
-      top.source,
-      firstNonSpaceCol(top.source),
-      file,
-    );
+    throw new AsmError(".if without .endif", top.line, top.source, firstNonSpaceCol(top.source), file);
   }
   if (proc) {
-    throw new AsmError(
-      ".proc without .endp",
-      proc.line,
-      proc.source,
-      firstNonSpaceCol(proc.source),
-      file,
-    );
+    throw new AsmError(".proc without .endp", proc.line, proc.source, firstNonSpaceCol(proc.source), file);
   }
   return out;
 }
@@ -739,14 +640,15 @@ function splitStatements(line) {
   let start = 0;
   let inQ = false;
   let qc = "";
-  for (let i = 0; i + 2 < src.length; i++) {
+  for (let i = 0;i + 2 < src.length; i++) {
     const c = src[i];
     if (inQ) {
       if (c === "\\" && i + 1 < src.length) {
         i++;
         continue;
       }
-      if (c === qc) inQ = false;
+      if (c === qc)
+        inQ = false;
       continue;
     }
     if (c === '"' || c === "'") {
@@ -754,47 +656,59 @@ function splitStatements(line) {
       qc = c;
       continue;
     }
-    if (
-      c !== " " ||
-      (src[i + 1] !== "/" && src[i + 1] !== "\\") ||
-      src[i + 2] !== " "
-    )
+    if (c !== " " || src[i + 1] !== "/" && src[i + 1] !== "\\" || src[i + 2] !== " ")
       continue;
     let j = i + 3;
-    while (j < src.length && src[j] === " ") j++;
+    while (j < src.length && src[j] === " ")
+      j++;
     let tokStart = j;
-    if (src[j] === ".") j++;
+    if (src[j] === ".")
+      j++;
     let tokEnd = j;
-    while (tokEnd < src.length && /\w/.test(src[tokEnd])) tokEnd++;
-    if (tokEnd === j) continue;
+    while (tokEnd < src.length && /\w/.test(src[tokEnd]))
+      tokEnd++;
+    if (tokEnd === j)
+      continue;
     let tok = src.slice(tokStart, tokEnd).toUpperCase();
-    if (tok.startsWith(".")) tok = tok.slice(1);
-    if (!ALL_MNEMONICS.has(tok)) continue;
+    if (tok.startsWith("."))
+      tok = tok.slice(1);
+    if (!ALL_MNEMONICS.has(tok))
+      continue;
     out.push(src.slice(start, i));
     start = i + 2;
     i += 2;
   }
   out.push(src.slice(start));
   if (out.length > MAX_STATEMENTS_PER_LINE) {
-    throw new Error(
-      `too many statements on one line (max ${MAX_STATEMENTS_PER_LINE})`,
-    );
+    throw new Error(`too many statements on one line (max ${MAX_STATEMENTS_PER_LINE})`);
   }
   return out;
 }
 function instrSize(m) {
-  if (m in IMPLIED) return 1;
-  if (m in ALU_REG) return 1;
-  if (m === "MOV" || m === "INR" || m === "DCR") return 1;
-  if (m === "PUSH" || m === "POP") return 1;
-  if (m === "DAD" || m === "INX" || m === "DCX") return 1;
-  if (m === "LDAX" || m === "STAX") return 1;
-  if (m === "RST") return 1;
-  if (m === "MVI") return 2;
-  if (m in ALU_IMM) return 2;
-  if (m === "IN" || m === "OUT") return 2;
-  if (m === "LXI") return 3;
-  if (m in ADDR16) return 3;
+  if (m in IMPLIED)
+    return 1;
+  if (m in ALU_REG)
+    return 1;
+  if (m === "MOV" || m === "INR" || m === "DCR")
+    return 1;
+  if (m === "PUSH" || m === "POP")
+    return 1;
+  if (m === "DAD" || m === "INX" || m === "DCX")
+    return 1;
+  if (m === "LDAX" || m === "STAX")
+    return 1;
+  if (m === "RST")
+    return 1;
+  if (m === "MVI")
+    return 2;
+  if (m in ALU_IMM)
+    return 2;
+  if (m === "IN" || m === "OUT")
+    return 2;
+  if (m === "LXI")
+    return 3;
+  if (m in ADDR16)
+    return 3;
   throw new Error(`unknown mnemonic: ${m}`);
 }
 var STRING_ESCAPES = {
@@ -804,15 +718,16 @@ var STRING_ESCAPES = {
   n: 10,
   r: 13,
   t: 9,
-  0: 0,
+  "0": 0
 };
 function decodeString(text) {
   const body = text.slice(1, -1);
   const out = [];
-  for (let i = 0; i < body.length; i++) {
+  for (let i = 0;i < body.length; i++) {
     const c = body[i];
     if (c === "\\") {
-      if (i + 1 >= body.length) throw new Error("dangling '\\' in string");
+      if (i + 1 >= body.length)
+        throw new Error("dangling '\\' in string");
       const nxt = body[i + 1];
       if (!(nxt in STRING_ESCAPES)) {
         throw new Error(`unknown escape sequence '\\${nxt}'`);
@@ -828,18 +743,20 @@ function decodeString(text) {
 function stripComment(line) {
   let inQ = false;
   let qc = "";
-  for (let i = 0; i < line.length; i++) {
+  for (let i = 0;i < line.length; i++) {
     const c = line[i];
     if (inQ) {
       if (c === "\\" && i + 1 < line.length) {
         i++;
         continue;
       }
-      if (c === qc) inQ = false;
+      if (c === qc)
+        inQ = false;
     } else if (c === '"' || c === "'") {
       inQ = true;
       qc = c;
-    } else if (c === ";") return line.slice(0, i);
+    } else if (c === ";")
+      return line.slice(0, i);
   }
   return line;
 }
@@ -848,7 +765,7 @@ function splitOperands(s) {
   let current = "";
   let inQ = false;
   let qc = "";
-  for (let i = 0; i < s.length; i++) {
+  for (let i = 0;i < s.length; i++) {
     const c = s[i];
     if (inQ) {
       current += c;
@@ -857,7 +774,8 @@ function splitOperands(s) {
         i++;
         continue;
       }
-      if (c === qc) inQ = false;
+      if (c === qc)
+        inQ = false;
     } else if (c === '"' || c === "'") {
       inQ = true;
       qc = c;
@@ -865,9 +783,11 @@ function splitOperands(s) {
     } else if (c === ",") {
       r.push(current.trim());
       current = "";
-    } else current += c;
+    } else
+      current += c;
   }
-  if (current.trim()) r.push(current.trim());
+  if (current.trim())
+    r.push(current.trim());
   return r;
 }
 var DIRECTIVES = new Set(["ORG", "SECTION", "END", "DB", "DW", "DS", "EQU"]);
@@ -883,14 +803,16 @@ function isMnemonic(tok) {
 }
 function parseLine(line) {
   let s = stripComment(line).trim();
-  if (!s) return { operands: [] };
+  if (!s)
+    return { operands: [] };
   let label;
   const ci = s.indexOf(":");
   if (ci > 0 && LABEL_RE.test(s.slice(0, ci).trim())) {
     label = s.slice(0, ci).trim();
     s = s.slice(ci + 1).trim();
   }
-  if (!s) return { label, operands: [] };
+  if (!s)
+    return { label, operands: [] };
   let si = s.search(/\s/);
   let first = si < 0 ? s : s.slice(0, si);
   let rest = si < 0 ? "" : s.slice(si).trim();
@@ -909,13 +831,13 @@ function parseLine(line) {
       label,
       mnemonic: "EQU",
       operands: [rest],
-      isEqu: true,
+      isEqu: true
     };
   }
   return {
     label,
     mnemonic,
-    operands: rest ? splitOperands(rest) : [],
+    operands: rest ? splitOperands(rest) : []
   };
 }
 function tokenizeExpr(expr) {
@@ -927,12 +849,7 @@ function tokenizeExpr(expr) {
       i++;
       continue;
     }
-    if (
-      c === "'" &&
-      i + 3 < expr.length &&
-      expr[i + 1] === "\\" &&
-      expr[i + 3] === "'"
-    ) {
+    if (c === "'" && i + 3 < expr.length && expr[i + 1] === "\\" && expr[i + 3] === "'") {
       const esc = expr[i + 2];
       if (!(esc in STRING_ESCAPES)) {
         throw new Error(`unknown escape sequence '\\${esc}'`);
@@ -953,23 +870,28 @@ function tokenizeExpr(expr) {
     }
     if (c === "@") {
       let j = i + 1;
-      while (j < expr.length && /\w/.test(expr[j])) j++;
-      if (j === i + 1) throw new Error("expected identifier after '@'");
+      while (j < expr.length && /\w/.test(expr[j]))
+        j++;
+      if (j === i + 1)
+        throw new Error("expected identifier after '@'");
       tokens.push({ kind: "id", val: expr.slice(i, j) });
       i = j;
       continue;
     }
     if (c === ".") {
       let j = i + 1;
-      while (j < expr.length && /\w/.test(expr[j])) j++;
-      if (j === i + 1) throw new Error("expected identifier after '.'");
+      while (j < expr.length && /\w/.test(expr[j]))
+        j++;
+      if (j === i + 1)
+        throw new Error("expected identifier after '.'");
       tokens.push({ kind: "id", val: expr.slice(i, j) });
       i = j;
       continue;
     }
     if (/[0-9]/.test(c)) {
       let j = i;
-      while (j < expr.length && /[0-9A-Fa-f]/.test(expr[j])) j++;
+      while (j < expr.length && /[0-9A-Fa-f]/.test(expr[j]))
+        j++;
       if (j < expr.length && /[hH]/.test(expr[j])) {
         tokens.push({ kind: "num", val: parseInt(expr.slice(i, j), 16) });
         j++;
@@ -981,7 +903,8 @@ function tokenizeExpr(expr) {
     }
     if (/[A-Za-z_]/.test(c)) {
       let j = i;
-      while (j < expr.length && /\w/.test(expr[j])) j++;
+      while (j < expr.length && /\w/.test(expr[j]))
+        j++;
       tokens.push({ kind: "id", val: expr.slice(i, j) });
       i = j;
       continue;
@@ -1020,7 +943,8 @@ function evalExpr(expr, symbols, pc = 0, lastLabel = "") {
   }
   function atom() {
     const t = peek();
-    if (!t) throw new Error("unexpected end of expression");
+    if (!t)
+      throw new Error("unexpected end of expression");
     if (t.kind === "num") {
       next();
       return t.val;
@@ -1028,29 +952,35 @@ function evalExpr(expr, symbols, pc = 0, lastLabel = "") {
     if (t.kind === "id") {
       next();
       const raw = t.val;
-      if (raw === "$") return pc;
+      if (raw === "$")
+        return pc;
       const upper = raw.toUpperCase();
       if (upper === "LOW" || upper === "HIGH") {
-        if (!isOp("(")) throw new Error(`${upper} requires parentheses`);
+        if (!isOp("("))
+          throw new Error(`${upper} requires parentheses`);
         next();
         const v = parseOr();
-        if (!isOp(")")) throw new Error("expected ')'");
+        if (!isOp(")"))
+          throw new Error("expected ')'");
         next();
-        return upper === "LOW" ? v & 255 : (v >> 8) & 255;
+        return upper === "LOW" ? v & 255 : v >> 8 & 255;
       }
       let name = raw;
       if (name.startsWith("@") || name.startsWith(".")) {
-        if (!lastLabel) throw new Error(`local label without scope: ${raw}`);
+        if (!lastLabel)
+          throw new Error(`local label without scope: ${raw}`);
         name = lastLabel + name;
       }
       const k = name.toUpperCase();
-      if (symbols.has(k)) return symbols.get(k);
+      if (symbols.has(k))
+        return symbols.get(k);
       throw new Error(`unknown symbol: ${raw}`);
     }
     if (t.kind === "op" && t.val === "(") {
       next();
       const v = parseOr();
-      if (!isOp(")")) throw new Error("expected ')'");
+      if (!isOp(")"))
+        throw new Error("expected ')'");
       next();
       return v;
     }
@@ -1076,9 +1006,12 @@ function evalExpr(expr, symbols, pc = 0, lastLabel = "") {
     while (isOp("*") || isOp("/") || isOp("%")) {
       const op = next().val;
       let r = unary();
-      if (op === "*") v = (v * r) & 65535;
-      else if (op === "/") v = Math.trunc(v / r) & 65535;
-      else v = (v % r) & 65535;
+      if (op === "*")
+        v = v * r & 65535;
+      else if (op === "/")
+        v = Math.trunc(v / r) & 65535;
+      else
+        v = v % r & 65535;
     }
     return v;
   }
@@ -1087,7 +1020,7 @@ function evalExpr(expr, symbols, pc = 0, lastLabel = "") {
     while (isOp("+") || isOp("-")) {
       const op = next().val;
       let r = multiplicative();
-      v = op === "+" ? (v + r) & 65535 : (v - r) & 65535;
+      v = op === "+" ? v + r & 65535 : v - r & 65535;
     }
     return v;
   }
@@ -1096,7 +1029,7 @@ function evalExpr(expr, symbols, pc = 0, lastLabel = "") {
     while (isOp("<<") || isOp(">>")) {
       const op = next().val;
       let r = additive();
-      v = op === "<<" ? (v << r) & 65535 : (v >>> r) & 65535;
+      v = op === "<<" ? v << r & 65535 : v >>> r & 65535;
     }
     return v;
   }
@@ -1129,52 +1062,137 @@ function evalExpr(expr, symbols, pc = 0, lastLabel = "") {
     throw new Error(`unexpected token: ${tokens[pos].val}`);
   return result;
 }
+function expectOps(m, ops, n) {
+  if (ops.length !== n) {
+    throw new Error(`${m} takes ${n} operand${n === 1 ? "" : "s"}, got ${ops.length}`);
+  }
+}
+function reg8(m, op) {
+  const r = REG8[op.toUpperCase()];
+  if (r === undefined) {
+    throw new Error(`${m}: invalid register '${op}' (expected B C D E H L M A)`);
+  }
+  return r;
+}
+function regPair(m, op, allowed) {
+  const names = Object.keys(allowed).join(" ");
+  const r = allowed[op.toUpperCase()];
+  if (r === undefined) {
+    throw new Error(`${m}: invalid register pair '${op}' (expected ${names})`);
+  }
+  return r;
+}
+function imm8(m, v) {
+  if (v < -128 || v > 255) {
+    throw new Error(`${m}: 8-bit value out of range: ${v}`);
+  }
+  return v & 255;
+}
+function imm16(m, v) {
+  if (v < -32768 || v > 65535) {
+    throw new Error(`${m}: 16-bit value out of range: ${v}`);
+  }
+  return [v & 255, v >> 8 & 255];
+}
+var LDAX_STAX_PAIRS = { B: 0, D: 1 };
 function encode(m, ops, symbols, pc = 0, lastLabel = "") {
-  if (m in IMPLIED) return [IMPLIED[m]];
-  if (m in ALU_REG) return [ALU_REG[m] | REG8[ops[0].toUpperCase()]];
-  if (m in ALU_IMM)
-    return [ALU_IMM[m], evalExpr(ops[0], symbols, pc, lastLabel) & 255];
+  if (m in IMPLIED) {
+    expectOps(m, ops, 0);
+    return [IMPLIED[m]];
+  }
+  if (m in ALU_REG) {
+    expectOps(m, ops, 1);
+    return [ALU_REG[m] | reg8(m, ops[0])];
+  }
+  if (m in ALU_IMM) {
+    expectOps(m, ops, 1);
+    return [ALU_IMM[m], imm8(m, evalExpr(ops[0], symbols, pc, lastLabel))];
+  }
   if (m in ADDR16) {
-    const v = evalExpr(ops[0], symbols, pc, lastLabel);
-    return [ADDR16[m], v & 255, (v >> 8) & 255];
+    expectOps(m, ops, 1);
+    const [lo, hi] = imm16(m, evalExpr(ops[0], symbols, pc, lastLabel));
+    return [ADDR16[m], lo, hi];
   }
-  if (m === "MOV")
-    return [
-      64 | (REG8[ops[0].toUpperCase()] << 3) | REG8[ops[1].toUpperCase()],
-    ];
+  if (m === "MOV") {
+    expectOps(m, ops, 2);
+    const dst = reg8(m, ops[0]);
+    const src = reg8(m, ops[1]);
+    if (dst === 6 && src === 6) {
+      throw new Error("MOV M,M is not a valid instruction (encodes to HLT)");
+    }
+    return [64 | dst << 3 | src];
+  }
   if (m === "MVI") {
-    const v = evalExpr(ops[1], symbols, pc, lastLabel);
-    return [6 | (REG8[ops[0].toUpperCase()] << 3), v & 255];
+    expectOps(m, ops, 2);
+    return [
+      6 | reg8(m, ops[0]) << 3,
+      imm8(m, evalExpr(ops[1], symbols, pc, lastLabel))
+    ];
   }
-  if (m === "INR") return [4 | (REG8[ops[0].toUpperCase()] << 3)];
-  if (m === "DCR") return [5 | (REG8[ops[0].toUpperCase()] << 3)];
+  if (m === "INR") {
+    expectOps(m, ops, 1);
+    return [4 | reg8(m, ops[0]) << 3];
+  }
+  if (m === "DCR") {
+    expectOps(m, ops, 1);
+    return [5 | reg8(m, ops[0]) << 3];
+  }
   if (m === "LXI") {
-    const v = evalExpr(ops[1], symbols, pc, lastLabel);
-    return [1 | (REG_PAIR[ops[0].toUpperCase()] << 4), v & 255, (v >> 8) & 255];
+    expectOps(m, ops, 2);
+    const [lo, hi] = imm16(m, evalExpr(ops[1], symbols, pc, lastLabel));
+    return [1 | regPair(m, ops[0], REG_PAIR) << 4, lo, hi];
   }
-  if (m === "DAD") return [9 | (REG_PAIR[ops[0].toUpperCase()] << 4)];
-  if (m === "INX") return [3 | (REG_PAIR[ops[0].toUpperCase()] << 4)];
-  if (m === "DCX") return [11 | (REG_PAIR[ops[0].toUpperCase()] << 4)];
-  if (m === "PUSH") return [197 | (REG_PAIR_PUSH[ops[0].toUpperCase()] << 4)];
-  if (m === "POP") return [193 | (REG_PAIR_PUSH[ops[0].toUpperCase()] << 4)];
-  if (m === "LDAX") return [10 | (REG_PAIR[ops[0].toUpperCase()] << 4)];
-  if (m === "STAX") return [2 | (REG_PAIR[ops[0].toUpperCase()] << 4)];
-  if (m === "IN") return [219, evalExpr(ops[0], symbols, pc, lastLabel) & 255];
-  if (m === "OUT") return [211, evalExpr(ops[0], symbols, pc, lastLabel) & 255];
+  if (m === "DAD") {
+    expectOps(m, ops, 1);
+    return [9 | regPair(m, ops[0], REG_PAIR) << 4];
+  }
+  if (m === "INX") {
+    expectOps(m, ops, 1);
+    return [3 | regPair(m, ops[0], REG_PAIR) << 4];
+  }
+  if (m === "DCX") {
+    expectOps(m, ops, 1);
+    return [11 | regPair(m, ops[0], REG_PAIR) << 4];
+  }
+  if (m === "PUSH") {
+    expectOps(m, ops, 1);
+    return [197 | regPair(m, ops[0], REG_PAIR_PUSH) << 4];
+  }
+  if (m === "POP") {
+    expectOps(m, ops, 1);
+    return [193 | regPair(m, ops[0], REG_PAIR_PUSH) << 4];
+  }
+  if (m === "LDAX") {
+    expectOps(m, ops, 1);
+    return [10 | regPair(m, ops[0], LDAX_STAX_PAIRS) << 4];
+  }
+  if (m === "STAX") {
+    expectOps(m, ops, 1);
+    return [2 | regPair(m, ops[0], LDAX_STAX_PAIRS) << 4];
+  }
+  if (m === "IN") {
+    expectOps(m, ops, 1);
+    return [219, imm8(m, evalExpr(ops[0], symbols, pc, lastLabel))];
+  }
+  if (m === "OUT") {
+    expectOps(m, ops, 1);
+    return [211, imm8(m, evalExpr(ops[0], symbols, pc, lastLabel))];
+  }
   if (m === "RST") {
+    expectOps(m, ops, 1);
     const n = evalExpr(ops[0], symbols, pc, lastLabel);
-    return [199 | (n << 3)];
+    if (n < 0 || n > 7)
+      throw new Error(`RST: vector out of range 0..7: ${n}`);
+    return [199 | n << 3];
   }
   throw new Error(`cannot encode: ${m} ${ops.join(", ")}`);
 }
 function dbBytes(operands, symbols, pc = 0, lastLabel = "") {
   const out = [];
   for (const op of operands) {
-    if (
-      (op.startsWith('"') && op.endsWith('"') && op.length >= 2) ||
-      (op.startsWith("'") && op.endsWith("'") && op.length >= 2)
-    ) {
-      for (const b of decodeString(op)) out.push(b);
+    if (op.startsWith('"') && op.endsWith('"') && op.length >= 2 || op.startsWith("'") && op.endsWith("'") && op.length >= 2) {
+      for (const b of decodeString(op))
+        out.push(b);
     } else {
       out.push(evalExpr(op, symbols, pc, lastLabel) & 255);
     }
@@ -1185,7 +1203,7 @@ function dwBytes(operands, symbols, pc = 0, lastLabel = "") {
   const out = [];
   for (const op of operands) {
     const v = evalExpr(op, symbols, pc, lastLabel) & 65535;
-    out.push(v & 255, (v >> 8) & 255);
+    out.push(v & 255, v >> 8 & 255);
   }
   return out;
 }
@@ -1193,7 +1211,8 @@ function parseDs(operands) {
   if (operands.length !== 1)
     throw new Error("DS takes one operand: count [(fill)]");
   const m = operands[0].match(/^(.+?)\s+\((.+)\)\s*$/);
-  if (m) return { count: m[1], fill: m[2] };
+  if (m)
+    return { count: m[1], fill: m[2] };
   return { count: operands[0], fill: "0" };
 }
 function dsBytes(operands, symbols, pc = 0, lastLabel = "") {
@@ -1209,23 +1228,21 @@ function countDs(operands, symbols, pc = 0, lastLabel = "") {
 function countDb(operands) {
   let n = 0;
   for (const op of operands) {
-    if (
-      (op.startsWith('"') && op.endsWith('"') && op.length >= 2) ||
-      (op.startsWith("'") && op.endsWith("'") && op.length >= 2)
-    )
+    if (op.startsWith('"') && op.endsWith('"') && op.length >= 2 || op.startsWith("'") && op.endsWith("'") && op.length >= 2)
       n += decodeString(op).length;
-    else n++;
+    else
+      n++;
   }
   return n;
 }
 function asm(source, opts) {
   const pp = preprocess(source, opts);
-  const symbols = new Map();
+  const symbols = new Map;
   const pending = [];
   let pc = 0;
   let lastLabel = "";
   let ended = false;
-  for (let idx = 0; idx < pp.length && !ended; idx++) {
+  for (let idx = 0;idx < pp.length && !ended; idx++) {
     const { text: line, orig, file } = pp[idx];
     try {
       for (const stmt of splitStatements(line)) {
@@ -1234,38 +1251,29 @@ function asm(source, opts) {
           let labelName = parts.label;
           if (labelName.startsWith("@") || labelName.startsWith(".")) {
             if (!lastLabel)
-              throw new Error(
-                `local label without preceding normal label: ${labelName}`,
-              );
+              throw new Error(`local label without preceding normal label: ${labelName}`);
             labelName = lastLabel + labelName;
           } else if (!parts.isEqu) {
             lastLabel = parts.label;
           }
           if (parts.isEqu) {
-            tryDefineEqu(
-              symbols,
-              pending,
-              labelName,
-              parts.operands[0],
-              pc,
-              lastLabel,
-              orig,
-              line,
-              file,
-            );
+            tryDefineEqu(symbols, pending, labelName, parts.operands[0], pc, lastLabel, orig, line, file);
             continue;
           }
           ensureSymbolFree(symbols, pending, labelName, orig, line, file);
           symbols.set(labelName.toUpperCase(), pc);
         }
-        if (!parts.mnemonic) continue;
+        if (!parts.mnemonic)
+          continue;
         const m = parts.mnemonic.toUpperCase();
-        if (m === "EQU") continue;
+        if (m === "EQU")
+          continue;
         if (m === "ORG") {
           pc = evalExpr(parts.operands[0], symbols, pc, lastLabel);
           continue;
         }
-        if (m === "SECTION") continue;
+        if (m === "SECTION")
+          continue;
         if (m === "END") {
           ended = true;
           break;
@@ -1285,32 +1293,30 @@ function asm(source, opts) {
         pc += instrSize(m);
       }
     } catch (e) {
-      if (e instanceof AsmError) throw e;
+      if (e instanceof AsmError)
+        throw e;
       throw new AsmError(e.message, orig, line, firstNonSpaceCol(line), file);
     }
   }
   resolvePendingEqus(symbols, pending);
   const sections = [];
   let current = null;
-  const sectionNames = new Set();
+  const sectionNames = new Set;
   let lastLabel2 = "";
   let endedPass2 = false;
-  for (let idx = 0; idx < pp.length && !endedPass2; idx++) {
+  for (let idx = 0;idx < pp.length && !endedPass2; idx++) {
     const { text: line, orig, file } = pp[idx];
     try {
       for (const stmt of splitStatements(line)) {
         const parts = parseLine(stmt);
-        if (
-          parts.label &&
-          !parts.label.startsWith("@") &&
-          !parts.label.startsWith(".") &&
-          !parts.isEqu
-        ) {
+        if (parts.label && !parts.label.startsWith("@") && !parts.label.startsWith(".") && !parts.isEqu) {
           lastLabel2 = parts.label;
         }
-        if (parts.isEqu || !parts.mnemonic) continue;
+        if (parts.isEqu || !parts.mnemonic)
+          continue;
         const m = parts.mnemonic.toUpperCase();
-        if (m === "EQU") continue;
+        if (m === "EQU")
+          continue;
         const curPc = current ? current.start + current.data.length : 0;
         if (m === "ORG") {
           if (current && current.data.length) {
@@ -1322,9 +1328,11 @@ function asm(source, opts) {
           continue;
         }
         if (m === "SECTION") {
-          if (!current) throw new Error("SECTION before ORG");
+          if (!current)
+            throw new Error("SECTION before ORG");
           const name = parts.operands[0];
-          if (!name) throw new Error("SECTION requires a name");
+          if (!name)
+            throw new Error("SECTION requires a name");
           if (sectionNames.has(name.toUpperCase()))
             throw new Error(`duplicate section name: ${name}`);
           sectionNames.add(name.toUpperCase());
@@ -1335,19 +1343,14 @@ function asm(source, opts) {
           endedPass2 = true;
           break;
         }
-        if (!current) throw new Error("code before ORG");
-        const bytes =
-          m === "DB"
-            ? dbBytes(parts.operands, symbols, curPc, lastLabel2)
-            : m === "DW"
-              ? dwBytes(parts.operands, symbols, curPc, lastLabel2)
-              : m === "DS"
-                ? dsBytes(parts.operands, symbols, curPc, lastLabel2)
-                : encode(m, parts.operands, symbols, curPc, lastLabel2);
+        if (!current)
+          throw new Error("code before ORG");
+        const bytes = m === "DB" ? dbBytes(parts.operands, symbols, curPc, lastLabel2) : m === "DW" ? dwBytes(parts.operands, symbols, curPc, lastLabel2) : m === "DS" ? dsBytes(parts.operands, symbols, curPc, lastLabel2) : encode(m, parts.operands, symbols, curPc, lastLabel2);
         current.data.push(...bytes);
       }
     } catch (e) {
-      if (e instanceof AsmError) throw e;
+      if (e instanceof AsmError)
+        throw e;
       throw new AsmError(e.message, orig, line, firstNonSpaceCol(line), file);
     }
   }
@@ -1368,30 +1371,11 @@ function isUnknownSymbolErr(e) {
 }
 function ensureSymbolFree(symbols, pending, name, orig, line, file) {
   const upper = name.toUpperCase();
-  if (
-    symbols.has(upper) ||
-    pending.some((p) => p.name.toUpperCase() === upper)
-  ) {
-    throw new AsmError(
-      `duplicate symbol: ${name}`,
-      orig,
-      line,
-      firstNonSpaceCol(line),
-      file,
-    );
+  if (symbols.has(upper) || pending.some((p) => p.name.toUpperCase() === upper)) {
+    throw new AsmError(`duplicate symbol: ${name}`, orig, line, firstNonSpaceCol(line), file);
   }
 }
-function tryDefineEqu(
-  symbols,
-  pending,
-  name,
-  expr,
-  pc,
-  lastLabel,
-  orig,
-  line,
-  file,
-) {
+function tryDefineEqu(symbols, pending, name, expr, pc, lastLabel, orig, line, file) {
   ensureSymbolFree(symbols, pending, name, orig, line, file);
   try {
     symbols.set(name.toUpperCase(), evalExpr(expr, symbols, pc, lastLabel));
@@ -1409,22 +1393,13 @@ function resolvePendingEqus(symbols, pending) {
     const next = [];
     for (const p of pending) {
       try {
-        symbols.set(
-          p.name.toUpperCase(),
-          evalExpr(p.expr, symbols, p.pc, p.lastLabel),
-        );
+        symbols.set(p.name.toUpperCase(), evalExpr(p.expr, symbols, p.pc, p.lastLabel));
         progress = true;
       } catch (e) {
         if (isUnknownSymbolErr(e)) {
           next.push(p);
         } else {
-          throw new AsmError(
-            e.message,
-            p.orig,
-            p.line,
-            firstNonSpaceCol(p.line),
-            p.file,
-          );
+          throw new AsmError(e.message, p.orig, p.line, firstNonSpaceCol(p.line), p.file);
         }
       }
     }
@@ -1433,13 +1408,7 @@ function resolvePendingEqus(symbols, pending) {
       try {
         evalExpr(p.expr, symbols, p.pc, p.lastLabel);
       } catch (e) {
-        throw new AsmError(
-          e.message,
-          p.orig,
-          p.line,
-          firstNonSpaceCol(p.line),
-          p.file,
-        );
+        throw new AsmError(e.message, p.orig, p.line, firstNonSpaceCol(p.line), p.file);
       }
       return;
     }
@@ -1448,12 +1417,12 @@ function resolvePendingEqus(symbols, pending) {
   }
 }
 function collectSymbols(pp) {
-  let symbols = new Map();
+  let symbols = new Map;
   const pending = [];
   let pc = 0;
   let lastLabel = "";
   let ended = false;
-  for (let idx = 0; idx < pp.length && !ended; idx++) {
+  for (let idx = 0;idx < pp.length && !ended; idx++) {
     let { text: line, orig, file } = pp[idx];
     try {
       for (const stmt of splitStatements(line)) {
@@ -1462,38 +1431,29 @@ function collectSymbols(pp) {
           let labelName = parts.label;
           if (labelName.startsWith("@") || labelName.startsWith(".")) {
             if (!lastLabel)
-              throw new Error(
-                `local label without preceding normal label: ${labelName}`,
-              );
+              throw new Error(`local label without preceding normal label: ${labelName}`);
             labelName = lastLabel + labelName;
           } else if (!parts.isEqu) {
             lastLabel = parts.label;
           }
           if (parts.isEqu) {
-            tryDefineEqu(
-              symbols,
-              pending,
-              labelName,
-              parts.operands[0],
-              pc,
-              lastLabel,
-              orig,
-              line,
-              file,
-            );
+            tryDefineEqu(symbols, pending, labelName, parts.operands[0], pc, lastLabel, orig, line, file);
             continue;
           }
           ensureSymbolFree(symbols, pending, labelName, orig, line, file);
           symbols.set(labelName.toUpperCase(), pc);
         }
-        if (!parts.mnemonic) continue;
+        if (!parts.mnemonic)
+          continue;
         let m = parts.mnemonic.toUpperCase();
-        if (m === "EQU") continue;
+        if (m === "EQU")
+          continue;
         if (m === "ORG") {
           pc = evalExpr(parts.operands[0], symbols, pc, lastLabel);
           continue;
         }
-        if (m === "SECTION") continue;
+        if (m === "SECTION")
+          continue;
         if (m === "END") {
           ended = true;
           break;
@@ -1513,7 +1473,8 @@ function collectSymbols(pp) {
         pc += instrSize(m);
       }
     } catch (e) {
-      if (e instanceof AsmError) throw e;
+      if (e instanceof AsmError)
+        throw e;
       throw new AsmError(e.message, orig, line, firstNonSpaceCol(line), file);
     }
   }
@@ -1527,7 +1488,7 @@ function lineInfo(source, opts) {
   let pc = 0;
   let lastLabel = "";
   let done = false;
-  for (let idx = 0; idx < pp.length; idx++) {
+  for (let idx = 0;idx < pp.length; idx++) {
     let { text: line, orig, file } = pp[idx];
     if (done) {
       out.push({ orig, prefix: "", display: line, bytes: [] });
@@ -1535,16 +1496,11 @@ function lineInfo(source, opts) {
     }
     try {
       const statements = splitStatements(line);
-      for (let si = 0; si < statements.length; si++) {
+      for (let si = 0;si < statements.length; si++) {
         const stmt = statements[si];
         const display = si === 0 ? line : "";
         let parts = parseLine(stmt);
-        if (
-          parts.label &&
-          !parts.label.startsWith("@") &&
-          !parts.label.startsWith(".") &&
-          !parts.isEqu
-        ) {
+        if (parts.label && !parts.label.startsWith("@") && !parts.label.startsWith(".") && !parts.isEqu) {
           lastLabel = parts.label;
         }
         if (parts.isEqu) {
@@ -1559,7 +1515,7 @@ function lineInfo(source, opts) {
               prefix: hex4(pc) + ":",
               display,
               addr: pc,
-              bytes: [],
+              bytes: []
             });
           } else if (si === 0) {
             out.push({ orig, prefix: "", display, bytes: [] });
@@ -1574,7 +1530,7 @@ function lineInfo(source, opts) {
             prefix: hex4(pc) + ":",
             display,
             addr: pc,
-            bytes: [],
+            bytes: []
           });
           continue;
         }
@@ -1594,18 +1550,13 @@ function lineInfo(source, opts) {
             prefix: hex4(pc) + ":",
             display,
             addr: pc,
-            bytes: [],
+            bytes: []
           });
           pc += n;
           continue;
         }
-        let bytes =
-          m === "DB"
-            ? dbBytes(parts.operands, symbols, pc, lastLabel)
-            : m === "DW"
-              ? dwBytes(parts.operands, symbols, pc, lastLabel)
-              : encode(m, parts.operands, symbols, pc, lastLabel);
-        for (let i = 0; i < bytes.length; i += 4) {
+        let bytes = m === "DB" ? dbBytes(parts.operands, symbols, pc, lastLabel) : m === "DW" ? dwBytes(parts.operands, symbols, pc, lastLabel) : encode(m, parts.operands, symbols, pc, lastLabel);
+        for (let i = 0;i < bytes.length; i += 4) {
           let chunk = bytes.slice(i, i + 4);
           let prefix = hex4(pc + i) + ": " + chunk.map(hex2).join(" ");
           out.push({
@@ -1613,7 +1564,7 @@ function lineInfo(source, opts) {
             prefix,
             display: i === 0 ? display : "",
             addr: pc + i,
-            bytes: chunk,
+            bytes: chunk
           });
         }
         if (bytes.length === 0) {
@@ -1622,24 +1573,24 @@ function lineInfo(source, opts) {
             prefix: hex4(pc) + ":",
             display,
             addr: pc,
-            bytes: [],
+            bytes: []
           });
         }
         pc += bytes.length;
       }
     } catch (e) {
-      if (e instanceof AsmError) throw e;
+      if (e instanceof AsmError)
+        throw e;
       throw new AsmError(e.message, orig, line, firstNonSpaceCol(line), file);
     }
   }
   return out;
 }
 var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
-if (false) {
-}
+if (false) {}
 
 // docs/build-info.ts
-var BUILD_TIME = "2026-05-17 11:19:44";
+var BUILD_TIME = "2026-06-21 06:07:55";
 
 // docs/playground.ts
 var fetchExample = (f) => fetch(`examples/${f}`).then((r) => r.text());
@@ -1647,15 +1598,12 @@ var EXAMPLES = (window.asm8Examples ?? []).map((e) => {
   const ex = {
     name: e.name,
     filename: e.filename,
-    source: fetchExample(e.filename),
+    source: fetchExample(e.filename)
   };
-  ex.source.then(
-    (s) => {
-      ex.resolvedSource = s;
-      renderTabs();
-    },
-    () => {},
-  );
+  ex.source.then((s) => {
+    ex.resolvedSource = s;
+    renderTabs();
+  }, () => {});
   return ex;
 });
 function tabMatchesExample(t) {
@@ -1669,7 +1617,14 @@ var ACTIVE_KEY = "asm8-playground:active";
 var THEME_KEY = "asm8-playground:theme";
 var FORMAT_KEY = "asm8-playground:format";
 var DEFAULT_FILENAME = "program.asm";
-var OUTPUT_FORMATS = ["asm", "bin", "rk", "rkr", "pki", "gam"];
+var OUTPUT_FORMATS = [
+  "asm",
+  "bin",
+  "rk",
+  "rkr",
+  "pki",
+  "gam"
+];
 var DEFAULT_FORMAT = "asm";
 var tabs = [];
 var active = 0;
@@ -1707,7 +1662,6 @@ var downloadFormatSel = document.getElementById("download-format");
 var runBinBtn = document.getElementById("run-bin");
 var resetBtn = document.getElementById("reset");
 var themeBtn = document.getElementById("theme");
-var fileInput = document.getElementById("file-input");
 var filenameInput = document.getElementById("filename");
 var tabsEl = document.getElementById("tabs");
 function asmName() {
@@ -1723,36 +1677,40 @@ function rk86CheckSum(v) {
   let j = 0;
   while (j < v.length - 1) {
     const c = v[j];
-    sum = (sum + c + (c << 8)) & 65535;
+    sum = sum + c + (c << 8) & 65535;
     j += 1;
   }
   const sum_h = sum & 65280;
   const sum_l = sum & 255;
-  sum = sum_h | ((sum_l + v[j]) & 255);
+  sum = sum_h | sum_l + v[j] & 255;
   return sum;
 }
 function buildOutputFile(sections, format2) {
-  if (sections.length === 0) return new Uint8Array(0);
+  if (sections.length === 0)
+    return new Uint8Array(0);
   const start = sections.reduce((m, s) => Math.min(m, s.start), Infinity);
   const end = sections.reduce((m, s) => Math.max(m, s.end), 0);
   const size = end - start + 1;
   const payload = new Uint8Array(size);
-  for (const s of sections) payload.set(s.data, s.start - start);
-  if (format2 === "bin") return payload;
+  for (const s of sections)
+    payload.set(s.data, s.start - start);
+  if (format2 === "bin")
+    return payload;
   const hasSync = format2 === "pki" || format2 === "gam";
   const headerLen = hasSync ? 5 : 4;
   const out = new Uint8Array(headerLen + size + 3);
   let o = 0;
-  if (hasSync) out[o++] = 230;
-  out[o++] = (start >> 8) & 255;
+  if (hasSync)
+    out[o++] = 230;
+  out[o++] = start >> 8 & 255;
   out[o++] = start & 255;
-  out[o++] = (end >> 8) & 255;
+  out[o++] = end >> 8 & 255;
   out[o++] = end & 255;
   out.set(payload, o);
   o += size;
   const checksum = rk86CheckSum(payload);
   out[o++] = 230;
-  out[o++] = (checksum >> 8) & 255;
+  out[o++] = checksum >> 8 & 255;
   out[o++] = checksum & 255;
   return out;
 }
@@ -1766,7 +1724,8 @@ for (const ex of EXAMPLES) {
 }
 select.addEventListener("change", async () => {
   const ex = EXAMPLES.find((e) => e.name === select.value);
-  if (!ex) return;
+  if (!ex)
+    return;
   const exSource = await ex.source;
   tabs[active].source = source.value;
   const uniqueName = uniqueFilename(ex.filename);
@@ -1782,29 +1741,24 @@ select.addEventListener("change", async () => {
   source.focus();
 });
 function uniqueFilename(base) {
-  if (!tabs.some((t, i) => i !== active && t.filename === base)) return base;
+  if (!tabs.some((t, i) => i !== active && t.filename === base))
+    return base;
   const m = base.match(/^(.*?)(\.[^.]*)?$/);
   const stem = m ? m[1] : base;
   const ext = m && m[2] ? m[2] : "";
   let n = 2;
-  while (
-    tabs.some((t, i) => i !== active && t.filename === `${stem}-${n}${ext}`)
-  )
+  while (tabs.some((t, i) => i !== active && t.filename === `${stem}-${n}${ext}`))
     n++;
   return `${stem}-${n}${ext}`;
 }
 function deselectExample() {
-  if (select.value) select.value = "";
+  if (select.value)
+    select.value = "";
 }
 source.addEventListener("input", deselectExample);
 filenameInput.addEventListener("input", deselectExample);
 function esc(s) {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 function hex22(n) {
   return n.toString(16).toUpperCase().padStart(2, "0");
@@ -1815,9 +1769,11 @@ function hex42(n) {
 function formatDump(display, baseAddr, bytes, perRow) {
   const lines = [];
   const trimmed = display.replace(/^\s+/, "");
-  if (trimmed) lines.push(trimmed);
-  if (lines.length) lines.push("");
-  for (let i = 0; i < bytes.length; i += perRow) {
+  if (trimmed)
+    lines.push(trimmed);
+  if (lines.length)
+    lines.push("");
+  for (let i = 0;i < bytes.length; i += perRow) {
     const chunk = bytes.slice(i, i + perRow);
     lines.push(`${hex42(baseAddr + i)}: ${chunk.map(hex22).join(" ")}`);
   }
@@ -1825,14 +1781,17 @@ function formatDump(display, baseAddr, bytes, perRow) {
 `);
 }
 function fmtGutterGroup(rs) {
-  if (!rs || rs.length === 0) return "";
+  if (!rs || rs.length === 0)
+    return "";
   const first = rs[0];
-  if (!first.prefix) return "";
+  if (!first.prefix)
+    return "";
   if (first.prefix.startsWith("=")) {
     return `<span class="equ">${esc(first.prefix)}</span>`;
   }
   const m = first.prefix.match(/^([0-9A-F]{4}):/);
-  if (!m) return esc(first.prefix);
+  if (!m)
+    return esc(first.prefix);
   const addr = m[1];
   const allBytes = rs.flatMap((r) => r.bytes);
   if (allBytes.length === 0) {
@@ -1844,10 +1803,7 @@ function fmtGutterGroup(rs) {
   }
   const baseAddr = first.addr ?? parseInt(addr, 16);
   const dump = formatDump(first.display, baseAddr, allBytes, 8);
-  return (
-    `<span class="addr">${addr}:</span> <span class="bytes">${head}</span>` +
-    `<span class="more" data-dump="${esc(dump)}">…</span>`
-  );
+  return `<span class="addr">${addr}:</span> <span class="bytes">${head}</span>` + `<span class="more" data-dump="${esc(dump)}">…</span>`;
 }
 function openModal(text) {
   modalContent.textContent = text;
@@ -1869,47 +1825,57 @@ function closeConfirm(result) {
   confirmModal.hidden = true;
   const r = confirmResolver;
   confirmResolver = null;
-  if (r) r(result);
+  if (r)
+    r(result);
 }
 confirmOk.addEventListener("click", () => closeConfirm(true));
 confirmCancel.addEventListener("click", () => closeConfirm(false));
 confirmModal.addEventListener("click", (e) => {
-  if (e.target === confirmModal) closeConfirm(false);
+  if (e.target === confirmModal)
+    closeConfirm(false);
 });
 gutter.addEventListener("click", (e) => {
   const t = e.target;
-  if (!t.classList.contains("more")) return;
+  if (!t.classList.contains("more"))
+    return;
   const dump = t.getAttribute("data-dump");
-  if (dump !== null) openModal(dump);
+  if (dump !== null)
+    openModal(dump);
 });
 modal.addEventListener("click", (e) => {
-  if (e.target === modal) closeModal();
+  if (e.target === modal)
+    closeModal();
 });
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
-    if (!modal.hidden) closeModal();
-    else if (!confirmModal.hidden) closeConfirm(false);
+    if (!modal.hidden)
+      closeModal();
+    else if (!confirmModal.hidden)
+      closeConfirm(false);
   }
   if (e.key === "Enter" && !confirmModal.hidden) {
     e.preventDefault();
     closeConfirm(true);
   }
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "e") {
-    if (runBinBtn.disabled) return;
+    if (runBinBtn.disabled)
+      return;
     e.preventDefault();
     runBinBtn.click();
   }
 });
 function renderGutter(info, totalLines) {
-  const groups = new Map();
+  const groups = new Map;
   for (const r of info) {
     const arr = groups.get(r.orig);
-    if (arr) arr.push(r);
-    else groups.set(r.orig, [r]);
+    if (arr)
+      arr.push(r);
+    else
+      groups.set(r.orig, [r]);
   }
   const width = String(Math.max(totalLines, 1)).length;
   const out = [];
-  for (let i = 1; i <= totalLines; i++) {
+  for (let i = 1;i <= totalLines; i++) {
     const num = String(i).padStart(width, " ");
     const body = fmtGutterGroup(groups.get(i));
     out.push(`<span class="lineno">${num}</span>` + (body ? body : ""));
@@ -1919,7 +1885,8 @@ function renderGutter(info, totalLines) {
 }
 function renderHighlight(errLine) {
   highlight.innerHTML = "";
-  if (errLine === null) return;
+  if (errLine === null)
+    return;
   const div = document.createElement("div");
   div.className = "err-line";
   div.style.position = "absolute";
@@ -2007,9 +1974,20 @@ var MNEMONICS = new Set([
   "nop",
   "hlt",
   "in",
-  "out",
+  "out"
 ]);
-var REGISTERS = new Set(["a", "b", "c", "d", "e", "h", "l", "m", "sp", "psw"]);
+var REGISTERS = new Set([
+  "a",
+  "b",
+  "c",
+  "d",
+  "e",
+  "h",
+  "l",
+  "m",
+  "sp",
+  "psw"
+]);
 var DIRECTIVES2 = new Set([
   "org",
   "equ",
@@ -2026,7 +2004,7 @@ var DIRECTIVES2 = new Set([
   "endp",
   "return",
   "low",
-  "high",
+  "high"
 ]);
 function highlightLine(line) {
   let out = "";
@@ -2037,7 +2015,8 @@ function highlightLine(line) {
     const c = line[i];
     if (c === " " || c === "\t") {
       let j = i;
-      while (j < n && (line[j] === " " || line[j] === "\t")) j++;
+      while (j < n && (line[j] === " " || line[j] === "\t"))
+        j++;
       out += esc(line.slice(i, j));
       i = j;
       continue;
@@ -2071,10 +2050,7 @@ function highlightLine(line) {
       continue;
     }
     if (c >= "0" && c <= "9") {
-      const nm =
-        /^(?:0[xX][0-9a-fA-F]+|[0-9][0-9a-fA-F]*[hH]|[01]+[bB]|[0-9]+)/.exec(
-          line.slice(i),
-        );
+      const nm = /^(?:0[xX][0-9a-fA-F]+|[0-9][0-9a-fA-F]*[hH]|[01]+[bB]|[0-9]+)/.exec(line.slice(i));
       if (nm) {
         out += `<span class="tok-number">${esc(nm[0])}</span>`;
         i += nm[0].length;
@@ -2097,13 +2073,20 @@ function highlightLine(line) {
       let cls;
       if (word.startsWith(".") && DIRECTIVES2.has(stripped))
         cls = "tok-directive";
-      else if (MNEMONICS.has(lower)) cls = "tok-mnemonic";
-      else if (firstTok && DIRECTIVES2.has(stripped)) cls = "tok-directive";
-      else if (DIRECTIVES2.has(stripped)) cls = "tok-directive";
-      else if (REGISTERS.has(lower)) cls = "tok-register";
-      else if (word.startsWith("@") || word.startsWith(".")) cls = "tok-label";
-      else if (firstTok) cls = "tok-label";
-      else cls = "tok-ident";
+      else if (MNEMONICS.has(lower))
+        cls = "tok-mnemonic";
+      else if (firstTok && DIRECTIVES2.has(stripped))
+        cls = "tok-directive";
+      else if (DIRECTIVES2.has(stripped))
+        cls = "tok-directive";
+      else if (REGISTERS.has(lower))
+        cls = "tok-register";
+      else if (word.startsWith("@") || word.startsWith("."))
+        cls = "tok-label";
+      else if (firstTok)
+        cls = "tok-label";
+      else
+        cls = "tok-ident";
       out += `<span class="${cls}">${esc(word)}</span>`;
       i += word.length;
       firstTok = false;
@@ -2132,10 +2115,7 @@ var errLine = null;
 var lastSections = null;
 function compile() {
   const src = source.value;
-  const totalLines =
-    src.length === 0
-      ? 1
-      : src.split(`
+  const totalLines = src.length === 0 ? 1 : src.split(`
 `).length;
   renderHighlightText(src);
   try {
@@ -2148,10 +2128,12 @@ function compile() {
     errorEl.textContent = "";
     updateDownloadEnabled();
     runBinBtn.disabled = lastSections.length === 0;
+    uploadBtn.disabled = lastSections.length === 0;
   } catch (e) {
     lastSections = null;
     updateDownloadEnabled();
     runBinBtn.disabled = true;
+    uploadBtn.disabled = true;
     if (e instanceof AsmError) {
       errLine = e.line;
       errorEl.classList.add("visible");
@@ -2181,10 +2163,7 @@ function renderTabs() {
     const el = document.createElement("div");
     const live = i === active ? source.value : t.source;
     const matches = tabMatchesExample({ filename: t.filename, source: live });
-    el.className =
-      "tab" +
-      (i === active ? " active" : "") +
-      (matches ? " example" : " modified");
+    el.className = "tab" + (i === active ? " active" : "") + (matches ? " example" : " modified");
     el.title = t.filename;
     const name = document.createElement("span");
     name.textContent = t.filename || "(untitled)";
@@ -2212,11 +2191,13 @@ function renderTabs() {
 }
 function nextUntitled() {
   let n = 1;
-  while (tabs.some((t) => t.filename === `untitled-${n}.asm`)) n++;
+  while (tabs.some((t) => t.filename === `untitled-${n}.asm`))
+    n++;
   return `untitled-${n}.asm`;
 }
 function switchTab(i) {
-  if (i === active || i < 0 || i >= tabs.length) return;
+  if (i === active || i < 0 || i >= tabs.length)
+    return;
   tabs[active].source = source.value;
   active = i;
   source.value = tabs[active].source;
@@ -2247,13 +2228,12 @@ async function closeTab(i) {
   const current = i === active ? source.value : tabs[i].source;
   const matchesExample = tabMatchesExample({
     filename: tabs[i].filename,
-    source: current,
+    source: current
   });
   if (current.trim().length > 0 && !matchesExample) {
-    const ok = await askConfirm(
-      `Close "${tabs[i].filename}"? Its content will be lost.`,
-    );
-    if (!ok) return;
+    const ok = await askConfirm(`Close "${tabs[i].filename}"? Its content will be lost.`);
+    if (!ok)
+      return;
   }
   if (tabs.length === 1) {
     tabs[0] = { filename: DEFAULT_FILENAME, source: "" };
@@ -2263,8 +2243,10 @@ async function closeTab(i) {
     lastGoodName = tabs[0].filename;
   } else {
     tabs.splice(i, 1);
-    if (active > i) active--;
-    else if (active === i && active >= tabs.length) active = tabs.length - 1;
+    if (active > i)
+      active--;
+    else if (active === i && active >= tabs.length)
+      active = tabs.length - 1;
     source.value = tabs[active].source;
     filenameInput.value = tabs[active].filename;
     lastGoodName = tabs[active].filename;
@@ -2288,7 +2270,8 @@ filenameInput.addEventListener("change", () => {
   const val = filenameInput.value.trim();
   const dup = tabs.findIndex((t, i) => i !== active && t.filename === val);
   if (!val || dup !== -1) {
-    if (dup !== -1) alert(`A tab named "${val}" already exists.`);
+    if (dup !== -1)
+      alert(`A tab named "${val}" already exists.`);
     filenameInput.value = lastGoodName;
     tabs[active].filename = lastGoodName;
   } else {
@@ -2328,26 +2311,27 @@ function downloadBlob(data, name, type) {
 }
 function findOverlap(sections) {
   const sorted = [...sections].sort((a, b) => a.start - b.start);
-  for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i].start <= sorted[i - 1].end) return [sorted[i - 1], sorted[i]];
+  for (let i = 1;i < sorted.length; i++) {
+    if (sorted[i].start <= sorted[i - 1].end)
+      return [sorted[i - 1], sorted[i]];
   }
   return null;
 }
 function buildOutput(format2) {
-  if (!lastSections || lastSections.length === 0) return null;
+  if (!lastSections || lastSections.length === 0)
+    return null;
   const overlap = findOverlap(lastSections);
   if (overlap) {
     const [a, b] = overlap;
-    alert(
-      `sections overlap: ${hex42(a.start)}-${hex42(a.end)} and ${hex42(b.start)}-${hex42(b.end)}`,
-    );
+    alert(`sections overlap: ${hex42(a.start)}-${hex42(a.end)} and ${hex42(b.start)}-${hex42(b.end)}`);
     return null;
   }
   return buildOutputFile(lastSections, format2);
 }
 function toBase64(bytes) {
   let s = "";
-  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  for (let i = 0;i < bytes.length; i++)
+    s += String.fromCharCode(bytes[i]);
   return btoa(s);
 }
 function loadFormat() {
@@ -2369,8 +2353,7 @@ function selectedFormat() {
 }
 function updateDownloadEnabled() {
   const fmt = selectedFormat();
-  downloadBtn.disabled =
-    fmt !== "asm" && (!lastSections || lastSections.length === 0);
+  downloadBtn.disabled = fmt !== "asm" && (!lastSections || lastSections.length === 0);
 }
 downloadFormatSel.value = loadFormat();
 updateDownloadEnabled();
@@ -2385,7 +2368,8 @@ downloadBtn.addEventListener("click", () => {
     return;
   }
   const data = buildOutput(fmt);
-  if (!data) return;
+  if (!data)
+    return;
   downloadBlob(data, outputName(fmt), "application/octet-stream");
 });
 var EMULATOR_URL_DEFAULT = "https://rk86.ru/beta/index.html";
@@ -2395,14 +2379,17 @@ var HANDOFF_TTL_MS = 60 * 60 * 1000;
 function sweepStaleHandoffs() {
   try {
     const now = Date.now();
-    for (let i = localStorage.length - 1; i >= 0; i--) {
+    for (let i = localStorage.length - 1;i >= 0; i--) {
       const key = localStorage.key(i);
-      if (!key || !key.startsWith(HANDOFF_PREFIX)) continue;
+      if (!key || !key.startsWith(HANDOFF_PREFIX))
+        continue;
       const raw = localStorage.getItem(key);
-      if (!raw) continue;
+      if (!raw)
+        continue;
       try {
         const { ts } = JSON.parse(raw);
-        if (!ts || now - ts > HANDOFF_TTL_MS) localStorage.removeItem(key);
+        if (!ts || now - ts > HANDOFF_TTL_MS)
+          localStorage.removeItem(key);
       } catch {
         localStorage.removeItem(key);
       }
@@ -2411,42 +2398,40 @@ function sweepStaleHandoffs() {
 }
 function newHandoffId() {
   const c = globalThis.crypto;
-  if (c && typeof c.randomUUID === "function") return c.randomUUID();
+  if (c && typeof c.randomUUID === "function")
+    return c.randomUUID();
   return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
 }
-runBinBtn.addEventListener("click", () => {
+function sendToEmulator(mode) {
   const rk = buildOutput("rk");
-  if (!rk) return;
+  if (!rk)
+    return;
   const target = new URL(EMULATOR_URL, location.href);
   const dataUrl = `data:;name=${outputName("rk")};base64,${toBase64(rk)}`;
   if (target.origin === location.origin) {
     sweepStaleHandoffs();
     const id = newHandoffId();
     try {
-      localStorage.setItem(
-        HANDOFF_PREFIX + id,
-        JSON.stringify({ ts: Date.now(), url: dataUrl }),
-      );
+      localStorage.setItem(HANDOFF_PREFIX + id, JSON.stringify({ ts: Date.now(), url: dataUrl }));
     } catch (e) {
-      alert(
-        `localStorage unavailable, cannot hand off to emulator: ${e.message}`,
-      );
+      alert(`localStorage unavailable, cannot hand off to emulator: ${e.message}`);
       return;
     }
-    target.searchParams.set("handoff", id);
+    target.searchParams.set(mode === "run" ? "handoff" : "loadoff", id);
   } else {
-    target.searchParams.set("run", dataUrl);
+    target.searchParams.set(mode, dataUrl);
   }
   window.open(target.toString(), "_blank", "noopener");
-});
-uploadBtn.addEventListener("click", () => fileInput.click());
+}
+runBinBtn.addEventListener("click", () => sendToEmulator("run"));
+uploadBtn.addEventListener("click", () => sendToEmulator("load"));
 resetBtn.addEventListener("click", async () => {
-  const ok = await askConfirm(
-    "Reset the current tab to the 'aloha' example? This replaces its content.",
-  );
-  if (!ok) return;
+  const ok = await askConfirm("Reset the current tab to the 'aloha' example? This replaces its content.");
+  if (!ok)
+    return;
   const def = EXAMPLES.find((e) => e.name === "aloha");
-  if (!def) return;
+  if (!def)
+    return;
   const defSource = await def.source;
   const uniqueName = uniqueFilename(def.filename);
   tabs[active] = { filename: uniqueName, source: defSource };
@@ -2460,29 +2445,11 @@ resetBtn.addEventListener("click", async () => {
   onChange();
   source.focus();
 });
-fileInput.addEventListener("change", async () => {
-  const f = fileInput.files?.[0];
-  if (!f) return;
-  const text = await f.text();
-  const uniqueName = uniqueFilename(f.name);
-  tabs.push({ filename: uniqueName, source: text });
-  active = tabs.length - 1;
-  source.value = text;
-  filenameInput.value = uniqueName;
-  lastGoodName = uniqueName;
-  source.scrollTop = 0;
-  fileInput.value = "";
-  saveTabs();
-  renderTabs();
-  onChange();
-  source.focus();
-});
 var buildTimeEl = document.getElementById("build-time");
-if (buildTimeEl && BUILD_TIME) buildTimeEl.textContent = BUILD_TIME;
+if (buildTimeEl && BUILD_TIME)
+  buildTimeEl.textContent = BUILD_TIME;
 themeBtn.addEventListener("click", () => {
-  const next = document.body.classList.contains("theme-light")
-    ? "dark"
-    : "light";
+  const next = document.body.classList.contains("theme-light") ? "dark" : "light";
   applyTheme(next);
   saveTheme(next);
 });
@@ -2495,7 +2462,7 @@ async function loadTabsFromStorage() {
       if (Array.isArray(parsed) && parsed.length > 0) {
         tabs = parsed.map((t) => ({
           filename: String(t.filename ?? DEFAULT_FILENAME),
-          source: String(t.source ?? ""),
+          source: String(t.source ?? "")
         }));
         const a = Number(localStorage.getItem(ACTIVE_KEY) ?? 0) | 0;
         active = a < 0 || a >= tabs.length ? 0 : a;
@@ -2509,8 +2476,10 @@ async function loadTabsFromStorage() {
     src = localStorage.getItem(STORAGE_KEY) ?? "";
     name = localStorage.getItem(FILENAME_KEY) ?? "";
   } catch {}
-  if (!src) src = (await EXAMPLES[0]?.source) ?? "";
-  if (!name) name = EXAMPLES[0]?.filename ?? DEFAULT_FILENAME;
+  if (!src)
+    src = await EXAMPLES[0]?.source ?? "";
+  if (!name)
+    name = EXAMPLES[0]?.filename ?? DEFAULT_FILENAME;
   tabs = [{ filename: name, source: src }];
   active = 0;
   saveTabs();
