@@ -780,7 +780,7 @@ async function main() {
             for (const section of sections) {
                 const data = section.data as number[];
                 for (let i = 0; i < data.length; i++) {
-                    machine.memory.write(section.start + i, data[i]);
+                    machine.memory.write_raw(section.start + i, data[i]);
                 }
                 const name = section.name ? ` [${section.name}]` : "";
                 lines.push(`${hex16(section.start)}-${hex16(section.end)}${name} (${data.length} байт)`);

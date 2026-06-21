@@ -51,6 +51,13 @@ test("convert multiline line with signature", () => {
     expect(convert_hex_to_binary(input)).toEqual(expected);
 });
 
+test("convert ignores bare tag lines (no leading #)", () => {
+    // Голые строки-теги не должны попадать в образ как данные — иначе
+    // parseInt("=...",16) → NaN → 0 и образ сдвигается.
+    const input = "#!rk86\n" + "!name=rom.bin\n" + "!start=E000\n" + "E000 AA BB CC DD EE\n";
+    expect(convert_hex_to_binary(input)).toEqual([0xaa, 0xbb, 0xcc, 0xdd, 0xee]);
+});
+
 test("extract name=name", () => {
     expect(extact_metadata("!name=name")).toEqual({ name: "name" });
 });

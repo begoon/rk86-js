@@ -207,6 +207,13 @@ export class Memory {
             }
             return 0x00;
         }
+
+        // E000-FFFF на чтении отдаёт содержимое buf. На «оригинальном» РК86
+        // это зеркало 2-КБ ПЗУ монитора (старшие биты не декодируются), но мы
+        // моделируем вариант со статической памятью и полным 8-КБ ПЗУ: монитор
+        // лежит в F800-FFFF, а дополнительные 6 КБ E000-F7FF доступны под
+        // загружаемый/отлаживаемый код ПЗУ (см. write() — туда нельзя писать,
+        // но можно грузить через write_raw / load_file и читать обратно).
         return this.buf[addr];
     }
 
@@ -224,8 +231,15 @@ export class Memory {
         this.last_access_operation = "write";
         this.tracer?.("write", addr);
 
-        // RAM write — protect monitor ROM at 0xF800-0xFFFF.
-        if (addr < 0xf800) this.buf[addr] = byte;
+        // CPU-запись бьёт по ОЗУ только в окне 0000-DFFF. E000-FFFF
+        // (A13..A15 = 111) на запись адресует регистры ПДП (ВТ57), а не ОЗУ:
+        // старшие биты не декодируются, поэтому 16 регистров ПДП покрывают весь
+        // 8-КБ диапазон. CPU-запись туда в buf не попадает — это ПЗУ-окно
+        // (фантомного ОЗУ быть не должно). При этом загрузка внешних файлов
+        // идёт через write_raw/load_file (минуя этот путь) и МОЖЕТ класть код
+        // ПЗУ в E000-F7FF; read() его потом читает. Распознанные DMA-команды
+        // обрабатываются ниже по маске vt57_reg.
+        if (addr < 0xe000) this.buf[addr] = byte;
 
         // Peripheral chip-select uses only A13..A15 (К555ИД7 decoder), and
         // each chip exposes only as many of the low address bits as it has

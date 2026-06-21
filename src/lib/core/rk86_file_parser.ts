@@ -35,7 +35,14 @@ export const convert_hex_to_binary = function (text: string): number[] {
     const lines = text
         .split("\n")
         .filter((line) => line.trim().length)
-        .filter((line) => !line.startsWith(";") && !line.startsWith("#"));
+        // `#`/`;` — комментарии. `!` в начале строки — голая строка-тег
+        // (`!name=`, `!start=`, `!entry=`): метаданные из неё уже вынуты
+        // extact_metadata(), а как данные она парситься не должна (иначе
+        // `parseInt("=…",16)` → NaN → 0 и сдвиг образа).
+        .filter((line) => {
+            const c = line.trim()[0];
+            return c !== ";" && c !== "#" && c !== "!";
+        });
 
     const image = [];
     for (const line of lines) {
