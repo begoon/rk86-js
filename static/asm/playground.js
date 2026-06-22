@@ -1590,7 +1590,7 @@ var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
 if (false) {}
 
 // docs/build-info.ts
-var BUILD_TIME = "2026-06-21 06:07:55";
+var BUILD_TIME = "2026-06-22 10:35:07";
 
 // docs/playground.ts
 var fetchExample = (f) => fetch(`examples/${f}`).then((r) => r.text());
@@ -1656,7 +1656,9 @@ var confirmModal = document.getElementById("confirm-modal");
 var confirmMessage = document.getElementById("confirm-message");
 var confirmOk = document.getElementById("confirm-ok");
 var confirmCancel = document.getElementById("confirm-cancel");
+var loadEmuBtn = document.getElementById("load-emu");
 var uploadBtn = document.getElementById("upload-asm");
+var fileInput = document.getElementById("file-input");
 var downloadBtn = document.getElementById("download-btn");
 var downloadFormatSel = document.getElementById("download-format");
 var runBinBtn = document.getElementById("run-bin");
@@ -2128,12 +2130,12 @@ function compile() {
     errorEl.textContent = "";
     updateDownloadEnabled();
     runBinBtn.disabled = lastSections.length === 0;
-    uploadBtn.disabled = lastSections.length === 0;
+    loadEmuBtn.disabled = lastSections.length === 0;
   } catch (e) {
     lastSections = null;
     updateDownloadEnabled();
     runBinBtn.disabled = true;
-    uploadBtn.disabled = true;
+    loadEmuBtn.disabled = true;
     if (e instanceof AsmError) {
       errLine = e.line;
       errorEl.classList.add("visible");
@@ -2424,7 +2426,26 @@ function sendToEmulator(mode) {
   window.open(target.toString(), "_blank", "noopener");
 }
 runBinBtn.addEventListener("click", () => sendToEmulator("run"));
-uploadBtn.addEventListener("click", () => sendToEmulator("load"));
+loadEmuBtn.addEventListener("click", () => sendToEmulator("load"));
+uploadBtn.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", async () => {
+  const f = fileInput.files?.[0];
+  if (!f)
+    return;
+  const text = await f.text();
+  const uniqueName = uniqueFilename(f.name);
+  tabs.push({ filename: uniqueName, source: text });
+  active = tabs.length - 1;
+  source.value = text;
+  filenameInput.value = uniqueName;
+  lastGoodName = uniqueName;
+  source.scrollTop = 0;
+  fileInput.value = "";
+  saveTabs();
+  renderTabs();
+  onChange();
+  source.focus();
+});
 resetBtn.addEventListener("click", async () => {
   const ok = await askConfirm("Reset the current tab to the 'aloha' example? This replaces its content.");
   if (!ok)
