@@ -18,6 +18,8 @@
         type Freeze,
     } from "$lib/web/freeze_store";
     import { saveAs } from "$lib/web/saver";
+    import { CLASSIC_PROFILE_NAME, type MachineProfile } from "$lib/core/rk86_profile";
+    import { loadAllProfiles, saveActiveProfileName, saveCustomProfiles } from "$lib/web/profile_store";
     import { emit_rk86_binary, RK86_EXTENSIONS } from "$lib/core/rk86_file_emit";
     import BreakpointEditor from "./BreakpointEditor.svelte";
     import CatalogSelector from "./CatalogSelector.svelte";
@@ -26,6 +28,7 @@
     import Keyboard from "./Keyboard.svelte";
     import MemoryMap from "./MemoryMap.svelte";
     import CursorInfo from "./CursorInfo.svelte";
+    import ProfileEditor from "./ProfileEditor.svelte";
     import RkTextConverter from "./RkTextConverter.svelte";
     import { debuggerState, ui } from "./state.svelte";
     import Visualizer from "./Visualizer.svelte";
@@ -144,6 +147,35 @@
     function openCatalog() {
         catalogDialog?.showModal();
         setTimeout(() => catalogSelector?.focus(), 0);
+    }
+
+    let profileDialog = $state<HTMLDialogElement>();
+    // Редактор монтируется заново при каждом открытии (см. {#if} в разметке),
+    // чтобы список и выбор обновлялись из localStorage.
+    let profileEditorOpen = $state(false);
+    let profiles = $state<MachineProfile[]>([]);
+
+    function openProfileEditor() {
+        profiles = loadAllProfiles();
+        profileEditorOpen = true;
+        profileDialog?.showModal();
+    }
+
+    function saveProfiles(next: MachineProfile[]) {
+        profiles = next;
+        saveCustomProfiles(next);
+    }
+
+    // Активирует профиль: меняет раскладку памяти на лету (ПЗУ в buf
+    // сохраняется) и перезапускает эмулятор, чтобы монитор стартовал
+    // с чистым ОЗУ по новым адресам.
+    function applyProfile(profile: MachineProfile) {
+        if (!machine) return;
+        machine.memory.set_profile(profile);
+        saveActiveProfileName(profile.name);
+        ui.profileName = profile.name;
+        machine.restart();
+        profileDialog?.close();
     }
     let uploadInput = $state<HTMLInputElement>();
 
@@ -330,6 +362,7 @@
         z: freezeNow,
         x: openFreezeSelector,
         n: () => textConverterDialog?.showModal(),
+        m: openProfileEditor,
     };
 
     function onKeyDown(e: KeyboardEvent) {
@@ -353,6 +386,7 @@
         }
         if (catalogDialog?.open) return;
         if (freezeDialog?.open) return;
+        if (profileDialog?.open) return;
         if (debuggerVisible && dbg && !canvasFocused) {
             if (e.key === "F5") {
                 e.preventDefault();
@@ -900,6 +934,15 @@
             >
                 <img class="icon" src="i/restore.svg" alt="Восстановить состояние" />
             </button>
+            <button
+                type="button"
+                class="icon"
+                class:active={ui.profileName !== CLASSIC_PROFILE_NAME}
+                data-text="Профили оборудования"
+                onclick={openProfileEditor}
+            >
+                <img class="icon" src="i/profile.svg" alt="Профили оборудования" />
+            </button>
             <button type="button" class="icon" data-text="Включить/выключить звук" onclick={toggleSound}>
                 {#if soundEnabled}
                     <img class="icon" src="i/sound.svg" alt="Включить звук" />
@@ -1053,6 +1096,14 @@
             <span class="dimmed">ЛЕНТА</span>
             <span class={ui.tapeHighlight ? "tape_active" : ""}>{ui.tapeWrittenBytes.toString(16).toUpperCase().padStart(4, "0")}</span>
         </div>
+        {#if ui.profileName !== CLASSIC_PROFILE_NAME}
+            <div class="gauge">
+                <span class="dimmed">ПРОФИЛЬ</span>
+                <button type="button" class="color-mode" tabindex={-1} onclick={openProfileEditor} title="Профили оборудования">
+                    {ui.profileName}
+                </button>
+            </div>
+        {/if}
         <div class="gauge">
             <span class="dimmed">ВЕРСИЯ</span>
             <span>{version}</span>
@@ -1137,6 +1188,7 @@
             <div><mark>b</mark> помощь по клавиатуре</div>
             <div><mark>n</mark> кириллица → RK86</div>
             <div><mark>j</mark> прямой ввод</div>
+            <div><mark>m</mark> профили оборудования</div>
         </div>
     </div>
 </dialog>
@@ -1194,6 +1246,28 @@
         ondelete={deleteFreeze}
         onclose={() => freezeDialog?.close()}
     />
+</dialog>
+
+<dialog
+    id="profile-dialog"
+    bind:this={profileDialog}
+    onclick={(e) => {
+        if (e.target === e.currentTarget) profileDialog?.close();
+    }}
+    onclose={() => {
+        profileEditorOpen = false;
+        (document.activeElement as HTMLElement)?.blur();
+    }}
+>
+    {#if profileEditorOpen}
+        <ProfileEditor
+            {profiles}
+            activeName={ui.profileName}
+            onchange={saveProfiles}
+            onapply={applyProfile}
+            onclose={() => profileDialog?.close()}
+        />
+    {/if}
 </dialog>
 
 <dialog
@@ -1443,6 +1517,7 @@
     #shortcuts::backdrop,
     #catalog-dialog::backdrop,
     #freeze-dialog::backdrop,
+    #profile-dialog::backdrop,
     #text-converter-dialog::backdrop,
     #memory-save-dialog::backdrop,
     #iasm-dialog::backdrop {
@@ -1450,6 +1525,7 @@
     }
     #catalog-dialog,
     #freeze-dialog,
+    #profile-dialog,
     #text-converter-dialog,
     #memory-save-dialog,
     #iasm-dialog {

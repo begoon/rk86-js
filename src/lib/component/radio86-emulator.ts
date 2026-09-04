@@ -208,7 +208,7 @@ export class Radio86Emulator extends HTMLElement {
 
         machine.reset = () => {
             keyboard.reset();
-            machine.cpu.jump(0xf800);
+            machine.cpu.jump(machine.memory.profile.boot_address);
         };
         machine.restart = () => {
             machine.memory.zero_ram();

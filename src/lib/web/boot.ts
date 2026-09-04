@@ -16,6 +16,7 @@ import { rk86_snapshot, rk86_snapshot_restore } from "../core/rk86_snapshot.js";
 import { CanvasRenderer } from "./renderer.js";
 import { saveAs } from "./saver.js";
 import { Sound } from "./sound.js";
+import { loadActiveProfile } from "./profile_store.js";
 import { Tape } from "./tape.js";
 const elements = new Map();
 
@@ -70,7 +71,7 @@ export class UI {
 
     reset() {
         this.machine.keyboard.reset();
-        this.machine.cpu.jump(0xf800);
+        this.machine.cpu.jump(this.machine.memory.profile.boot_address);
         console.log("%creset", "color: lightgreen; font-weight: bold");
     }
 
@@ -373,10 +374,12 @@ export async function main(host: HostCallbacks) {
     machine.ui = new UI(machine, canvas);
     machine.ui.canvas = canvas;
 
-    machine.memory = new Memory(machine);
+    const profile = loadActiveProfile();
+    machine.memory = new Memory(machine, profile);
+    ui.profileName = profile.name;
     io.input = (port) => machine.memory.read(port | (port << 8));
     io.output = (port, w8) => machine.memory.write(port | (port << 8), w8);
-    console.log("память инициализирована");
+    console.log(`память инициализирована, профиль ${profile.name}`);
 
     machine.cpu = new I8080(machine);
     console.log("процессор инициализирован");
@@ -506,7 +509,7 @@ export async function main(host: HostCallbacks) {
 
     function reset() {
         machine.keyboard.reset();
-        machine.cpu.jump(0xf800);
+        machine.cpu.jump(machine.memory.profile.boot_address);
     }
 
     function restart() {

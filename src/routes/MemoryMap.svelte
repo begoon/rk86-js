@@ -16,14 +16,17 @@
 
     const hex = (v: number, w: number) => v.toString(16).toUpperCase().padStart(w, "0");
 
-    const MONITOR_ROM_BASE = 0xf800;
-    const MONITOR_ROM_END = 0x10000;
-
     function regionOf(addr: number): string | null {
         const vbase = memory.video_memory_base;
         const vsize = memory.video_memory_size;
+        const { ram_end, rom_start, keyboard_ppi_base, crtc_base, dma_base } = memory.profile;
         if (vsize > 0 && addr >= vbase && addr < vbase + vsize) return "видеопамять";
-        if (addr >= MONITOR_ROM_BASE && addr < MONITOR_ROM_END) return "ROM монитора";
+        if (addr >= rom_start) return "ПЗУ";
+        if (addr <= ram_end) return "ОЗУ";
+        const window = addr & 0xe000;
+        if (window === keyboard_ppi_base) return "ППИ клавиатуры";
+        if (window === crtc_base) return "ВГ75";
+        if (window === dma_base) return "ВТ57";
         return null;
     }
 

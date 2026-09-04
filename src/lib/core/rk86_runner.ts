@@ -55,7 +55,7 @@ export class Runner {
         this.TICKS_PER_WALL_MS = this.FREQ / 1000;
 
         this.machine.io.interrupt = (iff: number) => this.interrupt(iff);
-        this.machine.cpu.jump(0xf800);
+        this.machine.cpu.jump(this.machine.memory.profile.boot_address);
     }
 
     interrupt(iff: number) {
@@ -219,7 +219,7 @@ export class Runner {
     }
 
     reset() {
-        this.machine.cpu.jump(0xf800);
+        this.machine.cpu.jump(this.machine.memory.profile.boot_address);
         this.machine.keyboard.reset();
     }
 

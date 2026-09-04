@@ -2,6 +2,7 @@
 // Engine writes here via callbacks, Svelte reads reactively.
 
 import { DEFAULT_COLOR_MODE, type ColorMode } from "$lib/core/rk86_colors";
+import { CLASSIC_PROFILE_NAME } from "$lib/core/rk86_profile";
 import type { Breakpoint } from "$lib/core/rk86_debugger";
 import type { RK86File } from "$lib/core/rk86_file_parser";
 import type { RenderMode } from "$lib/core/rk86_screen";
@@ -33,4 +34,5 @@ export const ui = $state({
     selectedFileEntry: 0,
     colorMode: DEFAULT_COLOR_MODE as ColorMode,
     renderMode: "vg75" as RenderMode,
+    profileName: CLASSIC_PROFILE_NAME,
 });

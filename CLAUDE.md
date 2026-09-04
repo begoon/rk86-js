@@ -272,6 +272,25 @@ on every build/dev.
     Alternate for the colorized RK86 corpus (dizzy75, squash,
     boulder, rise, piton). Web: `?monitor=mon32-color.bin`.
     Terminal: `-m static/files/mon32-color.bin`.
+- Hardware profiles (`src/lib/core/rk86_profile.ts`): `MachineProfile`
+  = `{name, ram_end, rom_start, boot_address, keyboard_ppi_base,
+  crtc_base, dma_base}`. `RK86_CLASSIC` (ram_end 7FFF, rom_start E000,
+  boot F800, PPI 8000, CRTC C000, DMA E000) is built-in, frozen,
+  non-deletable. `Memory` takes the profile in its constructor
+  (`set_profile()` recomputes `ppi_port_a/b/c`, `ppi_control`,
+  `crtc_parameter/command`, `dma_ch0_address/count`, `dma_mode`
+  without touching `buf`); the decode masks (0xE003/0xE001/0xE00F)
+  stay, only the compared constants come from the profile, so bases
+  must be 8 KB aligned. Reset vector is `memory.profile.boot_address`
+  everywhere (runner, boot.ts, component). RAM write rule is lenient:
+  CPU writes land for `addr < rom_start`; `ram_end` drives only
+  `zero_ram`, MemoryMap labels and validation. Web persistence in
+  `src/lib/web/profile_store.ts`: `rk86:profiles` (`{version: 1,
+  profiles}` custom only) + `rk86:profile:active` (name; absent =
+  classic). Editor: `ProfileEditor.svelte`, toolbar button /
+  `Cmd/Ctrl+K, M`; "Применить" calls `memory.set_profile()` then
+  `machine.restart()`. Terminal and web component always use
+  `RK86_CLASSIC`. Snapshots do not carry the profile yet.
 - i8275 F-bit (SCN4 byte 4 bit 6) captured by `memory.ts` → set on
   `screen.transparent_attr`. `renderer.ts` and `TerminalRenderer.update()`
   branch between visible (1 src byte/cell, FA blanks the cell) and

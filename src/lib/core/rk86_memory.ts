@@ -2,6 +2,7 @@ import { fromHex, hex16 } from "./hex.js";
 import * as hexMap from "./hex_map";
 import type { RK86File } from "./rk86_file_parser.js";
 import type { Machine } from "./rk86_machine.js";
+import { RK86_CLASSIC, type MachineProfile } from "./rk86_profile.js";
 
 interface MemorySnapshot {
     vg75_c001_00_cmd: number;
@@ -59,11 +60,41 @@ export class Memory {
     // debugger panel edits and snapshot loads do not fire breakpoints).
     tracer: ((operation: "read" | "write", address: number) => void) | null = null;
 
-    constructor(machine: Machine) {
+    // Профиль оборудования и вычисленные из него адреса регистров
+    // периферии (см. set_profile). Сравниваются с адресом после
+    // наложения масок 0xE003 / 0xE001 / 0xE00F в read()/write().
+    profile: MachineProfile = RK86_CLASSIC;
+    ppi_port_a = 0;
+    ppi_port_b = 0;
+    ppi_port_c = 0;
+    ppi_control = 0;
+    crtc_parameter = 0;
+    crtc_command = 0;
+    dma_ch0_address = 0;
+    dma_ch0_count = 0;
+    dma_mode = 0;
+
+    constructor(machine: Machine, profile: MachineProfile = RK86_CLASSIC) {
         this.machine = machine;
 
+        this.set_profile(profile);
         this.init();
         this.invalidate_access_variables();
+    }
+
+    // Меняет раскладку без переинициализации buf: содержимое ПЗУ
+    // сохраняется, вызывающая сторона обычно делает machine.restart().
+    set_profile(profile: MachineProfile) {
+        this.profile = profile;
+        this.ppi_port_a = profile.keyboard_ppi_base | 0;
+        this.ppi_port_b = profile.keyboard_ppi_base | 1;
+        this.ppi_port_c = profile.keyboard_ppi_base | 2;
+        this.ppi_control = profile.keyboard_ppi_base | 3;
+        this.crtc_parameter = profile.crtc_base | 0;
+        this.crtc_command = profile.crtc_base | 1;
+        this.dma_ch0_address = profile.dma_base | 4;
+        this.dma_ch0_count = profile.dma_base | 5;
+        this.dma_mode = profile.dma_base | 8;
     }
 
     init() {
@@ -90,7 +121,7 @@ export class Memory {
     }
 
     zero_ram() {
-        for (let i = 0; i < 0x8000; ++i) this.buf[i] = 0;
+        for (let i = 0; i <= this.profile.ram_end; ++i) this.buf[i] = 0;
     }
 
     snapshot(from: number, sz: number): number[] {
@@ -178,17 +209,17 @@ export class Memory {
         const ppi_reg = addr & 0xe003;
         const vg75_reg = addr & 0xe001;
 
-        if (ppi_reg === 0x8002) return this.machine.keyboard.modifiers;
+        if (ppi_reg === this.ppi_port_c) return this.machine.keyboard.modifiers;
 
-        if (ppi_reg === 0x8001) {
+        if (ppi_reg === this.ppi_port_b) {
             const keyboard_state = this.machine.keyboard.state;
             let ch = 0xff;
-            const kbd_scanline = ~this.buf[0x8000];
+            const kbd_scanline = ~this.buf[this.ppi_port_a];
             for (let i = 0; i < 8; i++) if ((1 << i) & kbd_scanline) ch &= keyboard_state[i];
             return ch;
         }
 
-        if (vg75_reg === 0xc001) {
+        if (vg75_reg === this.crtc_command) {
             const ticks = this.machine.runner.total_ticks;
             const FRAME = 35600;
             const VRTC_ON = 3560;
@@ -196,7 +227,7 @@ export class Memory {
             return vrtc | (this.machine.screen.light_pen_active ? 0x10 : 0x00);
         }
 
-        if (vg75_reg === 0xc000) {
+        if (vg75_reg === this.crtc_parameter) {
             if (this.vg75_c001_60_cmd === 1) {
                 this.vg75_c001_60_cmd = 2;
                 return this.machine.screen.light_pen_x;
@@ -231,7 +262,8 @@ export class Memory {
         this.last_access_operation = "write";
         this.tracer?.("write", addr);
 
-        // CPU-запись бьёт по ОЗУ только в окне 0000-DFFF. E000-FFFF
+        // CPU-запись бьёт по ОЗУ только ниже profile.rom_start (у классического
+        // РК86 — окно 0000-DFFF). E000-FFFF
         // (A13..A15 = 111) на запись адресует регистры ПДП (ВТ57), а не ОЗУ:
         // старшие биты не декодируются, поэтому 16 регистров ПДП покрывают весь
         // 8-КБ диапазон. CPU-запись туда в buf не попадает — это ПЗУ-окно
@@ -239,7 +271,7 @@ export class Memory {
         // идёт через write_raw/load_file (минуя этот путь) и МОЖЕТ класть код
         // ПЗУ в E000-F7FF; read() его потом читает. Распознанные DMA-команды
         // обрабатываются ниже по маске vt57_reg.
-        if (addr < 0xe000) this.buf[addr] = byte;
+        if (addr < this.profile.rom_start) this.buf[addr] = byte;
 
         // Peripheral chip-select uses only A13..A15 (К555ИД7 decoder), and
         // each chip exposes only as many of the low address bits as it has
@@ -254,7 +286,7 @@ export class Memory {
         const vg75_reg = addr & 0xe001;
         const vt57_reg = addr & 0xe00f;
 
-        if (ppi_reg === 0x8003) {
+        if (ppi_reg === this.ppi_control) {
             if (byte & 0x80) {
                 // Mode set
             } else {
@@ -265,21 +297,21 @@ export class Memory {
             return;
         }
 
-        if (vg75_reg === 0xc001 && byte === 0x27) return;
-        if (vg75_reg === 0xc001 && byte === 0xe0) return;
+        if (vg75_reg === this.crtc_command && byte === 0x27) return;
+        if (vg75_reg === this.crtc_command && byte === 0xe0) return;
 
-        if (vg75_reg === 0xc001 && byte === 0x80) {
+        if (vg75_reg === this.crtc_command && byte === 0x80) {
             this.vg75_c001_80_cmd = 1;
             return;
         }
 
-        if (vg75_reg === 0xc000 && this.vg75_c001_80_cmd === 1) {
+        if (vg75_reg === this.crtc_parameter && this.vg75_c001_80_cmd === 1) {
             this.vg75_c001_80_cmd += 1;
             this.cursor_x_buf = byte + 1;
             return;
         }
 
-        if (vg75_reg === 0xc000 && this.vg75_c001_80_cmd === 2) {
+        if (vg75_reg === this.crtc_parameter && this.vg75_c001_80_cmd === 2) {
             this.cursor_y_buf = byte + 1;
             this.machine.screen.set_cursor(this.cursor_x_buf - 1, this.cursor_y_buf - 1);
             this.video_screen_cursor_x = this.cursor_x_buf;
@@ -288,23 +320,23 @@ export class Memory {
             return;
         }
 
-        if (vg75_reg === 0xc001 && byte === 0x60) {
+        if (vg75_reg === this.crtc_command && byte === 0x60) {
             if (this.machine.screen.light_pen_active) this.vg75_c001_60_cmd = 1;
             return;
         }
 
-        if (vg75_reg === 0xc001 && byte === 0x00) {
+        if (vg75_reg === this.crtc_command && byte === 0x00) {
             this.vg75_c001_00_cmd = 1;
             return;
         }
 
-        if (vg75_reg === 0xc000 && this.vg75_c001_00_cmd === 1) {
+        if (vg75_reg === this.crtc_parameter && this.vg75_c001_00_cmd === 1) {
             this.video_screen_size_x_buf = (byte & 0x7f) + 1;
             this.vg75_c001_00_cmd += 1;
             return;
         }
 
-        if (vg75_reg === 0xc000 && this.vg75_c001_00_cmd === 2) {
+        if (vg75_reg === this.crtc_parameter && this.vg75_c001_00_cmd === 2) {
             this.video_screen_size_y_buf = (byte & 0x3f) + 1;
             // Старшие 2 бита SCN2 — V (VRTC rows count - 1). У РК86
             // монитор пишет 1 → 2 строки VRTC. Нужно для расчёта
@@ -314,7 +346,7 @@ export class Memory {
             return;
         }
 
-        if (vg75_reg === 0xc000 && this.vg75_c001_00_cmd === 3) {
+        if (vg75_reg === this.crtc_parameter && this.vg75_c001_00_cmd === 3) {
             // SCN3: low nibble = char_height - 1 (scan lines per row),
             // high nibble = underline scan line (0-based). Standard RK86
             // monitor sets 0x79 → 10 lines, underline at line 7. Programs
@@ -325,7 +357,7 @@ export class Memory {
             return;
         }
 
-        if (vg75_reg === 0xc000 && this.vg75_c001_00_cmd === 4) {
+        if (vg75_reg === this.crtc_parameter && this.vg75_c001_00_cmd === 4) {
             this.vg75_c001_00_cmd = 0;
             if (this.video_screen_size_x_buf && this.video_screen_size_y_buf) {
                 this.video_screen_size_x = this.video_screen_size_x_buf;
@@ -343,32 +375,32 @@ export class Memory {
             return;
         }
 
-        if (vt57_reg === 0xe008 && byte === 0x80) {
+        if (vt57_reg === this.dma_mode && byte === 0x80) {
             this.ik57_e008_80_cmd = 1;
             this.ik57_ff = 0;
             this.tape_8002_as_output = 1;
             return;
         }
 
-        if (vt57_reg === 0xe004 && this.ik57_e008_80_cmd === 1) {
+        if (vt57_reg === this.dma_ch0_address && this.ik57_e008_80_cmd === 1) {
             this.video_memory_base_buf = byte;
             this.ik57_e008_80_cmd += 1;
             return;
         }
 
-        if (vt57_reg === 0xe004 && this.ik57_e008_80_cmd === 2) {
+        if (vt57_reg === this.dma_ch0_address && this.ik57_e008_80_cmd === 2) {
             this.video_memory_base_buf |= byte << 8;
             this.ik57_e008_80_cmd += 1;
             return;
         }
 
-        if (vt57_reg === 0xe005 && this.ik57_e008_80_cmd === 3) {
+        if (vt57_reg === this.dma_ch0_count && this.ik57_e008_80_cmd === 3) {
             this.video_memory_size_buf = byte;
             this.ik57_e008_80_cmd += 1;
             return;
         }
 
-        if (vt57_reg === 0xe005 && this.ik57_e008_80_cmd === 4) {
+        if (vt57_reg === this.dma_ch0_count && this.ik57_e008_80_cmd === 4) {
             this.video_memory_size_buf = ((this.video_memory_size_buf | (byte << 8)) & 0x3fff) + 1;
             this.ik57_e008_80_cmd = 0;
             this.video_memory_base = this.video_memory_base_buf;
@@ -377,12 +409,12 @@ export class Memory {
             return;
         }
 
-        if (vt57_reg === 0xe008 && byte === 0xa4) {
+        if (vt57_reg === this.dma_mode && byte === 0xa4) {
             this.tape_8002_as_output = 0;
             return;
         }
 
-        if (vt57_reg === 0xe004 && this.ik57_e008_80_cmd === 0) {
+        if (vt57_reg === this.dma_ch0_address && this.ik57_e008_80_cmd === 0) {
             if (this.ik57_ff === 0) {
                 this.video_memory_base_buf = (this.video_memory_base & 0xff00) | byte;
                 this.ik57_ff = 1;
@@ -395,7 +427,7 @@ export class Memory {
             return;
         }
 
-        if (vt57_reg === 0xe005 && this.ik57_e008_80_cmd === 0) {
+        if (vt57_reg === this.dma_ch0_count && this.ik57_e008_80_cmd === 0) {
             if (this.ik57_ff === 0) {
                 this.video_memory_size_buf = byte;
                 this.ik57_ff = 1;
@@ -407,7 +439,7 @@ export class Memory {
             return;
         }
 
-        if (ppi_reg === 0x8002) {
+        if (ppi_reg === this.ppi_port_c) {
             if (this.tape_8002_as_output) {
                 this.tape_write_bit(byte & 0x01);
             }
