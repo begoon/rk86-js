@@ -51,6 +51,15 @@ export const PROFILE_FIELD_LABELS: Record<ProfileAddressField, string> = {
     dma_base: "Контроллер ПДП (ВТ57)",
 };
 
+// Представление для снапшота: адреса — hex-строки вида "0xF800",
+// как и остальные адреса в JSON снапшота. Обратное — normalizeProfile().
+export function exportProfile(profile: MachineProfile): Record<string, string> {
+    const h16 = (n: number) => "0x" + n.toString(16).toUpperCase().padStart(4, "0");
+    const result: Record<string, string> = { name: profile.name };
+    for (const field of PROFILE_ADDRESS_FIELDS) result[field] = h16(profile[field]);
+    return result;
+}
+
 export function isClassicProfile(profile: MachineProfile): boolean {
     return profile.name === CLASSIC_PROFILE_NAME;
 }

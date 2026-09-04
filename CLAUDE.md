@@ -290,7 +290,13 @@ on every build/dev.
   classic). Editor: `ProfileEditor.svelte`, toolbar button /
   `Cmd/Ctrl+K, M`; "Применить" calls `memory.set_profile()` then
   `machine.restart()`. Terminal and web component always use
-  `RK86_CLASSIC`. Snapshots do not carry the profile yet.
+  `RK86_CLASSIC`. Snapshot format "2" carries `profile` (hex-string
+  addresses via `exportProfile`); `rk86_snapshot_restore` applies it
+  (`memory.set_profile`) before `memory.import`, treats format-1
+  snapshots (no `profile`) as classic, and ignores an invalid profile
+  with a `machine.log` message. `memory.on_profile_changed` drives
+  `ui.profileName`; the localStorage active profile is not touched by
+  snapshot restore.
 - i8275 F-bit (SCN4 byte 4 bit 6) captured by `memory.ts` → set on
   `screen.transparent_attr`. `renderer.ts` and `TerminalRenderer.update()`
   branch between visible (1 src byte/cell, FA blanks the cell) and

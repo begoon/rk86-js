@@ -1,11 +1,20 @@
 {
     "id": "rk86",
-    "created": "2026-04-20T13:59:52.407Z",
-    "format": "1",
+    "created": "2026-09-04T14:23:39.200Z",
+    "format": "2",
     "emulator": "rk86.ru",
-    "version": "2.0.19",
+    "version": "2.0.32",
     "start": "0x0000",
     "end": "0xFFFF",
+    "profile": {
+        "name": "RK86_CLASSIC",
+        "ram_end": "0x7FFF",
+        "rom_start": "0xE000",
+        "boot_address": "0xF800",
+        "keyboard_ppi_base": "0x8000",
+        "crtc_base": "0xC000",
+        "dma_base": "0xE000"
+    },
     "boot": {
         "keyboard": []
     },

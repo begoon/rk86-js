@@ -8,11 +8,12 @@ Snapshots capture the complete emulator state as JSON.
 {
   "id": "rk86",
   "created": "2021-03-19T20:41:05.131Z",
-  "format": "1",
+  "format": "2",
   "emulator": "rk86.ru",
-  "version": "1.8.1",
+  "version": "2.0.33",
   "start": "0x0000",
   "end": "0xFFFF",
+  "profile": { ... },
   "boot": { ... },
   "cpu": { ... },
   "keyboard": { ... },
@@ -25,11 +26,45 @@ Snapshots capture the complete emulator state as JSON.
 |----------|-----------------------------------------------|
 | id       | Always "rk86"                                 |
 | created  | ISO timestamp                                 |
-| format   | Format version (currently "1")                |
+| format   | Format version (currently "2"; "1" = no `profile`) |
 | emulator | Source emulator identifier                     |
 | version  | Emulator version that created the snapshot    |
 | start    | Memory range start (always "0x0000")          |
 | end      | Memory range end (always "0xFFFF")            |
+| profile  | Hardware profile (format "2"), see below       |
+
+## Profile
+
+Memory layout and peripheral base addresses the snapshot was taken on
+(see `src/lib/core/rk86_profile.ts`). All addresses are hex strings.
+
+```json
+"profile": {
+  "name": "RK86_CLASSIC",
+  "ram_end": "0x7FFF",
+  "rom_start": "0xE000",
+  "boot_address": "0xF800",
+  "keyboard_ppi_base": "0x8000",
+  "crtc_base": "0xC000",
+  "dma_base": "0xE000"
+}
+```
+
+| Field             | Description                                        |
+|-------------------|----------------------------------------------------|
+| name              | Profile name; `RK86_CLASSIC` is the built-in one   |
+| ram_end           | Last RAM address (RAM starts at 0x0000)            |
+| rom_start         | First ROM address (ROM ends at 0xFFFF)             |
+| boot_address      | Reset/boot address (monitor entry)                 |
+| keyboard_ppi_base | Base of the keyboard i8255 window (8 KB aligned)   |
+| crtc_base         | Base of the i8275 CRT controller window            |
+| dma_base          | Base of the i8257 DMA controller window            |
+
+On restore the profile is applied to the machine before the memory image is
+imported, so peripheral registers line up with the memory contents. A
+format "1" snapshot (no `profile`) is treated as taken on `RK86_CLASSIC`.
+An invalid `profile` is ignored with a log message and the current machine
+profile is kept. Addresses may also be given as plain numbers.
 
 ## CPU
 

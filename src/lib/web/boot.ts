@@ -377,6 +377,7 @@ export async function main(host: HostCallbacks) {
     const profile = loadActiveProfile();
     machine.memory = new Memory(machine, profile);
     ui.profileName = profile.name;
+    machine.memory.on_profile_changed = (next) => (ui.profileName = next.name);
     io.input = (port) => machine.memory.read(port | (port << 8));
     io.output = (port, w8) => machine.memory.write(port | (port << 8), w8);
     console.log(`память инициализирована, профиль ${profile.name}`);

@@ -64,6 +64,9 @@ export class Memory {
     // периферии (см. set_profile). Сравниваются с адресом после
     // наложения масок 0xE003 / 0xE001 / 0xE00F в read()/write().
     profile: MachineProfile = RK86_CLASSIC;
+    // Вызывается из set_profile() — web-слой обновляет индикатор ПРОФИЛЬ
+    // (в том числе при восстановлении снапшота с другим профилем).
+    on_profile_changed: ((profile: MachineProfile) => void) | null = null;
     ppi_port_a = 0;
     ppi_port_b = 0;
     ppi_port_c = 0;
@@ -95,6 +98,7 @@ export class Memory {
         this.dma_ch0_address = profile.dma_base | 4;
         this.dma_ch0_count = profile.dma_base | 5;
         this.dma_mode = profile.dma_base | 8;
+        this.on_profile_changed?.(profile);
     }
 
     init() {

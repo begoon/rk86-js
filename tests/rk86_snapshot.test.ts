@@ -121,10 +121,11 @@ beforeEach(() => {
 const normalize = (v: string) => JSON.stringify(JSON.parse(v), null, 4);
 
 import { type Machine } from "../src/lib/core/rk86_machine.js";
+import { RK86_CLASSIC, type MachineProfile } from "../src/lib/core/rk86_profile.js";
 import EXPECTED_SNAPSHOT from "./test_snapshot.json" with { type: "json" };
 
 test("export", () => {
-    expect.assertions(4173);
+    expect.assertions(4182);
 
     Date.prototype.toISOString = () => "created";
 
@@ -224,4 +225,84 @@ test("restore failure", () => {
     expect(rk86_snapshot_restore('{"id": "x"}')).toBeFalse();
     expect(rk86_snapshot_restore({})).toBeFalse();
     expect(rk86_snapshot_restore({ id: "x" })).toBeFalse();
+});
+
+// Restore drives screen geometry/video-memory callbacks on machine.ui.
+function stubUi() {
+    machine.ui.update_screen_geometry = () => {};
+    machine.ui.update_video_memory_address = () => {};
+}
+
+const shiftedProfile: MachineProfile = {
+    name: "SHIFTED",
+    ram_end: 0x9fff,
+    rom_start: 0xf000,
+    boot_address: 0xf800,
+    keyboard_ppi_base: 0xa000,
+    crtc_base: 0xc000,
+    dma_base: 0xe000,
+};
+
+test("export carries the machine profile as hex strings", () => {
+    if (!machine) throw new Error("machine is not defined");
+    machine.memory.set_profile(shiftedProfile);
+    const json = JSON.parse(rk86_snapshot(machine, version));
+    expect(json.format).toBe("2");
+    expect(json.profile).toEqual({
+        name: "SHIFTED",
+        ram_end: "0x9FFF",
+        rom_start: "0xF000",
+        boot_address: "0xF800",
+        keyboard_ppi_base: "0xA000",
+        crtc_base: "0xC000",
+        dma_base: "0xE000",
+    });
+});
+
+test("restore applies the snapshot profile before importing memory", () => {
+    if (!machine) throw new Error("machine is not defined");
+    stubUi();
+    machine.memory.set_profile(shiftedProfile);
+    const json = JSON.parse(rk86_snapshot(machine, version));
+    machine.memory.set_profile(RK86_CLASSIC);
+    const seen: string[] = [];
+    machine.memory.on_profile_changed = (p) => seen.push(p.name);
+    expect(rk86_snapshot_restore(json, machine)).toBeTrue();
+    expect(machine.memory.profile).toEqual(shiftedProfile);
+    expect(machine.memory.ppi_port_a).toBe(0xa000);
+    expect(seen).toEqual(["SHIFTED"]);
+});
+
+test("restore of a format-1 snapshot without profile falls back to RK86_CLASSIC", () => {
+    if (!machine) throw new Error("machine is not defined");
+    stubUi();
+    const json = JSON.parse(rk86_snapshot(machine, version));
+    delete json.profile;
+    json.format = "1";
+    machine.memory.set_profile(shiftedProfile);
+    expect(rk86_snapshot_restore(json, machine)).toBeTrue();
+    expect(machine.memory.profile).toEqual(RK86_CLASSIC);
+});
+
+test("restore ignores an invalid snapshot profile and keeps the current one", () => {
+    if (!machine) throw new Error("machine is not defined");
+    stubUi();
+    const logged: string[] = [];
+    machine.log = (...args: unknown[]) => logged.push(args.join(" "));
+    const json = JSON.parse(rk86_snapshot(machine, version));
+    json.profile = { ...json.profile, crtc_base: "0xC100" };
+    machine.memory.set_profile(shiftedProfile);
+    expect(rk86_snapshot_restore(json, machine)).toBeTrue();
+    expect(machine.memory.profile).toEqual(shiftedProfile);
+    expect(logged.some((l) => l.includes("проигнорирован"))).toBe(true);
+});
+
+test("restore does not re-apply an identical profile", () => {
+    if (!machine) throw new Error("machine is not defined");
+    stubUi();
+    const json = JSON.parse(rk86_snapshot(machine, version));
+    let calls = 0;
+    machine.memory.on_profile_changed = () => calls++;
+    expect(rk86_snapshot_restore(json, machine)).toBeTrue();
+    expect(calls).toBe(0);
 });

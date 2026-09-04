@@ -173,7 +173,6 @@
         if (!machine) return;
         machine.memory.set_profile(profile);
         saveActiveProfileName(profile.name);
-        ui.profileName = profile.name;
         machine.restart();
         profileDialog?.close();
     }
