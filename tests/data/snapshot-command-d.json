@@ -13,7 +13,8 @@
         "boot_address": "0xF800",
         "keyboard_ppi_base": "0x8000",
         "crtc_base": "0xC000",
-        "dma_base": "0xE000"
+        "dma_base": "0xE000",
+        "peripheral_window": "0x2000"
     },
     "boot": {
         "keyboard": []

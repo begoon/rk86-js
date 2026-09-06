@@ -2,7 +2,7 @@ import { fromHex, hex16 } from "./hex.js";
 import * as hexMap from "./hex_map";
 import type { RK86File } from "./rk86_file_parser.js";
 import type { Machine } from "./rk86_machine.js";
-import { RK86_CLASSIC, type MachineProfile } from "./rk86_profile.js";
+import { RK86_CLASSIC, peripheralWindowMask, type MachineProfile } from "./rk86_profile.js";
 
 interface MemorySnapshot {
     vg75_c001_00_cmd: number;
@@ -62,8 +62,14 @@ export class Memory {
 
     // Профиль оборудования и вычисленные из него адреса регистров
     // периферии (см. set_profile). Сравниваются с адресом после
-    // наложения масок 0xE003 / 0xE001 / 0xE00F в read()/write().
+    // наложения масок ppi_mask / crtc_mask / dma_mask в read()/write():
+    // старшие биты маски выбирают окно (для окна 8 КБ — 0xE000), младшие —
+    // регистр внутри микросхемы (ППИ: A0..A1, ВГ75: A0, ВТ57: A0..A3).
     profile: MachineProfile = RK86_CLASSIC;
+    peripheral_window_mask = 0xe000;
+    ppi_mask = 0xe003;
+    crtc_mask = 0xe001;
+    dma_mask = 0xe00f;
     // Вызывается из set_profile() — web-слой обновляет индикатор ПРОФИЛЬ
     // (в том числе при восстановлении снапшота с другим профилем).
     on_profile_changed: ((profile: MachineProfile) => void) | null = null;
@@ -89,6 +95,11 @@ export class Memory {
     // сохраняется, вызывающая сторона обычно делает machine.restart().
     set_profile(profile: MachineProfile) {
         this.profile = profile;
+        const window_mask = peripheralWindowMask(profile.peripheral_window);
+        this.peripheral_window_mask = window_mask;
+        this.ppi_mask = window_mask | 0x3;
+        this.crtc_mask = window_mask | 0x1;
+        this.dma_mask = window_mask | 0xf;
         this.ppi_port_a = profile.keyboard_ppi_base | 0;
         this.ppi_port_b = profile.keyboard_ppi_base | 1;
         this.ppi_port_c = profile.keyboard_ppi_base | 2;
@@ -204,14 +215,15 @@ export class Memory {
         this.last_access_operation = "read";
         this.tracer?.("read", addr);
 
-        // RK86 chip-select decoder (К555ИД7) uses A13..A15 only; chips see
-        // only the low address bits they need (others are mirrored). Use
+        // Chip-select decoder sees only the window-selecting high address
+        // bits (A13..A15 for the classic 8 KB window); chips see only the
+        // low address bits they need (others are mirrored). Use
         // per-peripheral masks so all hardware mirrors hit the right
-        // handler:
+        // handler (classic profile shown):
         //   PPI (8000-9FFF, A000-BFFF): A0..A1 used → mask 0xE003
         //   VG75 (C000-DFFF):           A0    used → mask 0xE001
-        const ppi_reg = addr & 0xe003;
-        const vg75_reg = addr & 0xe001;
+        const ppi_reg = addr & this.ppi_mask;
+        const vg75_reg = addr & this.crtc_mask;
 
         if (ppi_reg === this.ppi_port_c) return this.machine.keyboard.modifiers;
 
@@ -277,18 +289,19 @@ export class Memory {
         // обрабатываются ниже по маске vt57_reg.
         if (addr < this.profile.rom_start) this.buf[addr] = byte;
 
-        // Peripheral chip-select uses only A13..A15 (К555ИД7 decoder), and
-        // each chip exposes only as many of the low address bits as it has
-        // registers. Use per-peripheral masks so all hardware mirrors hit
-        // the right handler:
+        // Peripheral chip-select uses only the window-selecting high bits
+        // (A13..A15 for the classic 8 KB window), and each chip exposes only
+        // as many of the low address bits as it has registers. Use
+        // per-peripheral masks so all hardware mirrors hit the right
+        // handler (classic profile shown):
         //   PPI (8000-9FFF, A000-BFFF): A0..A1 used     → mask 0xE003
         //   VG75 (C000-DFFF):           A0    used      → mask 0xE001
         //   VT57 (E000-FFFF, write):    A0..A3 used     → mask 0xE00F
         // (For VT57 this also covers F-range mirrors that some programs use,
         //  e.g. F808 ≡ E008. Reads from F800-FFFF still fall through to ROM.)
-        const ppi_reg = addr & 0xe003;
-        const vg75_reg = addr & 0xe001;
-        const vt57_reg = addr & 0xe00f;
+        const ppi_reg = addr & this.ppi_mask;
+        const vg75_reg = addr & this.crtc_mask;
+        const vt57_reg = addr & this.dma_mask;
 
         if (ppi_reg === this.ppi_control) {
             if (byte & 0x80) {

@@ -14,6 +14,20 @@ const shifted: MachineProfile = {
     keyboard_ppi_base: 0xa000,
     crtc_base: 0xc000,
     dma_base: 0xe000,
+    peripheral_window: 0x2000,
+};
+
+// 32 КБ ОЗУ, ПЗУ от C000, восемь окон по 2 КБ в 8000-BFFF:
+// ППИ клавиатуры в 8000, ВГ75 в 8800, ВТ57 в 9000.
+const small: MachineProfile = {
+    name: "SRAM2K",
+    ram_end: 0x7fff,
+    rom_start: 0xc000,
+    boot_address: 0xc000,
+    keyboard_ppi_base: 0x8000,
+    crtc_base: 0x8800,
+    dma_base: 0x9000,
+    peripheral_window: 0x800,
 };
 
 function build(profile: MachineProfile) {
@@ -21,7 +35,13 @@ function build(profile: MachineProfile) {
     const screen = {
         set_video_memory: (_address: number) => {},
         set_cursor: (_x: number, _y: number) => {},
+        set_char_height: (_h: number) => {},
+        set_geometry: (..._args: number[]) => {},
         light_pen_active: false,
+        transparent_attr: false,
+        underline_scanline: 7,
+        hrtc_chars: 0,
+        vrtc_rows: 0,
     };
     const machine = { keyboard, screen, log: () => {} } as unknown as Machine;
     const memory = new Memory(machine, profile);
@@ -32,6 +52,10 @@ function build(profile: MachineProfile) {
 test("default profile is RK86_CLASSIC with classic register addresses", () => {
     const memory = new Memory({} as Machine);
     expect(memory.profile).toBe(RK86_CLASSIC);
+    expect(memory.peripheral_window_mask).toBe(0xe000);
+    expect(memory.ppi_mask).toBe(0xe003);
+    expect(memory.crtc_mask).toBe(0xe001);
+    expect(memory.dma_mask).toBe(0xe00f);
     expect(memory.ppi_port_a).toBe(0x8000);
     expect(memory.ppi_port_c).toBe(0x8002);
     expect(memory.crtc_parameter).toBe(0xc000);
@@ -119,4 +143,58 @@ test("classic profile: zero_ram clears 0000..7FFF only", () => {
     memory.zero_ram();
     expect(memory.read_raw(0x7fff)).toBe(0x00);
     expect(memory.read_raw(0x8000)).toBe(0x55);
+});
+
+test("2 KB window: decode masks follow the profile", () => {
+    const { memory } = build(small);
+    expect(memory.peripheral_window_mask).toBe(0xf800);
+    expect(memory.ppi_mask).toBe(0xf803);
+    expect(memory.crtc_mask).toBe(0xf801);
+    expect(memory.dma_mask).toBe(0xf80f);
+});
+
+test("2 KB window: registers are mirrored inside the window only", () => {
+    const { memory, keyboard } = build(small);
+    expect(memory.read(0x8002)).toBe(keyboard.modifiers);
+    expect(memory.read(0x87fe)).toBe(keyboard.modifiers); // last mirror inside 8000-87FF
+    // 8800-8FFF is the CRTC window in this profile: 8802 is the CRTC
+    // parameter register (reads 00), not PPI port C and not memory.
+    memory.write_raw(0x8802, 0x5a);
+    expect(memory.read(0x8802)).toBe(0x00);
+    // A000 would be a PPI mirror with the classic 8 KB window; here the
+    // window A000-A7FF is unmapped and reads fall through to memory.
+    memory.write_raw(0xa002, 0x3c);
+    expect(memory.read(0xa002)).toBe(0x3c);
+});
+
+test("2 KB window: DMA is programmed at 9000 and ROM window C000-FFFF is plain memory for writes", () => {
+    const { memory, screen } = build(small);
+    let video = -1;
+    screen.set_video_memory = (address: number) => (video = address);
+    memory.write(0x9008, 0x80);
+    memory.write(0x9004, 0x00);
+    memory.write(0x9004, 0x76);
+    memory.write(0x9005, 0xff);
+    memory.write(0x9005, 0x49);
+    expect(video).toBe(0x7600);
+    // Classic DMA address E008 is ROM here: write is ignored, no DMA side effect.
+    video = -1;
+    memory.write(0xe008, 0x80);
+    memory.write(0xe004, 0x00);
+    memory.write(0xe004, 0x50);
+    memory.write(0xe005, 0xff);
+    memory.write(0xe005, 0x49);
+    expect(video).toBe(-1);
+    expect(memory.read_raw(0xe004)).toBe(0x00);
+});
+
+test("2 KB window: CRTC command register at 8801", () => {
+    const { memory } = build(small);
+    memory.write(0x8801, 0x00); // reset command: next 4 parameter bytes
+    memory.write(0x8800, 0x4f); // 80 columns
+    memory.write(0x8800, 0x59); // 26 rows, blink 8
+    memory.write(0x8800, 0x79);
+    memory.write(0x8800, 0x73);
+    expect(memory.video_screen_size_x_buf).toBe(80);
+    expect(memory.video_screen_size_y_buf).toBe(26);
 });

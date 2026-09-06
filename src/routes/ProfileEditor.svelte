@@ -1,10 +1,13 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import {
+        PERIPHERAL_WINDOWS,
+        PERIPHERAL_WINDOW_LABEL,
         PROFILE_ADDRESS_FIELDS,
         PROFILE_FIELD_LABELS,
         RK86_CLASSIC,
         isClassicProfile,
+        peripheralWindowLabel,
         validateProfile,
         type MachineProfile,
         type ProfileAddressField,
@@ -26,18 +29,18 @@
         onclose: () => void;
     } = $props();
 
-    type Draft = { name: string } & Record<ProfileAddressField, string>;
+    type Draft = { name: string; peripheral_window: number } & Record<ProfileAddressField, string>;
 
     const hex4 = (v: number) => v.toString(16).toUpperCase().padStart(4, "0");
 
     function toDraft(profile: MachineProfile): Draft {
-        const draft = { name: profile.name } as Draft;
+        const draft = { name: profile.name, peripheral_window: profile.peripheral_window } as Draft;
         for (const field of PROFILE_ADDRESS_FIELDS) draft[field] = hex4(profile[field]);
         return draft;
     }
 
     function fromDraft(draft: Draft): MachineProfile {
-        const profile = { name: draft.name.trim() } as MachineProfile;
+        const profile = { name: draft.name.trim(), peripheral_window: draft.peripheral_window } as MachineProfile;
         for (const field of PROFILE_ADDRESS_FIELDS) {
             const text = draft[field].trim();
             profile[field] = /^[0-9a-f]{1,4}$/i.test(text) ? parseInt(text, 16) : NaN;
@@ -74,7 +77,11 @@
     const dirty = $derived.by(() => {
         if (!selected) return true;
         const original = toDraft(selected);
-        return draft.name !== original.name || PROFILE_ADDRESS_FIELDS.some((f) => draft[f].toUpperCase() !== original[f]);
+        return (
+            draft.name !== original.name ||
+            draft.peripheral_window !== original.peripheral_window ||
+            PROFILE_ADDRESS_FIELDS.some((f) => draft[f].toUpperCase() !== original[f])
+        );
     });
     const canSave = $derived(!readOnly && dirty && errors.length === 0);
     const canDelete = $derived(selected !== undefined && !readOnly && selected.name !== activeName);
@@ -227,9 +234,17 @@
                     />
                 </div>
             {/each}
+            <div class="row">
+                <label for="profile-peripheral-window">{PERIPHERAL_WINDOW_LABEL}</label>
+                <select id="profile-peripheral-window" bind:value={draft.peripheral_window} disabled={readOnly}>
+                    {#each PERIPHERAL_WINDOWS as window}
+                        <option value={window}>{peripheralWindowLabel(window)}</option>
+                    {/each}
+                </select>
+            </div>
             <div class="note">
-                ОЗУ: 0000–{draft.ram_end.toUpperCase()}, ПЗУ: {draft.rom_start.toUpperCase()}–FFFF. Базы периферии кратны 2000
-                (окно 8 КБ, дешифратор по A13..A15).
+                ОЗУ: 0000–{draft.ram_end.toUpperCase()}, ПЗУ: {draft.rom_start.toUpperCase()}–FFFF. Базы периферии кратны размеру
+                окна ({hex4(draft.peripheral_window)}); в классическом РК86 окно 8 КБ — дешифратор К555ИД7 по A13..A15.
             </div>
             {#if readOnly}
                 <div class="note">Встроенный профиль нельзя изменить или удалить. Нажмите «Новый профиль», чтобы создать копию.</div>
@@ -364,6 +379,23 @@
     .row input.hex {
         text-transform: uppercase;
         text-align: right;
+    }
+    .row select {
+        grid-column: 2;
+        justify-self: end;
+        background: #2c333d;
+        color: white;
+        border: 1px solid #3a424d;
+        border-radius: 4px;
+        padding: 4px 6px;
+        font-family: monospace;
+    }
+    .row:has(select) {
+        grid-template-columns: 1fr auto;
+    }
+    .row select:disabled {
+        color: #999;
+        background: #262b32;
     }
     .row input.name {
         grid-column: 2;

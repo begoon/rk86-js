@@ -125,7 +125,7 @@ import { RK86_CLASSIC, type MachineProfile } from "../src/lib/core/rk86_profile.
 import EXPECTED_SNAPSHOT from "./test_snapshot.json" with { type: "json" };
 
 test("export", () => {
-    expect.assertions(4182);
+    expect.assertions(4183);
 
     Date.prototype.toISOString = () => "created";
 
@@ -241,6 +241,7 @@ const shiftedProfile: MachineProfile = {
     keyboard_ppi_base: 0xa000,
     crtc_base: 0xc000,
     dma_base: 0xe000,
+    peripheral_window: 0x2000,
 };
 
 test("export carries the machine profile as hex strings", () => {
@@ -256,6 +257,7 @@ test("export carries the machine profile as hex strings", () => {
         keyboard_ppi_base: "0xA000",
         crtc_base: "0xC000",
         dma_base: "0xE000",
+        peripheral_window: "0x2000",
     });
 });
 

@@ -46,7 +46,8 @@ Memory layout and peripheral base addresses the snapshot was taken on
   "boot_address": "0xF800",
   "keyboard_ppi_base": "0x8000",
   "crtc_base": "0xC000",
-  "dma_base": "0xE000"
+  "dma_base": "0xE000",
+  "peripheral_window": "0x2000"
 }
 ```
 
@@ -56,9 +57,12 @@ Memory layout and peripheral base addresses the snapshot was taken on
 | ram_end           | Last RAM address (RAM starts at 0x0000)            |
 | rom_start         | First ROM address (ROM ends at 0xFFFF)             |
 | boot_address      | Reset/boot address (monitor entry)                 |
-| keyboard_ppi_base | Base of the keyboard i8255 window (8 KB aligned)   |
+| keyboard_ppi_base | Base of the keyboard i8255 window                  |
 | crtc_base         | Base of the i8275 CRT controller window            |
 | dma_base          | Base of the i8257 DMA controller window            |
+| peripheral_window | Size of every peripheral window: 0x2000 (classic   |
+|                   | 8 KB), 0x1000, 0x800, 0x400, 0x200 or 0x100; bases |
+|                   | are aligned to it. Absent = 0x2000.                |
 
 On restore the profile is applied to the machine before the memory image is
 imported, so peripheral registers line up with the memory contents. A

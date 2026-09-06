@@ -274,15 +274,19 @@ on every build/dev.
     Terminal: `-m static/files/mon32-color.bin`.
 - Hardware profiles (`src/lib/core/rk86_profile.ts`): `MachineProfile`
   = `{name, ram_end, rom_start, boot_address, keyboard_ppi_base,
-  crtc_base, dma_base}`. `RK86_CLASSIC` (ram_end 7FFF, rom_start E000,
-  boot F800, PPI 8000, CRTC C000, DMA E000) is built-in, frozen,
-  non-deletable. `Memory` takes the profile in its constructor
-  (`set_profile()` recomputes `ppi_port_a/b/c`, `ppi_control`,
-  `crtc_parameter/command`, `dma_ch0_address/count`, `dma_mode`
-  without touching `buf`); the decode masks (0xE003/0xE001/0xE00F)
-  stay, only the compared constants come from the profile, so bases
-  must be 8 KB aligned. Reset vector is `memory.profile.boot_address`
-  everywhere (runner, boot.ts, component). RAM write rule is lenient:
+  crtc_base, dma_base, peripheral_window}`. `RK86_CLASSIC` (ram_end
+  7FFF, rom_start E000, boot F800, PPI 8000, CRTC C000, DMA E000,
+  window 0x2000) is built-in, frozen, non-deletable. `Memory` takes the
+  profile in its constructor (`set_profile()` recomputes `ppi_port_a/b/
+  c`, `ppi_control`, `crtc_parameter/command`, `dma_ch0_address/count`,
+  `dma_mode` and the decode masks `ppi_mask`/`crtc_mask`/`dma_mask`/
+  `peripheral_window_mask` without touching `buf`). Masks =
+  `peripheralWindowMask(window) | low-bits` (classic: 0xE003/0xE001/
+  0xE00F); `peripheral_window` ∈ `PERIPHERAL_WINDOWS` (0x2000, 0x1000,
+  0x800, 0x400, 0x200, 0x100) and bases must be aligned to it.
+  Profiles/snapshots without `peripheral_window` normalize to 0x2000.
+  Reset vector is `memory.profile.boot_address` everywhere (runner,
+  boot.ts, component). RAM write rule is lenient:
   CPU writes land for `addr < rom_start`; `ram_end` drives only
   `zero_ram`, MemoryMap labels and validation. Web persistence in
   `src/lib/web/profile_store.ts`: `rk86:profiles` (`{version: 1,

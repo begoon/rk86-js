@@ -23,7 +23,7 @@
         if (vsize > 0 && addr >= vbase && addr < vbase + vsize) return "видеопамять";
         if (addr >= rom_start) return "ПЗУ";
         if (addr <= ram_end) return "ОЗУ";
-        const window = addr & 0xe000;
+        const window = addr & memory.peripheral_window_mask;
         if (window === keyboard_ppi_base) return "ППИ клавиатуры";
         if (window === crtc_base) return "ВГ75";
         if (window === dma_base) return "ВТ57";
