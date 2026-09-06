@@ -1430,6 +1430,12 @@
         flex: 1;
         min-height: 0;
         min-width: 0;
+        /* main is a column flexbox with align-items: start, so without
+         * an explicit width the placeholder shrink-wraps its content.
+         * Chrome resolves the canvas width:100% cycle via aspect-ratio
+         * to the full width; Safari falls back to the canvas bitmap's
+         * intrinsic width (narrow column on the left). */
+        width: 100%;
         max-width: 100%;
         max-height: 100%;
         display: flex;
