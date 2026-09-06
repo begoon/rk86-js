@@ -32,7 +32,26 @@
         >
           run <kbd>Ctrl+E</kbd>
         </button>
-        <button type="button" id="upload-asm">upload</button>
+        <button
+          type="button"
+          id="load-emu"
+          title="load into emulator without running"
+        >
+          load
+        </button>
+        <button
+          type="button"
+          id="upload-asm"
+          title="upload a local .asm file into a new tab"
+        >
+          upload
+        </button>
+        <input
+          type="file"
+          id="file-input"
+          accept=".asm,.txt,text/plain"
+          hidden
+        />
         <button type="button" id="download-btn">download</button>
         <label for="download-format">as</label>
         <select id="download-format" title="download format">
@@ -45,12 +64,6 @@
         </select>
         <button type="button" id="reset" class="danger">reset</button>
         <button type="button" id="theme" title="toggle theme">theme</button>
-        <input
-          type="file"
-          id="file-input"
-          accept=".asm,.s,.a,text/plain"
-          hidden
-        />
       </div>
     </header>
     <main>
@@ -58,6 +71,7 @@
       <div class="editor">
         <div class="gutter" id="gutter" aria-hidden="true"></div>
         <div class="source-wrap">
+          <pre class="hl-text" id="hl-text" aria-hidden="true"></pre>
           <div class="highlight" id="highlight" aria-hidden="true"></div>
           <textarea
             id="source"

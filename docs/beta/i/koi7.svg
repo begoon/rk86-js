@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+     stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- top edge + top-right rounded corner + right edge -->
+    <path d="M 4 4 L 19 4 Q 21 4 21 6 L 21 19" />
+
+    <!-- bottom edge + bottom-left rounded corner + left edge -->
+    <path d="M 20 20 L 6 20 Q 3 20 3 18 L 3 5" />
+
+    <!-- up-arrow head: chevron at top of left edge, tip above the frame -->
+    <path d="M 1 6 L 3 3 L 5 6" />
+
+    <!-- down-arrow head: chevron at bottom of right edge, tip below the frame -->
+    <path d="M 19 18 L 21 21 L 23 18" />
+
+    <!-- text lines inside (rounded ends, three lines of varying widths) -->
+    <line x1="9"  y1="8"  x2="17" y2="8" />
+    <line x1="7"  y1="12" x2="17" y2="12" />
+    <line x1="9"  y1="16" x2="16" y2="16" />
+</svg>

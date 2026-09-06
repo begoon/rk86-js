@@ -1062,57 +1062,127 @@ function evalExpr(expr, symbols, pc = 0, lastLabel = "") {
     throw new Error(`unexpected token: ${tokens[pos].val}`);
   return result;
 }
+function expectOps(m, ops, n) {
+  if (ops.length !== n) {
+    throw new Error(`${m} takes ${n} operand${n === 1 ? "" : "s"}, got ${ops.length}`);
+  }
+}
+function reg8(m, op) {
+  const r = REG8[op.toUpperCase()];
+  if (r === undefined) {
+    throw new Error(`${m}: invalid register '${op}' (expected B C D E H L M A)`);
+  }
+  return r;
+}
+function regPair(m, op, allowed) {
+  const names = Object.keys(allowed).join(" ");
+  const r = allowed[op.toUpperCase()];
+  if (r === undefined) {
+    throw new Error(`${m}: invalid register pair '${op}' (expected ${names})`);
+  }
+  return r;
+}
+function imm8(m, v) {
+  if (v < -128 || v > 255) {
+    throw new Error(`${m}: 8-bit value out of range: ${v}`);
+  }
+  return v & 255;
+}
+function imm16(m, v) {
+  if (v < -32768 || v > 65535) {
+    throw new Error(`${m}: 16-bit value out of range: ${v}`);
+  }
+  return [v & 255, v >> 8 & 255];
+}
+var LDAX_STAX_PAIRS = { B: 0, D: 1 };
 function encode(m, ops, symbols, pc = 0, lastLabel = "") {
-  if (m in IMPLIED)
+  if (m in IMPLIED) {
+    expectOps(m, ops, 0);
     return [IMPLIED[m]];
-  if (m in ALU_REG)
-    return [ALU_REG[m] | REG8[ops[0].toUpperCase()]];
-  if (m in ALU_IMM)
-    return [ALU_IMM[m], evalExpr(ops[0], symbols, pc, lastLabel) & 255];
+  }
+  if (m in ALU_REG) {
+    expectOps(m, ops, 1);
+    return [ALU_REG[m] | reg8(m, ops[0])];
+  }
+  if (m in ALU_IMM) {
+    expectOps(m, ops, 1);
+    return [ALU_IMM[m], imm8(m, evalExpr(ops[0], symbols, pc, lastLabel))];
+  }
   if (m in ADDR16) {
-    const v = evalExpr(ops[0], symbols, pc, lastLabel);
-    return [ADDR16[m], v & 255, v >> 8 & 255];
+    expectOps(m, ops, 1);
+    const [lo, hi] = imm16(m, evalExpr(ops[0], symbols, pc, lastLabel));
+    return [ADDR16[m], lo, hi];
   }
-  if (m === "MOV")
-    return [
-      64 | REG8[ops[0].toUpperCase()] << 3 | REG8[ops[1].toUpperCase()]
-    ];
+  if (m === "MOV") {
+    expectOps(m, ops, 2);
+    const dst = reg8(m, ops[0]);
+    const src = reg8(m, ops[1]);
+    if (dst === 6 && src === 6) {
+      throw new Error("MOV M,M is not a valid instruction (encodes to HLT)");
+    }
+    return [64 | dst << 3 | src];
+  }
   if (m === "MVI") {
-    const v = evalExpr(ops[1], symbols, pc, lastLabel);
-    return [6 | REG8[ops[0].toUpperCase()] << 3, v & 255];
-  }
-  if (m === "INR")
-    return [4 | REG8[ops[0].toUpperCase()] << 3];
-  if (m === "DCR")
-    return [5 | REG8[ops[0].toUpperCase()] << 3];
-  if (m === "LXI") {
-    const v = evalExpr(ops[1], symbols, pc, lastLabel);
+    expectOps(m, ops, 2);
     return [
-      1 | REG_PAIR[ops[0].toUpperCase()] << 4,
-      v & 255,
-      v >> 8 & 255
+      6 | reg8(m, ops[0]) << 3,
+      imm8(m, evalExpr(ops[1], symbols, pc, lastLabel))
     ];
   }
-  if (m === "DAD")
-    return [9 | REG_PAIR[ops[0].toUpperCase()] << 4];
-  if (m === "INX")
-    return [3 | REG_PAIR[ops[0].toUpperCase()] << 4];
-  if (m === "DCX")
-    return [11 | REG_PAIR[ops[0].toUpperCase()] << 4];
-  if (m === "PUSH")
-    return [197 | REG_PAIR_PUSH[ops[0].toUpperCase()] << 4];
-  if (m === "POP")
-    return [193 | REG_PAIR_PUSH[ops[0].toUpperCase()] << 4];
-  if (m === "LDAX")
-    return [10 | REG_PAIR[ops[0].toUpperCase()] << 4];
-  if (m === "STAX")
-    return [2 | REG_PAIR[ops[0].toUpperCase()] << 4];
-  if (m === "IN")
-    return [219, evalExpr(ops[0], symbols, pc, lastLabel) & 255];
-  if (m === "OUT")
-    return [211, evalExpr(ops[0], symbols, pc, lastLabel) & 255];
+  if (m === "INR") {
+    expectOps(m, ops, 1);
+    return [4 | reg8(m, ops[0]) << 3];
+  }
+  if (m === "DCR") {
+    expectOps(m, ops, 1);
+    return [5 | reg8(m, ops[0]) << 3];
+  }
+  if (m === "LXI") {
+    expectOps(m, ops, 2);
+    const [lo, hi] = imm16(m, evalExpr(ops[1], symbols, pc, lastLabel));
+    return [1 | regPair(m, ops[0], REG_PAIR) << 4, lo, hi];
+  }
+  if (m === "DAD") {
+    expectOps(m, ops, 1);
+    return [9 | regPair(m, ops[0], REG_PAIR) << 4];
+  }
+  if (m === "INX") {
+    expectOps(m, ops, 1);
+    return [3 | regPair(m, ops[0], REG_PAIR) << 4];
+  }
+  if (m === "DCX") {
+    expectOps(m, ops, 1);
+    return [11 | regPair(m, ops[0], REG_PAIR) << 4];
+  }
+  if (m === "PUSH") {
+    expectOps(m, ops, 1);
+    return [197 | regPair(m, ops[0], REG_PAIR_PUSH) << 4];
+  }
+  if (m === "POP") {
+    expectOps(m, ops, 1);
+    return [193 | regPair(m, ops[0], REG_PAIR_PUSH) << 4];
+  }
+  if (m === "LDAX") {
+    expectOps(m, ops, 1);
+    return [10 | regPair(m, ops[0], LDAX_STAX_PAIRS) << 4];
+  }
+  if (m === "STAX") {
+    expectOps(m, ops, 1);
+    return [2 | regPair(m, ops[0], LDAX_STAX_PAIRS) << 4];
+  }
+  if (m === "IN") {
+    expectOps(m, ops, 1);
+    return [219, imm8(m, evalExpr(ops[0], symbols, pc, lastLabel))];
+  }
+  if (m === "OUT") {
+    expectOps(m, ops, 1);
+    return [211, imm8(m, evalExpr(ops[0], symbols, pc, lastLabel))];
+  }
   if (m === "RST") {
+    expectOps(m, ops, 1);
     const n = evalExpr(ops[0], symbols, pc, lastLabel);
+    if (n < 0 || n > 7)
+      throw new Error(`RST: vector out of range 0..7: ${n}`);
     return [199 | n << 3];
   }
   throw new Error(`cannot encode: ${m} ${ops.join(", ")}`);
@@ -1520,7 +1590,7 @@ var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
 if (false) {}
 
 // docs/build-info.ts
-var BUILD_TIME = "2026-05-16 15:04:39";
+var BUILD_TIME = "2026-06-22 10:35:07";
 
 // docs/playground.ts
 var fetchExample = (f) => fetch(`examples/${f}`).then((r) => r.text());
@@ -1547,7 +1617,14 @@ var ACTIVE_KEY = "asm8-playground:active";
 var THEME_KEY = "asm8-playground:theme";
 var FORMAT_KEY = "asm8-playground:format";
 var DEFAULT_FILENAME = "program.asm";
-var OUTPUT_FORMATS = ["asm", "bin", "rk", "rkr", "pki", "gam"];
+var OUTPUT_FORMATS = [
+  "asm",
+  "bin",
+  "rk",
+  "rkr",
+  "pki",
+  "gam"
+];
 var DEFAULT_FORMAT = "asm";
 var tabs = [];
 var active = 0;
@@ -1570,6 +1647,7 @@ function saveTheme(t) {
 var source = document.getElementById("source");
 var gutter = document.getElementById("gutter");
 var highlight = document.getElementById("highlight");
+var hlText = document.getElementById("hl-text");
 var errorEl = document.getElementById("error");
 var select = document.getElementById("example");
 var modal = document.getElementById("modal");
@@ -1578,13 +1656,14 @@ var confirmModal = document.getElementById("confirm-modal");
 var confirmMessage = document.getElementById("confirm-message");
 var confirmOk = document.getElementById("confirm-ok");
 var confirmCancel = document.getElementById("confirm-cancel");
+var loadEmuBtn = document.getElementById("load-emu");
 var uploadBtn = document.getElementById("upload-asm");
+var fileInput = document.getElementById("file-input");
 var downloadBtn = document.getElementById("download-btn");
 var downloadFormatSel = document.getElementById("download-format");
 var runBinBtn = document.getElementById("run-bin");
 var resetBtn = document.getElementById("reset");
 var themeBtn = document.getElementById("theme");
-var fileInput = document.getElementById("file-input");
 var filenameInput = document.getElementById("filename");
 var tabsEl = document.getElementById("tabs");
 function asmName() {
@@ -1796,9 +1875,12 @@ function renderGutter(info, totalLines) {
     else
       groups.set(r.orig, [r]);
   }
+  const width = String(Math.max(totalLines, 1)).length;
   const out = [];
   for (let i = 1;i <= totalLines; i++) {
-    out.push(fmtGutterGroup(groups.get(i)));
+    const num = String(i).padStart(width, " ");
+    const body = fmtGutterGroup(groups.get(i));
+    out.push(`<span class="lineno">${num}</span>` + (body ? body : ""));
   }
   gutter.innerHTML = out.join(`
 `);
@@ -1812,9 +1894,224 @@ function renderHighlight(errLine) {
   div.style.position = "absolute";
   div.style.left = "0";
   div.style.right = "0";
-  div.style.top = `${PAD_TOP + (errLine - 1) * LINE_HEIGHT - source.scrollTop}px`;
+  div.style.top = `${PAD_TOP + (errLine - 1) * LINE_HEIGHT}px`;
   div.style.height = `${LINE_HEIGHT}px`;
   highlight.appendChild(div);
+}
+var MNEMONICS = new Set([
+  "mov",
+  "mvi",
+  "lxi",
+  "lda",
+  "sta",
+  "lhld",
+  "shld",
+  "ldax",
+  "stax",
+  "xchg",
+  "push",
+  "pop",
+  "xthl",
+  "sphl",
+  "add",
+  "adc",
+  "sub",
+  "sbb",
+  "ana",
+  "ora",
+  "xra",
+  "cmp",
+  "adi",
+  "aci",
+  "sui",
+  "sbi",
+  "ani",
+  "ori",
+  "xri",
+  "cpi",
+  "inr",
+  "dcr",
+  "inx",
+  "dcx",
+  "dad",
+  "daa",
+  "rlc",
+  "rrc",
+  "ral",
+  "rar",
+  "cma",
+  "cmc",
+  "stc",
+  "jmp",
+  "jnz",
+  "jz",
+  "jnc",
+  "jc",
+  "jpo",
+  "jpe",
+  "jp",
+  "jm",
+  "pchl",
+  "call",
+  "cnz",
+  "cz",
+  "cnc",
+  "cc",
+  "cpo",
+  "cpe",
+  "cp",
+  "cm",
+  "ret",
+  "rnz",
+  "rz",
+  "rnc",
+  "rc",
+  "rpo",
+  "rpe",
+  "rp",
+  "rm",
+  "rst",
+  "ei",
+  "di",
+  "nop",
+  "hlt",
+  "in",
+  "out"
+]);
+var REGISTERS = new Set([
+  "a",
+  "b",
+  "c",
+  "d",
+  "e",
+  "h",
+  "l",
+  "m",
+  "sp",
+  "psw"
+]);
+var DIRECTIVES2 = new Set([
+  "org",
+  "equ",
+  "db",
+  "dw",
+  "ds",
+  "end",
+  "section",
+  "include",
+  "if",
+  "else",
+  "endif",
+  "proc",
+  "endp",
+  "return",
+  "low",
+  "high"
+]);
+function highlightLine(line) {
+  let out = "";
+  let i = 0;
+  let firstTok = true;
+  const n = line.length;
+  while (i < n) {
+    const c = line[i];
+    if (c === " " || c === "\t") {
+      let j = i;
+      while (j < n && (line[j] === " " || line[j] === "\t"))
+        j++;
+      out += esc(line.slice(i, j));
+      i = j;
+      continue;
+    }
+    if (c === ";") {
+      out += `<span class="tok-comment">${esc(line.slice(i))}</span>`;
+      return out;
+    }
+    if (c === "'" || c === '"') {
+      let j = i + 1;
+      while (j < n) {
+        if (line[j] === "\\" && j + 1 < n) {
+          j += 2;
+          continue;
+        }
+        if (line[j] === c) {
+          j++;
+          break;
+        }
+        j++;
+      }
+      out += `<span class="tok-string">${esc(line.slice(i, j))}</span>`;
+      i = j;
+      firstTok = false;
+      continue;
+    }
+    if (c === "$" && !/[A-Za-z0-9_]/.test(line[i + 1] ?? "")) {
+      out += `<span class="tok-number">$</span>`;
+      i++;
+      firstTok = false;
+      continue;
+    }
+    if (c >= "0" && c <= "9") {
+      const nm = /^(?:0[xX][0-9a-fA-F]+|[0-9][0-9a-fA-F]*[hH]|[01]+[bB]|[0-9]+)/.exec(line.slice(i));
+      if (nm) {
+        out += `<span class="tok-number">${esc(nm[0])}</span>`;
+        i += nm[0].length;
+        firstTok = false;
+        continue;
+      }
+    }
+    const idm = /^[@.]?[A-Za-z_][A-Za-z0-9_]*/.exec(line.slice(i));
+    if (idm) {
+      const word = idm[0];
+      const after = i + word.length;
+      const lower = word.toLowerCase();
+      const stripped = lower.replace(/^[.@]/, "");
+      if (line[after] === ":") {
+        out += `<span class="tok-label">${esc(word + ":")}</span>`;
+        i = after + 1;
+        firstTok = false;
+        continue;
+      }
+      let cls;
+      if (word.startsWith(".") && DIRECTIVES2.has(stripped))
+        cls = "tok-directive";
+      else if (MNEMONICS.has(lower))
+        cls = "tok-mnemonic";
+      else if (firstTok && DIRECTIVES2.has(stripped))
+        cls = "tok-directive";
+      else if (DIRECTIVES2.has(stripped))
+        cls = "tok-directive";
+      else if (REGISTERS.has(lower))
+        cls = "tok-register";
+      else if (word.startsWith("@") || word.startsWith("."))
+        cls = "tok-label";
+      else if (firstTok)
+        cls = "tok-label";
+      else
+        cls = "tok-ident";
+      out += `<span class="${cls}">${esc(word)}</span>`;
+      i += word.length;
+      firstTok = false;
+      continue;
+    }
+    const pm = /^[<>=!&|^~+\-*/%(),:\[\]\\]/.exec(line.slice(i));
+    if (pm) {
+      out += `<span class="tok-punct">${esc(pm[0])}</span>`;
+      i += pm[0].length;
+      firstTok = false;
+      continue;
+    }
+    out += esc(c);
+    i++;
+    firstTok = false;
+  }
+  return out;
+}
+function renderHighlightText(src) {
+  const lines = src.split(`
+`);
+  hlText.innerHTML = lines.map(highlightLine).join(`
+`);
 }
 var errLine = null;
 var lastSections = null;
@@ -1822,6 +2119,7 @@ function compile() {
   const src = source.value;
   const totalLines = src.length === 0 ? 1 : src.split(`
 `).length;
+  renderHighlightText(src);
   try {
     const info = lineInfo(src);
     lastSections = asm(src);
@@ -1832,10 +2130,12 @@ function compile() {
     errorEl.textContent = "";
     updateDownloadEnabled();
     runBinBtn.disabled = lastSections.length === 0;
+    loadEmuBtn.disabled = lastSections.length === 0;
   } catch (e) {
     lastSections = null;
     updateDownloadEnabled();
     runBinBtn.disabled = true;
+    loadEmuBtn.disabled = true;
     if (e instanceof AsmError) {
       errLine = e.line;
       errorEl.classList.add("visible");
@@ -1845,7 +2145,7 @@ function compile() {
       errorEl.classList.add("visible");
       errorEl.textContent = e.message;
     }
-    gutter.innerHTML = "";
+    renderGutter([], totalLines);
     renderHighlight(errLine);
   }
 }
@@ -1985,9 +2285,11 @@ filenameInput.addEventListener("change", () => {
   renderTabs();
 });
 function syncScroll() {
-  gutter.style.transform = `translateY(${-source.scrollTop}px)`;
-  if (errLine !== null)
-    renderHighlight(errLine);
+  const dx = -source.scrollLeft;
+  const dy = -source.scrollTop;
+  gutter.style.transform = `translateY(${dy}px)`;
+  hlText.style.transform = `translate(${dx}px, ${dy}px)`;
+  highlight.style.transform = `translateY(${dy}px)`;
 }
 function onChange() {
   save();
@@ -2102,7 +2404,7 @@ function newHandoffId() {
     return c.randomUUID();
   return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
 }
-runBinBtn.addEventListener("click", () => {
+function sendToEmulator(mode) {
   const rk = buildOutput("rk");
   if (!rk)
     return;
@@ -2117,13 +2419,33 @@ runBinBtn.addEventListener("click", () => {
       alert(`localStorage unavailable, cannot hand off to emulator: ${e.message}`);
       return;
     }
-    target.searchParams.set("handoff", id);
+    target.searchParams.set(mode === "run" ? "handoff" : "loadoff", id);
   } else {
-    target.searchParams.set("run", dataUrl);
+    target.searchParams.set(mode, dataUrl);
   }
   window.open(target.toString(), "_blank", "noopener");
-});
+}
+runBinBtn.addEventListener("click", () => sendToEmulator("run"));
+loadEmuBtn.addEventListener("click", () => sendToEmulator("load"));
 uploadBtn.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", async () => {
+  const f = fileInput.files?.[0];
+  if (!f)
+    return;
+  const text = await f.text();
+  const uniqueName = uniqueFilename(f.name);
+  tabs.push({ filename: uniqueName, source: text });
+  active = tabs.length - 1;
+  source.value = text;
+  filenameInput.value = uniqueName;
+  lastGoodName = uniqueName;
+  source.scrollTop = 0;
+  fileInput.value = "";
+  saveTabs();
+  renderTabs();
+  onChange();
+  source.focus();
+});
 resetBtn.addEventListener("click", async () => {
   const ok = await askConfirm("Reset the current tab to the 'aloha' example? This replaces its content.");
   if (!ok)
@@ -2139,24 +2461,6 @@ resetBtn.addEventListener("click", async () => {
   lastGoodName = uniqueName;
   select.value = def.name;
   source.scrollTop = 0;
-  saveTabs();
-  renderTabs();
-  onChange();
-  source.focus();
-});
-fileInput.addEventListener("change", async () => {
-  const f = fileInput.files?.[0];
-  if (!f)
-    return;
-  const text = await f.text();
-  const uniqueName = uniqueFilename(f.name);
-  tabs.push({ filename: uniqueName, source: text });
-  active = tabs.length - 1;
-  source.value = text;
-  filenameInput.value = uniqueName;
-  lastGoodName = uniqueName;
-  source.scrollTop = 0;
-  fileInput.value = "";
   saveTabs();
   renderTabs();
   onChange();
