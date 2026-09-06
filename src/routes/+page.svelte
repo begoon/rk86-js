@@ -1,5 +1,6 @@
 <script lang="ts">
     import { type Machine } from "$lib/core/rk86_machine";
+    import { Keyboard as RkKeyboard } from "$lib/core/rk86_keyboard";
 
     let shortcutsDialog = $state<HTMLDialogElement>();
     let hintText = $state("");
@@ -431,7 +432,21 @@
             }
             // Fall through for Enter, Backspace, Tab, Arrow*, F1..F12, etc.
         }
+        // Клавиша уходит в матрицу РК — браузеру её отдавать нельзя.
+        // Иначе Firefox на "/" и "'" открывает Quick Find: фокус уезжает в
+        // строку поиска, keyup до нас не доходит, и монитор бесконечно
+        // автоповторяет зажатый символ. Сочетания с Ctrl/Cmd/Alt не трогаем,
+        // чтобы не ломать браузерные шорткаты.
+        if (!e.ctrlKey && !e.metaKey && !e.altKey && e.code in RkKeyboard.key_table) {
+            e.preventDefault();
+        }
         emulatorKeyDown?.(e.code);
+    }
+
+    // Потеря фокуса окном (Quick Find, переключение вкладки/окна, alert)
+    // съедает keyup — отпускаем всё, чтобы клавиша не осталась зажатой.
+    function releaseAllKeys() {
+        machine?.keyboard.reset();
     }
 
     function onKeyUp(e: KeyboardEvent) {
@@ -680,8 +695,11 @@
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />
-<svelte:document on:fullscreenchange={() => (fullscreen = Boolean(document.fullscreenElement))} />
+<svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} on:blur={releaseAllKeys} />
+<svelte:document
+    on:fullscreenchange={() => (fullscreen = Boolean(document.fullscreenElement))}
+    on:visibilitychange={() => document.hidden && releaseAllKeys()}
+/>
 
 <!-- svelte-ignore a11y_mouse_events_have_key_events -->
 <main
