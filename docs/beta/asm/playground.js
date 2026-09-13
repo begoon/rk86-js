@@ -1190,11 +1190,12 @@ function encode(m, ops, symbols, pc = 0, lastLabel = "") {
 function dbBytes(operands, symbols, pc = 0, lastLabel = "") {
   const out = [];
   for (const op of operands) {
+    const addr = pc + out.length;
     if (op.startsWith('"') && op.endsWith('"') && op.length >= 2 || op.startsWith("'") && op.endsWith("'") && op.length >= 2) {
       for (const b of decodeString(op))
         out.push(b);
     } else {
-      out.push(evalExpr(op, symbols, pc, lastLabel) & 255);
+      out.push(evalExpr(op, symbols, addr, lastLabel) & 255);
     }
   }
   return out;
@@ -1202,7 +1203,7 @@ function dbBytes(operands, symbols, pc = 0, lastLabel = "") {
 function dwBytes(operands, symbols, pc = 0, lastLabel = "") {
   const out = [];
   for (const op of operands) {
-    const v = evalExpr(op, symbols, pc, lastLabel) & 65535;
+    const v = evalExpr(op, symbols, pc + out.length, lastLabel) & 65535;
     out.push(v & 255, v >> 8 & 255);
   }
   return out;
@@ -1590,7 +1591,7 @@ var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
 if (false) {}
 
 // docs/build-info.ts
-var BUILD_TIME = "2026-06-22 10:35:07";
+var BUILD_TIME = "2026-09-13 07:47:22";
 
 // docs/playground.ts
 var fetchExample = (f) => fetch(`examples/${f}`).then((r) => r.text());
@@ -2374,7 +2375,7 @@ downloadBtn.addEventListener("click", () => {
     return;
   downloadBlob(data, outputName(fmt), "application/octet-stream");
 });
-var EMULATOR_URL_DEFAULT = "https://rk86.ru/beta/index.html";
+var EMULATOR_URL_DEFAULT = "https://rk86.ru/";
 var EMULATOR_URL = window.asm8EmulatorUrl ?? EMULATOR_URL_DEFAULT;
 var HANDOFF_PREFIX = "asm8-handoff:";
 var HANDOFF_TTL_MS = 60 * 60 * 1000;
