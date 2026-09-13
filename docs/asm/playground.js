@@ -890,13 +890,17 @@ function tokenizeExpr(expr) {
     }
     if (/[0-9]/.test(c)) {
       let j = i;
-      while (j < expr.length && /[0-9A-Fa-f]/.test(expr[j]))
+      while (j < expr.length && /[0-9A-Za-z_]/.test(expr[j]))
         j++;
-      if (j < expr.length && /[hH]/.test(expr[j])) {
-        tokens.push({ kind: "num", val: parseInt(expr.slice(i, j), 16) });
-        j++;
+      const text = expr.slice(i, j);
+      if (/^[0-9A-Fa-f]+[hH]$/.test(text)) {
+        tokens.push({ kind: "num", val: parseInt(text.slice(0, -1), 16) });
+      } else if (/^[0-9]+$/.test(text)) {
+        tokens.push({ kind: "num", val: parseInt(text, 10) });
+      } else if (/^[0-9A-Fa-f]+$/.test(text)) {
+        throw new Error(`invalid number: ${text} (missing 'h' suffix?)`);
       } else {
-        tokens.push({ kind: "num", val: parseInt(expr.slice(i, j), 10) });
+        throw new Error(`invalid number: ${text}`);
       }
       i = j;
       continue;
@@ -1083,7 +1087,8 @@ function regPair(m, op, allowed) {
   return r;
 }
 function imm8(m, v) {
-  if (v < -128 || v > 255) {
+  const neg = v >= 65280 && v <= 65535;
+  if (v < -128 || v > 255 && !neg) {
     throw new Error(`${m}: 8-bit value out of range: ${v}`);
   }
   return v & 255;
@@ -1591,7 +1596,7 @@ var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
 if (false) {}
 
 // docs/build-info.ts
-var BUILD_TIME = "2026-09-13 07:47:22";
+var BUILD_TIME = "2026-09-13 15:06:27";
 
 // docs/playground.ts
 var fetchExample = (f) => fetch(`examples/${f}`).then((r) => r.text());
