@@ -1596,7 +1596,7 @@ var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
 if (false) {}
 
 // docs/build-info.ts
-var BUILD_TIME = "2026-09-13 15:06:27";
+var BUILD_TIME = "2026-09-18 17:32:02";
 
 // docs/playground.ts
 var fetchExample = (f) => fetch(`examples/${f}`).then((r) => r.text());
@@ -1675,6 +1675,28 @@ var tabsEl = document.getElementById("tabs");
 function asmName() {
   return filenameInput.value.trim() || DEFAULT_FILENAME;
 }
+function captureView() {
+  const t = tabs[active];
+  if (!t)
+    return;
+  t.source = source.value;
+  t.selectionStart = source.selectionStart;
+  t.selectionEnd = source.selectionEnd;
+  t.scrollTop = source.scrollTop;
+  t.scrollLeft = source.scrollLeft;
+}
+function showTab(t) {
+  source.value = t.source;
+  filenameInput.value = t.filename;
+  lastGoodName = t.filename;
+  const len = source.value.length;
+  const start = Math.min(t.selectionStart ?? 0, len);
+  const end = Math.min(t.selectionEnd ?? start, len);
+  source.setSelectionRange(start, end);
+  source.focus({ preventScroll: true });
+  source.scrollTop = t.scrollTop ?? 0;
+  source.scrollLeft = t.scrollLeft ?? 0;
+}
 function outputName(format2) {
   const n = asmName();
   const base = n.replace(/\.[^.]*$/, "") || n;
@@ -1735,18 +1757,14 @@ select.addEventListener("change", async () => {
   if (!ex)
     return;
   const exSource = await ex.source;
-  tabs[active].source = source.value;
+  captureView();
   const uniqueName = uniqueFilename(ex.filename);
   tabs.push({ filename: uniqueName, source: exSource });
   active = tabs.length - 1;
-  source.value = exSource;
-  filenameInput.value = uniqueName;
-  lastGoodName = uniqueName;
-  source.scrollTop = 0;
+  showTab(tabs[active]);
   saveTabs();
   renderTabs();
   onChange();
-  source.focus();
 });
 function uniqueFilename(base) {
   if (!tabs.some((t, i) => i !== active && t.filename === base))
@@ -2162,7 +2180,7 @@ function saveTabs() {
   } catch {}
 }
 function save() {
-  tabs[active].source = source.value;
+  captureView();
   saveTabs();
 }
 function renderTabs() {
@@ -2206,31 +2224,25 @@ function nextUntitled() {
 function switchTab(i) {
   if (i === active || i < 0 || i >= tabs.length)
     return;
-  tabs[active].source = source.value;
+  captureView();
   active = i;
-  source.value = tabs[active].source;
-  filenameInput.value = tabs[active].filename;
-  source.scrollTop = 0;
+  showTab(tabs[active]);
   saveTabs();
   renderTabs();
   deselectExample();
   compile();
   syncScroll();
-  source.focus();
 }
 function newTab() {
-  tabs[active].source = source.value;
+  captureView();
   tabs.push({ filename: nextUntitled(), source: "" });
   active = tabs.length - 1;
-  source.value = "";
-  filenameInput.value = tabs[active].filename;
-  source.scrollTop = 0;
+  showTab(tabs[active]);
   saveTabs();
   renderTabs();
   deselectExample();
   compile();
   syncScroll();
-  source.focus();
 }
 async function closeTab(i) {
   const current = i === active ? source.value : tabs[i].source;
@@ -2243,22 +2255,19 @@ async function closeTab(i) {
     if (!ok)
       return;
   }
+  if (i !== active)
+    captureView();
   if (tabs.length === 1) {
     tabs[0] = { filename: DEFAULT_FILENAME, source: "" };
     active = 0;
-    source.value = "";
-    filenameInput.value = tabs[0].filename;
-    lastGoodName = tabs[0].filename;
   } else {
     tabs.splice(i, 1);
     if (active > i)
       active--;
     else if (active === i && active >= tabs.length)
       active = tabs.length - 1;
-    source.value = tabs[active].source;
-    filenameInput.value = tabs[active].filename;
-    lastGoodName = tabs[active].filename;
   }
+  showTab(tabs[active]);
   saveTabs();
   renderTabs();
   deselectExample();
@@ -2440,17 +2449,14 @@ fileInput.addEventListener("change", async () => {
     return;
   const text = await f.text();
   const uniqueName = uniqueFilename(f.name);
+  captureView();
   tabs.push({ filename: uniqueName, source: text });
   active = tabs.length - 1;
-  source.value = text;
-  filenameInput.value = uniqueName;
-  lastGoodName = uniqueName;
-  source.scrollTop = 0;
+  showTab(tabs[active]);
   fileInput.value = "";
   saveTabs();
   renderTabs();
   onChange();
-  source.focus();
 });
 resetBtn.addEventListener("click", async () => {
   const ok = await askConfirm("Reset the current tab to the 'aloha' example? This replaces its content.");
@@ -2462,15 +2468,11 @@ resetBtn.addEventListener("click", async () => {
   const defSource = await def.source;
   const uniqueName = uniqueFilename(def.filename);
   tabs[active] = { filename: uniqueName, source: defSource };
-  source.value = defSource;
-  filenameInput.value = uniqueName;
-  lastGoodName = uniqueName;
+  showTab(tabs[active]);
   select.value = def.name;
-  source.scrollTop = 0;
   saveTabs();
   renderTabs();
   onChange();
-  source.focus();
 });
 var buildTimeEl = document.getElementById("build-time");
 if (buildTimeEl && BUILD_TIME)
@@ -2481,6 +2483,9 @@ themeBtn.addEventListener("click", () => {
   saveTheme(next);
 });
 applyTheme(loadTheme());
+function numOrUndef(v) {
+  return typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : undefined;
+}
 async function loadTabsFromStorage() {
   try {
     const raw = localStorage.getItem(TABS_KEY);
@@ -2489,7 +2494,11 @@ async function loadTabsFromStorage() {
       if (Array.isArray(parsed) && parsed.length > 0) {
         tabs = parsed.map((t) => ({
           filename: String(t.filename ?? DEFAULT_FILENAME),
-          source: String(t.source ?? "")
+          source: String(t.source ?? ""),
+          selectionStart: numOrUndef(t.selectionStart),
+          selectionEnd: numOrUndef(t.selectionEnd),
+          scrollTop: numOrUndef(t.scrollTop),
+          scrollLeft: numOrUndef(t.scrollLeft)
         }));
         const a = Number(localStorage.getItem(ACTIVE_KEY) ?? 0) | 0;
         active = a < 0 || a >= tabs.length ? 0 : a;
@@ -2511,11 +2520,13 @@ async function loadTabsFromStorage() {
   active = 0;
   saveTabs();
 }
+window.addEventListener("pagehide", () => {
+  captureView();
+  saveTabs();
+});
 (async () => {
   await loadTabsFromStorage();
-  source.value = tabs[active].source;
-  filenameInput.value = tabs[active].filename;
-  lastGoodName = tabs[active].filename;
+  showTab(tabs[active]);
   renderTabs();
   onChange();
 })();

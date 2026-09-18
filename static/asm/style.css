@@ -321,7 +321,11 @@ main {
   flex: 1;
   display: flex;
   min-height: 0;
+  /* clip, not hidden: a hidden box is still a scroll container, and the
+     browser may scroll it to reveal the caret, shifting the whole editor
+     up with nothing to reset it. clip cannot be scrolled at all. */
   overflow: hidden;
+  overflow: clip;
   position: relative;
   background: var(--bg);
 }
@@ -453,6 +457,7 @@ main {
   flex: 1;
   position: relative;
   overflow: hidden;
+  overflow: clip;
 }
 
 .hl-text,
