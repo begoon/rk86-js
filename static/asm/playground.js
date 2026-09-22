@@ -2313,6 +2313,16 @@ function onChange() {
   renderTabs();
 }
 source.addEventListener("input", onChange);
+source.addEventListener("keydown", (e) => {
+  if (e.key !== "Tab" || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) {
+    return;
+  }
+  e.preventDefault();
+  if (!document.execCommand("insertText", false, "\t")) {
+    source.setRangeText("\t", source.selectionStart, source.selectionEnd, "end");
+    onChange();
+  }
+});
 source.addEventListener("scroll", syncScroll);
 window.addEventListener("resize", syncScroll);
 function downloadBlob(data, name, type) {
