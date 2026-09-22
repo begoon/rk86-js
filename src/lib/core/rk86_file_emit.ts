@@ -1,6 +1,6 @@
 import { rk86_check_sum } from "./rk86_check_sum.js";
 
-export const RK86_EXTENSIONS = ["rk", "rkr", "gam", "pki", "rki", "bin"] as const;
+export const RK86_EXTENSIONS = ["rk", "rkr", "gam", "pki", "rki", "rks", "bin"] as const;
 export type Rk86Ext = (typeof RK86_EXTENSIONS)[number];
 
 export function emit_rk86_binary(
@@ -12,6 +12,16 @@ export function emit_rk86_binary(
     const data = payload instanceof Uint8Array ? Array.from(payload) : payload.slice();
     const e = ext.toLowerCase();
     if (e === "bin") return new Uint8Array(data);
+    if (e === "rks") {
+        // Specialist: little-endian addresses and RK checksum, without sync bytes.
+        const sum = rk86_check_sum(data);
+        return new Uint8Array([
+            start & 0xff, (start >> 8) & 0xff,
+            end & 0xff, (end >> 8) & 0xff,
+            ...data,
+            sum & 0xff, (sum >> 8) & 0xff,
+        ]);
+    }
     if (e !== "rk" && e !== "rkr" && e !== "pki" && e !== "gam" && e !== "rki") {
         throw new Error(`неизвестное расширение: ${ext}`);
     }
