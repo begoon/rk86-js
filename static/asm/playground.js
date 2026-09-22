@@ -1628,6 +1628,7 @@ var OUTPUT_FORMATS = [
   "bin",
   "rk",
   "rkr",
+  "rks",
   "pki",
   "gam"
 ];
@@ -1726,6 +1727,16 @@ function buildOutputFile(sections, format2) {
     payload.set(s.data, s.start - start);
   if (format2 === "bin")
     return payload;
+  const checksum = rk86CheckSum(payload);
+  if (format2 === "rks") {
+    const out2 = new Uint8Array(4 + size + 2);
+    const view = new DataView(out2.buffer);
+    view.setUint16(0, start, true);
+    view.setUint16(2, end, true);
+    out2.set(payload, 4);
+    view.setUint16(4 + size, checksum, true);
+    return out2;
+  }
   const hasSync = format2 === "pki" || format2 === "gam";
   const headerLen = hasSync ? 5 : 4;
   const out = new Uint8Array(headerLen + size + 3);
@@ -1738,7 +1749,6 @@ function buildOutputFile(sections, format2) {
   out[o++] = end & 255;
   out.set(payload, o);
   o += size;
-  const checksum = rk86CheckSum(payload);
   out[o++] = 230;
   out[o++] = checksum >> 8 & 255;
   out[o++] = checksum & 255;
