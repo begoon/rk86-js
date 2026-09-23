@@ -1497,7 +1497,7 @@ function lineInfo(source, opts) {
   for (let idx = 0;idx < pp.length; idx++) {
     let { text: line, orig, file } = pp[idx];
     if (done) {
-      out.push({ orig, prefix: "", display: line, bytes: [] });
+      out.push({ orig, file, prefix: "", display: line, bytes: [] });
       continue;
     }
     try {
@@ -1511,20 +1511,21 @@ function lineInfo(source, opts) {
         }
         if (parts.isEqu) {
           let val = evalExpr(parts.operands[0], symbols, pc, lastLabel);
-          out.push({ orig, prefix: "=" + hex4(val), display, bytes: [] });
+          out.push({ orig, file, prefix: "=" + hex4(val), display, bytes: [] });
           continue;
         }
         if (!parts.mnemonic) {
           if (parts.label) {
             out.push({
               orig,
+              file,
               prefix: hex4(pc) + ":",
               display,
               addr: pc,
               bytes: []
             });
           } else if (si === 0) {
-            out.push({ orig, prefix: "", display, bytes: [] });
+            out.push({ orig, file, prefix: "", display, bytes: [] });
           }
           continue;
         }
@@ -1533,6 +1534,7 @@ function lineInfo(source, opts) {
           pc = evalExpr(parts.operands[0], symbols, pc, lastLabel);
           out.push({
             orig,
+            file,
             prefix: hex4(pc) + ":",
             display,
             addr: pc,
@@ -1541,11 +1543,11 @@ function lineInfo(source, opts) {
           continue;
         }
         if (m === "SECTION") {
-          out.push({ orig, prefix: "", display, bytes: [] });
+          out.push({ orig, file, prefix: "", display, bytes: [] });
           continue;
         }
         if (m === "END") {
-          out.push({ orig, prefix: "", display, bytes: [] });
+          out.push({ orig, file, prefix: "", display, bytes: [] });
           done = true;
           break;
         }
@@ -1553,6 +1555,7 @@ function lineInfo(source, opts) {
           const n = countDs(parts.operands, symbols, pc, lastLabel);
           out.push({
             orig,
+            file,
             prefix: hex4(pc) + ":",
             display,
             addr: pc,
@@ -1567,6 +1570,7 @@ function lineInfo(source, opts) {
           let prefix = hex4(pc + i) + ": " + chunk.map(hex2).join(" ");
           out.push({
             orig,
+            file,
             prefix,
             display: i === 0 ? display : "",
             addr: pc + i,
@@ -1576,6 +1580,7 @@ function lineInfo(source, opts) {
         if (bytes.length === 0) {
           out.push({
             orig,
+            file,
             prefix: hex4(pc) + ":",
             display,
             addr: pc,
@@ -1596,7 +1601,22 @@ var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
 if (false) {}
 
 // docs/build-info.ts
-var BUILD_TIME = "2026-09-18 17:32:02";
+var BUILD_TIME = "2026-09-23 11:46:02";
+
+// docs/tab-includes.ts
+function tabIncludeOptions(tabs, file) {
+  return {
+    file,
+    readInclude(name) {
+      const matches = tabs.filter((tab) => tab.filename === name);
+      if (matches.length === 0)
+        throw new Error(`no open tab named "${name}"`);
+      if (matches.length > 1)
+        throw new Error(`multiple tabs named "${name}"`);
+      return { source: matches[0].source, resolvedFile: matches[0].filename };
+    }
+  };
+}
 
 // docs/playground.ts
 var fetchExample = (f) => fetch(`examples/${f}`).then((r) => r.text());
@@ -2150,14 +2170,17 @@ function renderHighlightText(src) {
 var errLine = null;
 var lastSections = null;
 function compile() {
+  captureView();
   const src = source.value;
+  const file = asmName();
+  const opts = tabIncludeOptions(tabs.map((tab, i) => i === active ? { filename: file, source: src } : tab), file);
   const totalLines = src.length === 0 ? 1 : src.split(`
 `).length;
   renderHighlightText(src);
   try {
-    const info = lineInfo(src);
-    lastSections = asm(src);
-    renderGutter(info, totalLines);
+    const info = lineInfo(src, opts);
+    lastSections = asm(src, opts);
+    renderGutter(info.filter((row) => row.file === file), totalLines);
     errLine = null;
     renderHighlight(null);
     errorEl.classList.remove("visible");
@@ -2171,9 +2194,9 @@ function compile() {
     runBinBtn.disabled = true;
     loadEmuBtn.disabled = true;
     if (e instanceof AsmError) {
-      errLine = e.line;
+      errLine = !e.file || e.file === file ? e.line : null;
       errorEl.classList.add("visible");
-      errorEl.textContent = `line ${e.line}: ${e.message}`;
+      errorEl.textContent = `${e.file ?? file}:${e.line}: ${e.message}`;
     } else {
       errLine = null;
       errorEl.classList.add("visible");
@@ -2292,6 +2315,7 @@ filenameInput.addEventListener("input", () => {
   tabs[active].filename = filenameInput.value;
   saveTabs();
   renderTabs();
+  compile();
 });
 filenameInput.addEventListener("change", () => {
   const val = filenameInput.value.trim();
@@ -2308,6 +2332,7 @@ filenameInput.addEventListener("change", () => {
   }
   saveTabs();
   renderTabs();
+  compile();
 });
 function syncScroll() {
   const dx = -source.scrollLeft;
