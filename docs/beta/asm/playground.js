@@ -1601,7 +1601,7 @@ var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
 if (false) {}
 
 // docs/build-info.ts
-var BUILD_TIME = "2026-09-23 11:46:02";
+var BUILD_TIME = "2026-10-01 18:20:22";
 
 // docs/tab-includes.ts
 function tabIncludeOptions(tabs, file) {
@@ -1616,6 +1616,28 @@ function tabIncludeOptions(tabs, file) {
       return { source: matches[0].source, resolvedFile: matches[0].filename };
     }
   };
+}
+function includeClosure(tabs, entry) {
+  const out = [];
+  const seen = new Set;
+  const visit = (name) => {
+    if (seen.has(name))
+      return;
+    const matches = tabs.filter((tab) => tab.filename === name);
+    if (matches.length !== 1)
+      return;
+    seen.add(name);
+    const tab = matches[0];
+    out.push(tab);
+    for (const line of tab.source.split(`
+`)) {
+      const m = line.match(/^\s*\.?include\s+(?:"([^"]*)"|'([^']*)')/i);
+      if (m)
+        visit(m[1] ?? m[2]);
+    }
+  };
+  visit(entry);
+  return out;
 }
 
 // docs/playground.ts
@@ -1721,10 +1743,10 @@ function showTab(t) {
   source.scrollTop = t.scrollTop ?? 0;
   source.scrollLeft = t.scrollLeft ?? 0;
 }
-function outputName(format2) {
+function outputName(format) {
   const n = main === null ? asmName() : tabs[main].filename;
   const base = n.replace(/\.[^.]*$/, "") || n;
-  return `${base}.${format2}`;
+  return `${base}.${format}`;
 }
 function rk86CheckSum(v) {
   let sum = 0;
@@ -1739,7 +1761,7 @@ function rk86CheckSum(v) {
   sum = sum_h | sum_l + v[j] & 255;
   return sum;
 }
-function buildOutputFile(sections, format2) {
+function buildOutputFile(sections, format) {
   if (sections.length === 0)
     return new Uint8Array(0);
   const start = sections.reduce((m, s) => Math.min(m, s.start), Infinity);
@@ -1748,19 +1770,19 @@ function buildOutputFile(sections, format2) {
   const payload = new Uint8Array(size);
   for (const s of sections)
     payload.set(s.data, s.start - start);
-  if (format2 === "bin")
+  if (format === "bin")
     return payload;
   const checksum = rk86CheckSum(payload);
-  if (format2 === "rks") {
-    const out2 = new Uint8Array(4 + size + 2);
-    const view = new DataView(out2.buffer);
+  if (format === "rks") {
+    const out = new Uint8Array(4 + size + 2);
+    const view = new DataView(out.buffer);
     view.setUint16(0, start, true);
     view.setUint16(2, end, true);
-    out2.set(payload, 4);
+    out.set(payload, 4);
     view.setUint16(4 + size, checksum, true);
-    return out2;
+    return out;
   }
-  const hasSync = format2 === "pki" || format2 === "gam";
+  const hasSync = format === "pki" || format === "gam";
   const headerLen = hasSync ? 5 : 4;
   const out = new Uint8Array(headerLen + size + 3);
   let o = 0;
@@ -1876,8 +1898,8 @@ function askConfirm(message) {
   confirmMessage.textContent = message;
   confirmModal.hidden = false;
   confirmOk.focus();
-  return new Promise((resolve2) => {
-    confirmResolver = resolve2;
+  return new Promise((resolve) => {
+    confirmResolver = resolve;
   });
 }
 function closeConfirm(result) {
@@ -2399,7 +2421,7 @@ function findOverlap(sections) {
   }
   return null;
 }
-function buildOutput(format2) {
+function buildOutput(format) {
   if (!lastSections || lastSections.length === 0)
     return null;
   const overlap = findOverlap(lastSections);
@@ -2408,7 +2430,7 @@ function buildOutput(format2) {
     alert(`sections overlap: ${hex42(a.start)}-${hex42(a.end)} and ${hex42(b.start)}-${hex42(b.end)}`);
     return null;
   }
-  return buildOutputFile(lastSections, format2);
+  return buildOutputFile(lastSections, format);
 }
 function toBase64(bytes) {
   let s = "";
@@ -2443,10 +2465,19 @@ downloadFormatSel.addEventListener("change", () => {
   saveFormat(selectedFormat());
   updateDownloadEnabled();
 });
+function downloadSources() {
+  captureView();
+  const file = asmName();
+  const liveTabs = tabs.map((tab, i) => i === active ? { filename: file, source: source.value } : tab);
+  const entry = liveTabs[main ?? active];
+  for (const tab of includeClosure(liveTabs, entry.filename)) {
+    downloadBlob(tab.source, tab.filename, "text/plain");
+  }
+}
 downloadBtn.addEventListener("click", () => {
   const fmt = selectedFormat();
   if (fmt === "asm") {
-    downloadBlob(source.value, asmName(), "text/plain");
+    downloadSources();
     return;
   }
   const data = buildOutput(fmt);
