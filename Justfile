@@ -69,7 +69,7 @@ terminal-build:
 terminal-bump:
     cd packages/rk86 && npm version patch
 
-terminal-publish: terminal-build terminal-bump
+terminal-publish: terminal-bump terminal-build
     cd packages/rk86 && npm publish
 
 #
