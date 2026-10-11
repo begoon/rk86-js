@@ -61,6 +61,7 @@ just                      # tests + build
 just dev                  # http://localhost:8000
 just test                 # race-enabled tests, no external credentials needed
 just build                # creates ./exe
+just clean                # removes ./exe
 ```
 
 Smoke test against the local server:

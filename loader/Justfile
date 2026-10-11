@@ -3,6 +3,9 @@ default: test build
 build:
     go build -o exe .
 
+clean:
+    rm -f exe
+
 dev:
     go run .
 
