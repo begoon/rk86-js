@@ -112,18 +112,18 @@ docs/
   monitor/          — hand-maintained monitor viewer
   classic/          — generated redirect to / (from /classic route)
 loader/
-  main.ts           — Deno Deploy single-file server for the rk86
-                      --online flag. POST /load chunks the binary
-                      into Deno KV (32KB Uint8Array values) with a
-                      60s TTL, returns {id} (6 chars). GET /file/
-                      <name>?<id> looks up by bare-query id and
-                      serves application/octet-stream with permissive
-                      CORS; <name> in the path is purely a hint for
-                      rk86.ru's extension-based parser dispatch. TTL
-                      handles cleanup; no explicit delete on GET.
-                      Deployed manually via Deno Deploy² playground;
-                      requires {"unstable":["kv"]} in deno.json or
-                      the project's unstable-APIs toggle.
+  main.ts           — original Deno Deploy server, retained unchanged.
+  main.go           — Go replacement: normal HTTP server on PORT (8000
+                      locally), Vercel Go framework preset + Fluid compute.
+  handler.go        — POST /load returns a 6-character ID; GET /file/
+                      <name>?<id> serves bytes by bare-query ID with CORS.
+  mongo.go          — shared MongoDB storage in the loader collection,
+                      BSON binary data and a 60s expiry with a TTL index.
+                      Reads enforce expiry before asynchronous cleanup.
+  vercel.json       — deploy loader/ as a separate project in lhr1.
+  README.md         — environment variables, local tests, deployment and
+                      CLI configuration. Production: rk86.vercel.app;
+                      the terminal CLI uses this endpoint.
 ```
 
 ## Generated files (gitignored)

@@ -1,0 +1,4 @@
+.env*
+exe
+Justfile
+*_test.go

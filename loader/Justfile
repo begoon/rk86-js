@@ -1,0 +1,13 @@
+default: test build
+
+build:
+    go build -o exe .
+
+dev:
+    go run .
+
+test:
+    go test -race ./...
+
+deploy:
+    vercel deploy --prod
