@@ -5,12 +5,14 @@ class AsmError extends Error {
   line;
   column;
   source;
-  constructor(message, line, source, column = 1) {
+  file;
+  constructor(message, line, source, column = 1, file) {
     super(message);
     this.name = "AsmError";
     this.line = line;
     this.source = source;
     this.column = column;
+    this.file = file;
   }
 }
 function firstNonSpaceCol(s) {
@@ -151,64 +153,99 @@ var INVERT_JUMP = {
   "<>": "JZ"
 };
 var VALID_PROC_REGS = new Set(["PSW", "B", "D", "H"]);
-function popsAndRet(regs, orig) {
+function popsAndRet(regs, orig, file) {
   const out = [];
   for (let k = regs.length - 1;k >= 0; k--) {
-    out.push({ text: `	POP ${regs[k]}`, orig });
+    out.push({ text: `	POP ${regs[k]}`, orig, file });
   }
-  out.push({ text: `	RET`, orig });
+  out.push({ text: `	RET`, orig, file });
   return out;
 }
-function preprocess(source) {
+function preprocess(source, opts) {
+  const ctx = {
+    counter: { n: 0 },
+    procCounter: { n: 0 },
+    includeStack: opts?.file ? [opts.file] : [],
+    readInclude: opts?.readInclude
+  };
+  return preprocessImpl(source, opts?.file, ctx);
+}
+function preprocessImpl(source, file, ctx) {
   const lines = source.split(`
 `);
   const out = [];
   const stack = [];
-  let counter = 0;
-  let procCounter = 0;
   let proc = null;
   for (let i = 0;i < lines.length; i++) {
     const line = lines[i];
     const orig = i + 1;
     const bare = stripComment(line).trim();
+    const incMatch = bare.match(/^\.?include\s+(.+)$/i);
+    if (incMatch) {
+      const arg = incMatch[1].trim();
+      const m1 = arg.match(/^"([^"]*)"$/);
+      const m2 = arg.match(/^'([^']*)'$/);
+      const path = m1?.[1] ?? m2?.[1];
+      if (path === undefined) {
+        throw new AsmError('include requires a quoted filename, e.g. include "foo.inc"', orig, line, firstNonSpaceCol(line), file);
+      }
+      if (!ctx.readInclude) {
+        throw new AsmError("include is not supported in this environment", orig, line, firstNonSpaceCol(line), file);
+      }
+      let result;
+      try {
+        result = ctx.readInclude(path, file);
+      } catch (e) {
+        throw new AsmError(`cannot read include "${path}": ${e.message}`, orig, line, firstNonSpaceCol(line), file);
+      }
+      if (ctx.includeStack.includes(result.resolvedFile)) {
+        const chain = [...ctx.includeStack, result.resolvedFile].join(" -> ");
+        throw new AsmError(`circular include: ${chain}`, orig, line, firstNonSpaceCol(line), file);
+      }
+      ctx.includeStack.push(result.resolvedFile);
+      const nested = preprocessImpl(result.source, result.resolvedFile, ctx);
+      ctx.includeStack.pop();
+      out.push(...nested);
+      continue;
+    }
     const ifMatch = bare.match(/^\.?if\s+(\S+)\s*$/i);
     if (ifMatch) {
       const cond = ifMatch[1].toUpperCase();
       const jmp = INVERT_JUMP[cond];
       if (!jmp) {
-        throw new AsmError(`unknown .if condition: ${ifMatch[1]}`, orig, line, firstNonSpaceCol(line));
+        throw new AsmError(`unknown .if condition: ${ifMatch[1]}`, orig, line, firstNonSpaceCol(line), file);
       }
-      const id = counter++;
+      const id = ctx.counter.n++;
       stack.push({ id, sawElse: false, line: orig, source: line });
-      out.push({ text: `	${jmp} @_if_${id}_else`, orig });
+      out.push({ text: `	${jmp} @_if_${id}_else`, orig, file });
       continue;
     }
     if (/^\.?else\s*$/i.test(bare)) {
       const top = stack[stack.length - 1];
       if (!top) {
-        throw new AsmError(".else without .if", orig, line, firstNonSpaceCol(line));
+        throw new AsmError(".else without .if", orig, line, firstNonSpaceCol(line), file);
       }
       if (top.sawElse) {
-        throw new AsmError("duplicate .else", orig, line, firstNonSpaceCol(line));
+        throw new AsmError("duplicate .else", orig, line, firstNonSpaceCol(line), file);
       }
       top.sawElse = true;
-      out.push({ text: `	JMP @_if_${top.id}_exit`, orig });
-      out.push({ text: `@_if_${top.id}_else:`, orig });
+      out.push({ text: `	JMP @_if_${top.id}_exit`, orig, file });
+      out.push({ text: `@_if_${top.id}_else:`, orig, file });
       continue;
     }
     if (/^\.?endif\s*$/i.test(bare)) {
       const top = stack.pop();
       if (!top) {
-        throw new AsmError(".endif without .if", orig, line, firstNonSpaceCol(line));
+        throw new AsmError(".endif without .if", orig, line, firstNonSpaceCol(line), file);
       }
       const suffix = top.sawElse ? "exit" : "else";
-      out.push({ text: `@_if_${top.id}_${suffix}:`, orig });
+      out.push({ text: `@_if_${top.id}_${suffix}:`, orig, file });
       continue;
     }
     const procMatch = bare.match(/^([A-Za-z_]\w*):?\s+\.?proc\b\s*(.*)$/i);
     if (procMatch && !ALL_MNEMONICS.has(procMatch[1].toUpperCase())) {
       if (proc) {
-        throw new AsmError("nested .proc not allowed", orig, line, firstNonSpaceCol(line));
+        throw new AsmError("nested .proc not allowed", orig, line, firstNonSpaceCol(line), file);
       }
       const name = procMatch[1];
       const regsRaw = procMatch[2].trim();
@@ -219,12 +256,12 @@ function preprocess(source) {
             continue;
           const up = r.toUpperCase();
           if (!VALID_PROC_REGS.has(up)) {
-            throw new AsmError(`invalid .proc register: ${r} (expected PSW, B, D, or H)`, orig, line, firstNonSpaceCol(line));
+            throw new AsmError(`invalid .proc register: ${r} (expected PSW, B, D, or H)`, orig, line, firstNonSpaceCol(line), file);
           }
           regs.push(up);
         }
       }
-      const id = procCounter++;
+      const id = ctx.procCounter.n++;
       proc = {
         regs,
         line: orig,
@@ -232,46 +269,46 @@ function preprocess(source) {
         exitLabel: `__proc_${id}_exit`,
         returnUsed: false
       };
-      out.push({ text: `${name}:`, orig });
+      out.push({ text: `${name}:`, orig, file });
       for (const r of regs) {
-        out.push({ text: `	PUSH ${r}`, orig });
+        out.push({ text: `	PUSH ${r}`, orig, file });
       }
       continue;
     }
     if (/^\.proc(\s|$)/i.test(bare) || /^proc\s+\S/i.test(bare)) {
-      throw new AsmError(".proc requires a label", orig, line, firstNonSpaceCol(line));
+      throw new AsmError(".proc requires a label", orig, line, firstNonSpaceCol(line), file);
     }
     if (/^\.?endp\s*$/i.test(bare)) {
       if (!proc) {
-        throw new AsmError(".endp without .proc", orig, line, firstNonSpaceCol(line));
+        throw new AsmError(".endp without .proc", orig, line, firstNonSpaceCol(line), file);
       }
       if (proc.returnUsed) {
-        out.push({ text: `${proc.exitLabel}:`, orig });
+        out.push({ text: `${proc.exitLabel}:`, orig, file });
       }
-      out.push(...popsAndRet(proc.regs, orig));
+      out.push(...popsAndRet(proc.regs, orig, file));
       proc = null;
       continue;
     }
     if (/^\.?return\s*$/i.test(bare)) {
       if (!proc) {
-        throw new AsmError(".return outside .proc", orig, line, firstNonSpaceCol(line));
+        throw new AsmError(".return outside .proc", orig, line, firstNonSpaceCol(line), file);
       }
       if (proc.regs.length === 0) {
-        out.push({ text: `	RET`, orig });
+        out.push({ text: `	RET`, orig, file });
       } else {
         proc.returnUsed = true;
-        out.push({ text: `	JMP ${proc.exitLabel}`, orig });
+        out.push({ text: `	JMP ${proc.exitLabel}`, orig, file });
       }
       continue;
     }
-    out.push({ text: line, orig });
+    out.push({ text: line, orig, file });
   }
   if (stack.length) {
     const top = stack[stack.length - 1];
-    throw new AsmError(".if without .endif", top.line, top.source, firstNonSpaceCol(top.source));
+    throw new AsmError(".if without .endif", top.line, top.source, firstNonSpaceCol(top.source), file);
   }
   if (proc) {
-    throw new AsmError(".proc without .endp", proc.line, proc.source, firstNonSpaceCol(proc.source));
+    throw new AsmError(".proc without .endp", proc.line, proc.source, firstNonSpaceCol(proc.source), file);
   }
   return out;
 }
@@ -285,6 +322,10 @@ function splitStatements(line) {
   for (let i = 0;i + 2 < src.length; i++) {
     const c = src[i];
     if (inQ) {
+      if (c === "\\" && i + 1 < src.length) {
+        i++;
+        continue;
+      }
       if (c === qc)
         inQ = false;
       continue;
@@ -294,7 +335,7 @@ function splitStatements(line) {
       qc = c;
       continue;
     }
-    if (c !== " " || src[i + 1] !== "/" || src[i + 2] !== " ")
+    if (c !== " " || src[i + 1] !== "/" && src[i + 1] !== "\\" || src[i + 2] !== " ")
       continue;
     let j = i + 3;
     while (j < src.length && src[j] === " ")
@@ -349,12 +390,45 @@ function instrSize(m) {
     return 3;
   throw new Error(`unknown mnemonic: ${m}`);
 }
+var STRING_ESCAPES = {
+  "\\": 92,
+  '"': 34,
+  "'": 39,
+  n: 10,
+  r: 13,
+  t: 9,
+  "0": 0
+};
+function decodeString(text) {
+  const body = text.slice(1, -1);
+  const out = [];
+  for (let i = 0;i < body.length; i++) {
+    const c = body[i];
+    if (c === "\\") {
+      if (i + 1 >= body.length)
+        throw new Error("dangling '\\' in string");
+      const nxt = body[i + 1];
+      if (!(nxt in STRING_ESCAPES)) {
+        throw new Error(`unknown escape sequence '\\${nxt}'`);
+      }
+      out.push(STRING_ESCAPES[nxt]);
+      i++;
+    } else {
+      out.push(c.charCodeAt(0));
+    }
+  }
+  return out;
+}
 function stripComment(line) {
   let inQ = false;
   let qc = "";
   for (let i = 0;i < line.length; i++) {
     const c = line[i];
     if (inQ) {
+      if (c === "\\" && i + 1 < line.length) {
+        i++;
+        continue;
+      }
       if (c === qc)
         inQ = false;
     } else if (c === '"' || c === "'") {
@@ -370,9 +444,15 @@ function splitOperands(s) {
   let current = "";
   let inQ = false;
   let qc = "";
-  for (const c of s) {
+  for (let i = 0;i < s.length; i++) {
+    const c = s[i];
     if (inQ) {
       current += c;
+      if (c === "\\" && i + 1 < s.length) {
+        current += s[i + 1];
+        i++;
+        continue;
+      }
       if (c === qc)
         inQ = false;
     } else if (c === '"' || c === "'") {
@@ -448,6 +528,15 @@ function tokenizeExpr(expr) {
       i++;
       continue;
     }
+    if (c === "'" && i + 3 < expr.length && expr[i + 1] === "\\" && expr[i + 3] === "'") {
+      const esc = expr[i + 2];
+      if (!(esc in STRING_ESCAPES)) {
+        throw new Error(`unknown escape sequence '\\${esc}'`);
+      }
+      tokens.push({ kind: "num", val: STRING_ESCAPES[esc] });
+      i += 4;
+      continue;
+    }
     if (c === "'" && i + 2 < expr.length && expr[i + 2] === "'") {
       tokens.push({ kind: "num", val: expr.charCodeAt(i + 1) });
       i += 3;
@@ -480,13 +569,17 @@ function tokenizeExpr(expr) {
     }
     if (/[0-9]/.test(c)) {
       let j = i;
-      while (j < expr.length && /[0-9A-Fa-f]/.test(expr[j]))
+      while (j < expr.length && /[0-9A-Za-z_]/.test(expr[j]))
         j++;
-      if (j < expr.length && /[hH]/.test(expr[j])) {
-        tokens.push({ kind: "num", val: parseInt(expr.slice(i, j), 16) });
-        j++;
+      const text = expr.slice(i, j);
+      if (/^[0-9A-Fa-f]+[hH]$/.test(text)) {
+        tokens.push({ kind: "num", val: parseInt(text.slice(0, -1), 16) });
+      } else if (/^[0-9]+$/.test(text)) {
+        tokens.push({ kind: "num", val: parseInt(text, 10) });
+      } else if (/^[0-9A-Fa-f]+$/.test(text)) {
+        throw new Error(`invalid number: ${text} (missing 'h' suffix?)`);
       } else {
-        tokens.push({ kind: "num", val: parseInt(expr.slice(i, j), 10) });
+        throw new Error(`invalid number: ${text}`);
       }
       i = j;
       continue;
@@ -652,57 +745,128 @@ function evalExpr(expr, symbols, pc = 0, lastLabel = "") {
     throw new Error(`unexpected token: ${tokens[pos].val}`);
   return result;
 }
+function expectOps(m, ops, n) {
+  if (ops.length !== n) {
+    throw new Error(`${m} takes ${n} operand${n === 1 ? "" : "s"}, got ${ops.length}`);
+  }
+}
+function reg8(m, op) {
+  const r = REG8[op.toUpperCase()];
+  if (r === undefined) {
+    throw new Error(`${m}: invalid register '${op}' (expected B C D E H L M A)`);
+  }
+  return r;
+}
+function regPair(m, op, allowed) {
+  const names = Object.keys(allowed).join(" ");
+  const r = allowed[op.toUpperCase()];
+  if (r === undefined) {
+    throw new Error(`${m}: invalid register pair '${op}' (expected ${names})`);
+  }
+  return r;
+}
+function imm8(m, v) {
+  const neg = v >= 65280 && v <= 65535;
+  if (v < -128 || v > 255 && !neg) {
+    throw new Error(`${m}: 8-bit value out of range: ${v}`);
+  }
+  return v & 255;
+}
+function imm16(m, v) {
+  if (v < -32768 || v > 65535) {
+    throw new Error(`${m}: 16-bit value out of range: ${v}`);
+  }
+  return [v & 255, v >> 8 & 255];
+}
+var LDAX_STAX_PAIRS = { B: 0, D: 1 };
 function encode(m, ops, symbols, pc = 0, lastLabel = "") {
-  if (m in IMPLIED)
+  if (m in IMPLIED) {
+    expectOps(m, ops, 0);
     return [IMPLIED[m]];
-  if (m in ALU_REG)
-    return [ALU_REG[m] | REG8[ops[0].toUpperCase()]];
-  if (m in ALU_IMM)
-    return [ALU_IMM[m], evalExpr(ops[0], symbols, pc, lastLabel) & 255];
+  }
+  if (m in ALU_REG) {
+    expectOps(m, ops, 1);
+    return [ALU_REG[m] | reg8(m, ops[0])];
+  }
+  if (m in ALU_IMM) {
+    expectOps(m, ops, 1);
+    return [ALU_IMM[m], imm8(m, evalExpr(ops[0], symbols, pc, lastLabel))];
+  }
   if (m in ADDR16) {
-    const v = evalExpr(ops[0], symbols, pc, lastLabel);
-    return [ADDR16[m], v & 255, v >> 8 & 255];
+    expectOps(m, ops, 1);
+    const [lo, hi] = imm16(m, evalExpr(ops[0], symbols, pc, lastLabel));
+    return [ADDR16[m], lo, hi];
   }
-  if (m === "MOV")
-    return [
-      64 | REG8[ops[0].toUpperCase()] << 3 | REG8[ops[1].toUpperCase()]
-    ];
+  if (m === "MOV") {
+    expectOps(m, ops, 2);
+    const dst = reg8(m, ops[0]);
+    const src = reg8(m, ops[1]);
+    if (dst === 6 && src === 6) {
+      throw new Error("MOV M,M is not a valid instruction (encodes to HLT)");
+    }
+    return [64 | dst << 3 | src];
+  }
   if (m === "MVI") {
-    const v = evalExpr(ops[1], symbols, pc, lastLabel);
-    return [6 | REG8[ops[0].toUpperCase()] << 3, v & 255];
-  }
-  if (m === "INR")
-    return [4 | REG8[ops[0].toUpperCase()] << 3];
-  if (m === "DCR")
-    return [5 | REG8[ops[0].toUpperCase()] << 3];
-  if (m === "LXI") {
-    const v = evalExpr(ops[1], symbols, pc, lastLabel);
+    expectOps(m, ops, 2);
     return [
-      1 | REG_PAIR[ops[0].toUpperCase()] << 4,
-      v & 255,
-      v >> 8 & 255
+      6 | reg8(m, ops[0]) << 3,
+      imm8(m, evalExpr(ops[1], symbols, pc, lastLabel))
     ];
   }
-  if (m === "DAD")
-    return [9 | REG_PAIR[ops[0].toUpperCase()] << 4];
-  if (m === "INX")
-    return [3 | REG_PAIR[ops[0].toUpperCase()] << 4];
-  if (m === "DCX")
-    return [11 | REG_PAIR[ops[0].toUpperCase()] << 4];
-  if (m === "PUSH")
-    return [197 | REG_PAIR_PUSH[ops[0].toUpperCase()] << 4];
-  if (m === "POP")
-    return [193 | REG_PAIR_PUSH[ops[0].toUpperCase()] << 4];
-  if (m === "LDAX")
-    return [10 | REG_PAIR[ops[0].toUpperCase()] << 4];
-  if (m === "STAX")
-    return [2 | REG_PAIR[ops[0].toUpperCase()] << 4];
-  if (m === "IN")
-    return [219, evalExpr(ops[0], symbols, pc, lastLabel) & 255];
-  if (m === "OUT")
-    return [211, evalExpr(ops[0], symbols, pc, lastLabel) & 255];
+  if (m === "INR") {
+    expectOps(m, ops, 1);
+    return [4 | reg8(m, ops[0]) << 3];
+  }
+  if (m === "DCR") {
+    expectOps(m, ops, 1);
+    return [5 | reg8(m, ops[0]) << 3];
+  }
+  if (m === "LXI") {
+    expectOps(m, ops, 2);
+    const [lo, hi] = imm16(m, evalExpr(ops[1], symbols, pc, lastLabel));
+    return [1 | regPair(m, ops[0], REG_PAIR) << 4, lo, hi];
+  }
+  if (m === "DAD") {
+    expectOps(m, ops, 1);
+    return [9 | regPair(m, ops[0], REG_PAIR) << 4];
+  }
+  if (m === "INX") {
+    expectOps(m, ops, 1);
+    return [3 | regPair(m, ops[0], REG_PAIR) << 4];
+  }
+  if (m === "DCX") {
+    expectOps(m, ops, 1);
+    return [11 | regPair(m, ops[0], REG_PAIR) << 4];
+  }
+  if (m === "PUSH") {
+    expectOps(m, ops, 1);
+    return [197 | regPair(m, ops[0], REG_PAIR_PUSH) << 4];
+  }
+  if (m === "POP") {
+    expectOps(m, ops, 1);
+    return [193 | regPair(m, ops[0], REG_PAIR_PUSH) << 4];
+  }
+  if (m === "LDAX") {
+    expectOps(m, ops, 1);
+    return [10 | regPair(m, ops[0], LDAX_STAX_PAIRS) << 4];
+  }
+  if (m === "STAX") {
+    expectOps(m, ops, 1);
+    return [2 | regPair(m, ops[0], LDAX_STAX_PAIRS) << 4];
+  }
+  if (m === "IN") {
+    expectOps(m, ops, 1);
+    return [219, imm8(m, evalExpr(ops[0], symbols, pc, lastLabel))];
+  }
+  if (m === "OUT") {
+    expectOps(m, ops, 1);
+    return [211, imm8(m, evalExpr(ops[0], symbols, pc, lastLabel))];
+  }
   if (m === "RST") {
+    expectOps(m, ops, 1);
     const n = evalExpr(ops[0], symbols, pc, lastLabel);
+    if (n < 0 || n > 7)
+      throw new Error(`RST: vector out of range 0..7: ${n}`);
     return [199 | n << 3];
   }
   throw new Error(`cannot encode: ${m} ${ops.join(", ")}`);
@@ -710,11 +874,12 @@ function encode(m, ops, symbols, pc = 0, lastLabel = "") {
 function dbBytes(operands, symbols, pc = 0, lastLabel = "") {
   const out = [];
   for (const op of operands) {
-    if (op.startsWith('"') && op.endsWith('"') || op.startsWith("'") && op.endsWith("'")) {
-      for (const ch of op.slice(1, -1))
-        out.push(ch.charCodeAt(0));
+    const addr = pc + out.length;
+    if (op.startsWith('"') && op.endsWith('"') && op.length >= 2 || op.startsWith("'") && op.endsWith("'") && op.length >= 2) {
+      for (const b of decodeString(op))
+        out.push(b);
     } else {
-      out.push(evalExpr(op, symbols, pc, lastLabel) & 255);
+      out.push(evalExpr(op, symbols, addr, lastLabel) & 255);
     }
   }
   return out;
@@ -722,7 +887,7 @@ function dbBytes(operands, symbols, pc = 0, lastLabel = "") {
 function dwBytes(operands, symbols, pc = 0, lastLabel = "") {
   const out = [];
   for (const op of operands) {
-    const v = evalExpr(op, symbols, pc, lastLabel) & 65535;
+    const v = evalExpr(op, symbols, pc + out.length, lastLabel) & 65535;
     out.push(v & 255, v >> 8 & 255);
   }
   return out;
@@ -748,22 +913,22 @@ function countDs(operands, symbols, pc = 0, lastLabel = "") {
 function countDb(operands) {
   let n = 0;
   for (const op of operands) {
-    if (op.startsWith('"') && op.endsWith('"') || op.startsWith("'") && op.endsWith("'"))
-      n += op.length - 2;
+    if (op.startsWith('"') && op.endsWith('"') && op.length >= 2 || op.startsWith("'") && op.endsWith("'") && op.length >= 2)
+      n += decodeString(op).length;
     else
       n++;
   }
   return n;
 }
-function asm(source) {
-  const pp = preprocess(source);
+function asm(source, opts) {
+  const pp = preprocess(source, opts);
   const symbols = new Map;
   const pending = [];
   let pc = 0;
   let lastLabel = "";
   let ended = false;
   for (let idx = 0;idx < pp.length && !ended; idx++) {
-    const { text: line, orig } = pp[idx];
+    const { text: line, orig, file } = pp[idx];
     try {
       for (const stmt of splitStatements(line)) {
         const parts = parseLine(stmt);
@@ -777,9 +942,10 @@ function asm(source) {
             lastLabel = parts.label;
           }
           if (parts.isEqu) {
-            tryDefineEqu(symbols, pending, labelName, parts.operands[0], pc, lastLabel, orig, line);
+            tryDefineEqu(symbols, pending, labelName, parts.operands[0], pc, lastLabel, orig, line, file);
             continue;
           }
+          ensureSymbolFree(symbols, pending, labelName, orig, line, file);
           symbols.set(labelName.toUpperCase(), pc);
         }
         if (!parts.mnemonic)
@@ -814,7 +980,7 @@ function asm(source) {
     } catch (e) {
       if (e instanceof AsmError)
         throw e;
-      throw new AsmError(e.message, orig, line, firstNonSpaceCol(line));
+      throw new AsmError(e.message, orig, line, firstNonSpaceCol(line), file);
     }
   }
   resolvePendingEqus(symbols, pending);
@@ -824,7 +990,7 @@ function asm(source) {
   let lastLabel2 = "";
   let endedPass2 = false;
   for (let idx = 0;idx < pp.length && !endedPass2; idx++) {
-    const { text: line, orig } = pp[idx];
+    const { text: line, orig, file } = pp[idx];
     try {
       for (const stmt of splitStatements(line)) {
         const parts = parseLine(stmt);
@@ -870,7 +1036,7 @@ function asm(source) {
     } catch (e) {
       if (e instanceof AsmError)
         throw e;
-      throw new AsmError(e.message, orig, line, firstNonSpaceCol(line));
+      throw new AsmError(e.message, orig, line, firstNonSpaceCol(line), file);
     }
   }
   if (current && current.data.length) {
@@ -882,12 +1048,19 @@ function asm(source) {
 function isUnknownSymbolErr(e) {
   return e instanceof Error && /^unknown symbol:/.test(e.message);
 }
-function tryDefineEqu(symbols, pending, name, expr, pc, lastLabel, orig, line) {
+function ensureSymbolFree(symbols, pending, name, orig, line, file) {
+  const upper = name.toUpperCase();
+  if (symbols.has(upper) || pending.some((p) => p.name.toUpperCase() === upper)) {
+    throw new AsmError(`duplicate symbol: ${name}`, orig, line, firstNonSpaceCol(line), file);
+  }
+}
+function tryDefineEqu(symbols, pending, name, expr, pc, lastLabel, orig, line, file) {
+  ensureSymbolFree(symbols, pending, name, orig, line, file);
   try {
     symbols.set(name.toUpperCase(), evalExpr(expr, symbols, pc, lastLabel));
   } catch (e) {
     if (isUnknownSymbolErr(e)) {
-      pending.push({ name, expr, pc, lastLabel, orig, line });
+      pending.push({ name, expr, pc, lastLabel, orig, line, file });
     } else {
       throw e;
     }
@@ -905,7 +1078,7 @@ function resolvePendingEqus(symbols, pending) {
         if (isUnknownSymbolErr(e)) {
           next.push(p);
         } else {
-          throw new AsmError(e.message, p.orig, p.line, firstNonSpaceCol(p.line));
+          throw new AsmError(e.message, p.orig, p.line, firstNonSpaceCol(p.line), p.file);
         }
       }
     }
@@ -914,7 +1087,7 @@ function resolvePendingEqus(symbols, pending) {
       try {
         evalExpr(p.expr, symbols, p.pc, p.lastLabel);
       } catch (e) {
-        throw new AsmError(e.message, p.orig, p.line, firstNonSpaceCol(p.line));
+        throw new AsmError(e.message, p.orig, p.line, firstNonSpaceCol(p.line), p.file);
       }
       return;
     }
@@ -933,7 +1106,7 @@ import { basename } from "path";
 // packages/rk86/package.json
 var package_default = {
   name: "rk86",
-  version: "2.0.31",
+  version: "2.0.33",
   description: "\u042D\u043C\u0443\u043B\u044F\u0442\u043E\u0440 \u0420\u0430\u0434\u0438\u043E-86\u0420\u041A (Intel 8080) \u0434\u043B\u044F \u0442\u0435\u0440\u043C\u0438\u043D\u0430\u043B\u0430",
   bin: {
     rk86: "rk86.js"
@@ -2090,9 +2263,9 @@ function create(array, width = 16) {
   }
   return v;
 }
-function parse2(hex2) {
+function parse2(hex) {
   const array = [];
-  for (let [label, line] of Object.entries(hex2)) {
+  for (let [label, line] of Object.entries(hex)) {
     const address = parseInt(label.slice(1), 16);
     const line_values = line.split(" ").map((value) => parseInt(value, 16));
     for (let j = 0;j < line_values.length; j++) {
@@ -2100,6 +2273,124 @@ function parse2(hex2) {
     }
   }
   return array;
+}
+
+// src/lib/core/rk86_profile.ts
+var CLASSIC_PROFILE_NAME = "RK86_CLASSIC";
+var PERIPHERAL_WINDOW = 8192;
+var PERIPHERAL_WINDOWS = [8192, 4096, 2048, 1024, 512, 256];
+var PERIPHERAL_WINDOW_LABEL = "\u041E\u043A\u043D\u043E \u043F\u0435\u0440\u0438\u0444\u0435\u0440\u0438\u0438";
+function peripheralWindowLabel(window) {
+  return window >= 1024 ? `${window / 1024} \u041A\u0411` : `${window} \u0431\u0430\u0439\u0442`;
+}
+function peripheralWindowMask(window) {
+  return 65536 - window & 65535;
+}
+var RK86_CLASSIC = Object.freeze({
+  name: CLASSIC_PROFILE_NAME,
+  ram_end: 32767,
+  rom_start: 57344,
+  boot_address: 63488,
+  keyboard_ppi_base: 32768,
+  crtc_base: 49152,
+  dma_base: 57344,
+  peripheral_window: PERIPHERAL_WINDOW
+});
+var PROFILE_ADDRESS_FIELDS = ["ram_end", "rom_start", "boot_address", "keyboard_ppi_base", "crtc_base", "dma_base"];
+var PROFILE_FIELD_LABELS = {
+  ram_end: "\u041E\u0417\u0423 \u0434\u043E",
+  rom_start: "\u041F\u0417\u0423 \u043E\u0442",
+  boot_address: "\u0410\u0434\u0440\u0435\u0441 \u0437\u0430\u043F\u0443\u0441\u043A\u0430",
+  keyboard_ppi_base: "\u041F\u041F\u0418 \u043A\u043B\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u044B (\u0412\u041255)",
+  crtc_base: "\u041A\u043E\u043D\u0442\u0440\u043E\u043B\u043B\u0435\u0440 \u044D\u043A\u0440\u0430\u043D\u0430 (\u0412\u041375)",
+  dma_base: "\u041A\u043E\u043D\u0442\u0440\u043E\u043B\u043B\u0435\u0440 \u041F\u0414\u041F (\u0412\u042257)"
+};
+function exportProfile(profile) {
+  const h16 = (n) => "0x" + n.toString(16).toUpperCase().padStart(4, "0");
+  const result = { name: profile.name };
+  for (const field of PROFILE_ADDRESS_FIELDS)
+    result[field] = h16(profile[field]);
+  result.peripheral_window = h16(profile.peripheral_window);
+  return result;
+}
+function profilesEqual(a, b) {
+  return a.name === b.name && a.peripheral_window === b.peripheral_window && PROFILE_ADDRESS_FIELDS.every((field) => a[field] === b[field]);
+}
+var is16bit = (v) => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 65535;
+function validateProfile(profile) {
+  const errors = [];
+  const name = typeof profile.name === "string" ? profile.name.trim() : "";
+  if (!name)
+    errors.push("\u0438\u043C\u044F \u043F\u0440\u043E\u0444\u0438\u043B\u044F \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u043F\u0443\u0441\u0442\u044B\u043C");
+  else if (name.length > 32)
+    errors.push("\u0438\u043C\u044F \u043F\u0440\u043E\u0444\u0438\u043B\u044F \u0434\u043B\u0438\u043D\u043D\u0435\u0435 32 \u0441\u0438\u043C\u0432\u043E\u043B\u043E\u0432");
+  for (const field of PROFILE_ADDRESS_FIELDS) {
+    if (!is16bit(profile[field]))
+      errors.push(`${PROFILE_FIELD_LABELS[field]}: \u0430\u0434\u0440\u0435\u0441 \u0434\u043E\u043B\u0436\u0435\u043D \u0431\u044B\u0442\u044C \u0432 \u0434\u0438\u0430\u043F\u0430\u0437\u043E\u043D\u0435 0000-FFFF`);
+  }
+  if (!PERIPHERAL_WINDOWS.includes(profile.peripheral_window)) {
+    errors.push(`${PERIPHERAL_WINDOW_LABEL}: \u0440\u0430\u0437\u043C\u0435\u0440 \u0434\u043E\u043B\u0436\u0435\u043D \u0431\u044B\u0442\u044C \u043E\u0434\u043D\u0438\u043C \u0438\u0437 ${PERIPHERAL_WINDOWS.map(peripheralWindowLabel).join(", ")}`);
+  }
+  if (errors.length)
+    return errors;
+  const window = profile.peripheral_window;
+  const windowHex = window.toString(16).toUpperCase();
+  if (profile.ram_end >= profile.rom_start)
+    errors.push("\u041E\u0417\u0423 \u0434\u043E\u043B\u0436\u043D\u043E \u0437\u0430\u043A\u0430\u043D\u0447\u0438\u0432\u0430\u0442\u044C\u0441\u044F \u0440\u0430\u043D\u044C\u0448\u0435 \u043D\u0430\u0447\u0430\u043B\u0430 \u041F\u0417\u0423");
+  if (profile.boot_address < profile.rom_start)
+    errors.push("\u0430\u0434\u0440\u0435\u0441 \u0437\u0430\u043F\u0443\u0441\u043A\u0430 \u0434\u043E\u043B\u0436\u0435\u043D \u043B\u0435\u0436\u0430\u0442\u044C \u0432 \u041F\u0417\u0423");
+  const bases = ["keyboard_ppi_base", "crtc_base", "dma_base"];
+  for (const field of bases) {
+    const base = profile[field];
+    const label = PROFILE_FIELD_LABELS[field];
+    if (base % window !== 0)
+      errors.push(`${label}: \u0431\u0430\u0437\u0430 \u0434\u043E\u043B\u0436\u043D\u0430 \u0431\u044B\u0442\u044C \u043A\u0440\u0430\u0442\u043D\u0430 ${windowHex}`);
+    if (base <= profile.ram_end)
+      errors.push(`${label}: \u043E\u043A\u043D\u043E \u043F\u0435\u0440\u0438\u0444\u0435\u0440\u0438\u0438 \u043F\u0435\u0440\u0435\u0441\u0435\u043A\u0430\u0435\u0442\u0441\u044F \u0441 \u041E\u0417\u0423`);
+  }
+  for (let i = 0;i < bases.length; i++) {
+    for (let j = i + 1;j < bases.length; j++) {
+      if (profile[bases[i]] === profile[bases[j]]) {
+        errors.push(`${PROFILE_FIELD_LABELS[bases[i]]} \u0438 ${PROFILE_FIELD_LABELS[bases[j]]}: \u043E\u0434\u0438\u043D\u0430\u043A\u043E\u0432\u0430\u044F \u0431\u0430\u0437\u0430`);
+      }
+    }
+  }
+  return errors;
+}
+function normalizeProfile(raw) {
+  if (!raw || typeof raw !== "object")
+    return null;
+  const source = raw;
+  if (typeof source.name !== "string")
+    return null;
+  const profile = { name: source.name.trim() };
+  for (const field of PROFILE_ADDRESS_FIELDS) {
+    const value = source[field];
+    let number;
+    if (typeof value === "number")
+      number = value;
+    else if (typeof value === "string" && /^(0x)?[0-9a-f]{1,4}$/i.test(value.trim())) {
+      number = parseInt(value.trim().replace(/^0x/i, ""), 16);
+    } else if (field === "boot_address" && value === undefined) {
+      number = RK86_CLASSIC.boot_address;
+    } else
+      return null;
+    if (!is16bit(number))
+      return null;
+    profile[field] = number;
+  }
+  const window = source.peripheral_window;
+  if (window === undefined)
+    profile.peripheral_window = PERIPHERAL_WINDOW;
+  else if (typeof window === "number")
+    profile.peripheral_window = window;
+  else if (typeof window === "string" && /^(0x)?[0-9a-f]{1,5}$/i.test(window.trim())) {
+    profile.peripheral_window = parseInt(window.trim().replace(/^0x/i, ""), 16);
+  } else
+    return null;
+  if (!Number.isInteger(profile.peripheral_window) || profile.peripheral_window <= 0)
+    return null;
+  return profile;
 }
 
 // src/lib/core/rk86_memory.ts
@@ -2128,10 +2419,44 @@ class Memory {
   last_access_address = 0;
   last_access_operation = undefined;
   tracer = null;
-  constructor(machine) {
+  profile = RK86_CLASSIC;
+  peripheral_window_mask = 57344;
+  ppi_mask = 57347;
+  crtc_mask = 57345;
+  dma_mask = 57359;
+  on_profile_changed = null;
+  ppi_port_a = 0;
+  ppi_port_b = 0;
+  ppi_port_c = 0;
+  ppi_control = 0;
+  crtc_parameter = 0;
+  crtc_command = 0;
+  dma_ch0_address = 0;
+  dma_ch0_count = 0;
+  dma_mode = 0;
+  constructor(machine, profile = RK86_CLASSIC) {
     this.machine = machine;
+    this.set_profile(profile);
     this.init();
     this.invalidate_access_variables();
+  }
+  set_profile(profile) {
+    this.profile = profile;
+    const window_mask = peripheralWindowMask(profile.peripheral_window);
+    this.peripheral_window_mask = window_mask;
+    this.ppi_mask = window_mask | 3;
+    this.crtc_mask = window_mask | 1;
+    this.dma_mask = window_mask | 15;
+    this.ppi_port_a = profile.keyboard_ppi_base | 0;
+    this.ppi_port_b = profile.keyboard_ppi_base | 1;
+    this.ppi_port_c = profile.keyboard_ppi_base | 2;
+    this.ppi_control = profile.keyboard_ppi_base | 3;
+    this.crtc_parameter = profile.crtc_base | 0;
+    this.crtc_command = profile.crtc_base | 1;
+    this.dma_ch0_address = profile.dma_base | 4;
+    this.dma_ch0_count = profile.dma_base | 5;
+    this.dma_mode = profile.dma_base | 8;
+    this.on_profile_changed?.(profile);
   }
   init() {
     this.buf = new Array(65536).fill(0);
@@ -2155,7 +2480,7 @@ class Memory {
     this.video_screen_cursor_y = 0;
   }
   zero_ram() {
-    for (let i = 0;i < 32768; ++i)
+    for (let i = 0;i <= this.profile.ram_end; ++i)
       this.buf[i] = 0;
   }
   snapshot(from, sz) {
@@ -2227,27 +2552,27 @@ class Memory {
     this.last_access_address = addr;
     this.last_access_operation = "read";
     this.tracer?.("read", addr);
-    const ppi_reg = addr & 57347;
-    const vg75_reg = addr & 57345;
-    if (ppi_reg === 32770)
+    const ppi_reg = addr & this.ppi_mask;
+    const vg75_reg = addr & this.crtc_mask;
+    if (ppi_reg === this.ppi_port_c)
       return this.machine.keyboard.modifiers;
-    if (ppi_reg === 32769) {
+    if (ppi_reg === this.ppi_port_b) {
       const keyboard_state = this.machine.keyboard.state;
       let ch = 255;
-      const kbd_scanline = ~this.buf[32768];
+      const kbd_scanline = ~this.buf[this.ppi_port_a];
       for (let i = 0;i < 8; i++)
         if (1 << i & kbd_scanline)
           ch &= keyboard_state[i];
       return ch;
     }
-    if (vg75_reg === 49153) {
+    if (vg75_reg === this.crtc_command) {
       const ticks = this.machine.runner.total_ticks;
       const FRAME = 35600;
       const VRTC_ON = 3560;
       const vrtc = ticks % FRAME >= FRAME - VRTC_ON ? 32 : 0;
       return vrtc | (this.machine.screen.light_pen_active ? 16 : 0);
     }
-    if (vg75_reg === 49152) {
+    if (vg75_reg === this.crtc_parameter) {
       if (this.vg75_c001_60_cmd === 1) {
         this.vg75_c001_60_cmd = 2;
         return this.machine.screen.light_pen_x;
@@ -2271,12 +2596,12 @@ class Memory {
     this.last_access_address = addr;
     this.last_access_operation = "write";
     this.tracer?.("write", addr);
-    if (addr < 57344)
+    if (addr < this.profile.rom_start)
       this.buf[addr] = byte;
-    const ppi_reg = addr & 57347;
-    const vg75_reg = addr & 57345;
-    const vt57_reg = addr & 57359;
-    if (ppi_reg === 32771) {
+    const ppi_reg = addr & this.ppi_mask;
+    const vg75_reg = addr & this.crtc_mask;
+    const vt57_reg = addr & this.dma_mask;
+    if (ppi_reg === this.ppi_control) {
       if (byte & 128) {} else {
         const bit = byte >> 1 & 3;
         const value = byte & 1;
@@ -2285,20 +2610,20 @@ class Memory {
       }
       return;
     }
-    if (vg75_reg === 49153 && byte === 39)
+    if (vg75_reg === this.crtc_command && byte === 39)
       return;
-    if (vg75_reg === 49153 && byte === 224)
+    if (vg75_reg === this.crtc_command && byte === 224)
       return;
-    if (vg75_reg === 49153 && byte === 128) {
+    if (vg75_reg === this.crtc_command && byte === 128) {
       this.vg75_c001_80_cmd = 1;
       return;
     }
-    if (vg75_reg === 49152 && this.vg75_c001_80_cmd === 1) {
+    if (vg75_reg === this.crtc_parameter && this.vg75_c001_80_cmd === 1) {
       this.vg75_c001_80_cmd += 1;
       this.cursor_x_buf = byte + 1;
       return;
     }
-    if (vg75_reg === 49152 && this.vg75_c001_80_cmd === 2) {
+    if (vg75_reg === this.crtc_parameter && this.vg75_c001_80_cmd === 2) {
       this.cursor_y_buf = byte + 1;
       this.machine.screen.set_cursor(this.cursor_x_buf - 1, this.cursor_y_buf - 1);
       this.video_screen_cursor_x = this.cursor_x_buf;
@@ -2306,33 +2631,33 @@ class Memory {
       this.vg75_c001_80_cmd = 0;
       return;
     }
-    if (vg75_reg === 49153 && byte === 96) {
+    if (vg75_reg === this.crtc_command && byte === 96) {
       if (this.machine.screen.light_pen_active)
         this.vg75_c001_60_cmd = 1;
       return;
     }
-    if (vg75_reg === 49153 && byte === 0) {
+    if (vg75_reg === this.crtc_command && byte === 0) {
       this.vg75_c001_00_cmd = 1;
       return;
     }
-    if (vg75_reg === 49152 && this.vg75_c001_00_cmd === 1) {
+    if (vg75_reg === this.crtc_parameter && this.vg75_c001_00_cmd === 1) {
       this.video_screen_size_x_buf = (byte & 127) + 1;
       this.vg75_c001_00_cmd += 1;
       return;
     }
-    if (vg75_reg === 49152 && this.vg75_c001_00_cmd === 2) {
+    if (vg75_reg === this.crtc_parameter && this.vg75_c001_00_cmd === 2) {
       this.video_screen_size_y_buf = (byte & 63) + 1;
       this.machine.screen.vrtc_rows = (byte >> 6 & 3) + 1;
       this.vg75_c001_00_cmd += 1;
       return;
     }
-    if (vg75_reg === 49152 && this.vg75_c001_00_cmd === 3) {
+    if (vg75_reg === this.crtc_parameter && this.vg75_c001_00_cmd === 3) {
       this.machine.screen.set_char_height((byte & 15) + 1);
       this.machine.screen.underline_scanline = byte >> 4 & 15;
       this.vg75_c001_00_cmd += 1;
       return;
     }
-    if (vg75_reg === 49152 && this.vg75_c001_00_cmd === 4) {
+    if (vg75_reg === this.crtc_parameter && this.vg75_c001_00_cmd === 4) {
       this.vg75_c001_00_cmd = 0;
       if (this.video_screen_size_x_buf && this.video_screen_size_y_buf) {
         this.video_screen_size_x = this.video_screen_size_x_buf;
@@ -2343,28 +2668,28 @@ class Memory {
       this.machine.screen.hrtc_chars = ((byte & 15) + 1) * 2;
       return;
     }
-    if (vt57_reg === 57352 && byte === 128) {
+    if (vt57_reg === this.dma_mode && byte === 128) {
       this.ik57_e008_80_cmd = 1;
       this.ik57_ff = 0;
       this.tape_8002_as_output = 1;
       return;
     }
-    if (vt57_reg === 57348 && this.ik57_e008_80_cmd === 1) {
+    if (vt57_reg === this.dma_ch0_address && this.ik57_e008_80_cmd === 1) {
       this.video_memory_base_buf = byte;
       this.ik57_e008_80_cmd += 1;
       return;
     }
-    if (vt57_reg === 57348 && this.ik57_e008_80_cmd === 2) {
+    if (vt57_reg === this.dma_ch0_address && this.ik57_e008_80_cmd === 2) {
       this.video_memory_base_buf |= byte << 8;
       this.ik57_e008_80_cmd += 1;
       return;
     }
-    if (vt57_reg === 57349 && this.ik57_e008_80_cmd === 3) {
+    if (vt57_reg === this.dma_ch0_count && this.ik57_e008_80_cmd === 3) {
       this.video_memory_size_buf = byte;
       this.ik57_e008_80_cmd += 1;
       return;
     }
-    if (vt57_reg === 57349 && this.ik57_e008_80_cmd === 4) {
+    if (vt57_reg === this.dma_ch0_count && this.ik57_e008_80_cmd === 4) {
       this.video_memory_size_buf = ((this.video_memory_size_buf | byte << 8) & 16383) + 1;
       this.ik57_e008_80_cmd = 0;
       this.video_memory_base = this.video_memory_base_buf;
@@ -2372,11 +2697,11 @@ class Memory {
       this.machine.screen.set_video_memory(this.video_memory_base);
       return;
     }
-    if (vt57_reg === 57352 && byte === 164) {
+    if (vt57_reg === this.dma_mode && byte === 164) {
       this.tape_8002_as_output = 0;
       return;
     }
-    if (vt57_reg === 57348 && this.ik57_e008_80_cmd === 0) {
+    if (vt57_reg === this.dma_ch0_address && this.ik57_e008_80_cmd === 0) {
       if (this.ik57_ff === 0) {
         this.video_memory_base_buf = this.video_memory_base & 65280 | byte;
         this.ik57_ff = 1;
@@ -2388,7 +2713,7 @@ class Memory {
       }
       return;
     }
-    if (vt57_reg === 57349 && this.ik57_e008_80_cmd === 0) {
+    if (vt57_reg === this.dma_ch0_count && this.ik57_e008_80_cmd === 0) {
       if (this.ik57_ff === 0) {
         this.video_memory_size_buf = byte;
         this.ik57_ff = 1;
@@ -2399,7 +2724,7 @@ class Memory {
       }
       return;
     }
-    if (ppi_reg === 32770) {
+    if (ppi_reg === this.ppi_port_c) {
       if (this.tape_8002_as_output) {
         this.tape_write_bit(byte & 1);
       }
@@ -2445,7 +2770,7 @@ class Runner {
     this.BATCH_TICKS = this.FREQ / 100;
     this.TICKS_PER_WALL_MS = this.FREQ / 1000;
     this.machine.io.interrupt = (iff) => this.interrupt(iff);
-    this.machine.cpu.jump(63488);
+    this.machine.cpu.jump(this.machine.memory.profile.boot_address);
   }
   interrupt(iff) {
     if (!this.sound || this.turbo)
@@ -2567,7 +2892,7 @@ class Runner {
     this.paused = false;
   }
   reset() {
-    this.machine.cpu.jump(63488);
+    this.machine.cpu.jump(this.machine.memory.profile.boot_address);
     this.machine.keyboard.reset();
   }
   fire_hardware_id() {
@@ -2743,11 +3068,12 @@ function rk86_snapshot(machine, version) {
   const snapshot = {
     id: "rk86",
     created: new Date().toISOString(),
-    format: "1",
+    format: "2",
     emulator: "rk86.ru",
     version,
     start: h16(0),
     end: h16(65535),
+    profile: exportProfile(memory.profile),
     boot: { keyboard: [] },
     cpu: cpu.export(),
     keyboard: keyboard.export(),
@@ -2764,6 +3090,19 @@ function rk86_snapshot_restore(snapshot, machine, keys_injector) {
     if (!machine)
       return false;
     const { screen, cpu, memory, keyboard } = machine;
+    let profile = RK86_CLASSIC;
+    if (json.profile !== undefined) {
+      const parsed = normalizeProfile(json.profile);
+      const errors = parsed ? validateProfile(parsed) : ["\u043D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0440\u0430\u0437\u043E\u0431\u0440\u0430\u0442\u044C \u043F\u0440\u043E\u0444\u0438\u043B\u044C"];
+      if (parsed && errors.length === 0)
+        profile = parsed;
+      else {
+        machine.log?.(`\u043F\u0440\u043E\u0444\u0438\u043B\u044C \u0432 \u0441\u043D\u0430\u043F\u0448\u043E\u0442\u0435 \u043F\u0440\u043E\u0438\u0433\u043D\u043E\u0440\u0438\u0440\u043E\u0432\u0430\u043D: ${errors.join("; ")}`);
+        profile = memory.profile;
+      }
+    }
+    if (!profilesEqual(profile, memory.profile))
+      memory.set_profile(profile);
     cpu.import(json.cpu);
     keyboard.import(json.keyboard);
     screen.import(json.screen);
@@ -2880,7 +3219,7 @@ class Tape {
 }
 
 // src/lib/terminal/rk86_terminal.ts
-var UPLOAD_SERVER = "https://rk86.ea.deno.net";
+var UPLOAD_SERVER = "https://rk86.vercel.app";
 var charMap = {
   0: " ",
   1: "\u2598",
@@ -3275,11 +3614,11 @@ function setupKeyboard(keyboard) {
     }
     if (data.length === 1 && data >= "\x01" && data <= "\x1A" && data !== "\b" && data !== "\t" && data !== `
 ` && data !== "\r") {
-      const code2 = `Key${String.fromCharCode(data.charCodeAt(0) + 64)}`;
+      const code = `Key${String.fromCharCode(data.charCodeAt(0) + 64)}`;
       keyboard.onkeydown("ControlLeft");
-      keyboard.onkeydown(code2);
+      keyboard.onkeydown(code);
       setTimeout(() => {
-        keyboard.onkeyup(code2);
+        keyboard.onkeyup(code);
         keyboard.onkeyup("ControlLeft");
       }, 50);
       return;
@@ -3445,8 +3784,8 @@ async function main() {
   const colorMode = COLOR_MODES[colorIdx];
   let inputSeq = arg(args, "--input");
   if (goViaMonitor !== undefined) {
-    const hex2 = goViaMonitor.toString(16).toUpperCase();
-    const keys = [...hex2].map((c) => c >= "0" && c <= "9" ? `Digit${c}` : `Key${c}`);
+    const hex = goViaMonitor.toString(16).toUpperCase();
+    const keys = [...hex].map((c) => c >= "0" && c <= "9" ? `Digit${c}` : `Key${c}`);
     const gSeq = ["KeyG", ...keys, "Enter"].join(",");
     inputSeq = inputSeq ? `${inputSeq},${gSeq}` : gSeq;
   }
@@ -3457,7 +3796,7 @@ async function main() {
     font: rk86_font_image(),
     keyboard,
     io,
-    log: (...args2) => console.log(...args2)
+    log: (...args) => console.log(...args)
   };
   const machine = machineBuilder;
   machine.ui = new TerminalUI;

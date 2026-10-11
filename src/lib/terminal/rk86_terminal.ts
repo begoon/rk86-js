@@ -8,7 +8,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { basename } from "node:path";
 import pkg from "../../../packages/rk86/package.json";
 
-const UPLOAD_SERVER = "https://rk86.ea.deno.net";
+const UPLOAD_SERVER = "https://rk86.vercel.app";
 import {
     COLOR_MODES,
     attrToRgb,

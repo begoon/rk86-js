@@ -44,15 +44,15 @@ bunx rk86 --online CHESS.GAM       # открыть файл в онлайн-э�
 ## Онлайн-режим (`--online`)
 
 Загружает локальный файл на одноразовый relay-сервер
-([rk86.ea.deno.net](https://rk86.ea.deno.net)) и открывает
+([rk86.vercel.app](https://rk86.vercel.app)) и открывает
 [rk86.ru](https://rk86.ru) в браузере с `?run=<URL>`. Файл живёт на сервере
-60 секунд (TTL в Deno KV), затем удаляется автоматически. Удобно когда нужно
+60 секунд (TTL в MongoDB), затем удаляется автоматически. Удобно когда нужно
 быстро поделиться `.rk`/`.gam` или показать программу без публикации в
 каталог.
 
 ```bash
 bunx rk86 --online CHESS.GAM
-# https://rk86.ru/index.html?run=https%3A%2F%2Frk86.ea.deno.net%2Ffile%2FCHESS.GAM%3F<id>
+# https://rk86.ru/index.html?run=https%3A%2F%2Frk86.vercel.app%2Ffile%2FCHESS.GAM%3F<id>
 ```
 
 ## Безголовый режим (headless) и автотесты
