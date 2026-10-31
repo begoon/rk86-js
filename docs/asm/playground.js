@@ -895,6 +895,8 @@ function tokenizeExpr(expr) {
       const text = expr.slice(i, j);
       if (/^[0-9A-Fa-f]+[hH]$/.test(text)) {
         tokens.push({ kind: "num", val: parseInt(text.slice(0, -1), 16) });
+      } else if (/^[01]+[bB]$/.test(text)) {
+        tokens.push({ kind: "num", val: parseInt(text.slice(0, -1), 2) });
       } else if (/^[0-9]+$/.test(text)) {
         tokens.push({ kind: "num", val: parseInt(text, 10) });
       } else if (/^[0-9A-Fa-f]+$/.test(text)) {
@@ -1601,7 +1603,7 @@ var DATA_DIRECTIVES = new Set(["DB", "DW", "DS"]);
 if (false) {}
 
 // docs/build-info.ts
-var BUILD_TIME = "2026-10-01 18:20:22";
+var BUILD_TIME = "2026-10-31 15:35:40";
 
 // docs/tab-includes.ts
 function tabIncludeOptions(tabs, file) {
