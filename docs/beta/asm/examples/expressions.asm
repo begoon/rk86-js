@@ -1,4 +1,5 @@
 ; C-precedence expressions with LOW/HIGH, |, &, ^, ~, <<, >>, %.
+; Numbers: decimal (40), hex (0F800h), binary (11110000b or 11110000B).
 
 BASE    equ 0F800h
 WIDTH   equ 40
@@ -13,7 +14,7 @@ start:
     mvi b, HIGH(BASE + 5)      ; b = F8h
     lxi h, BASE | 00FFh        ; hl = F8FFh
     lxi d, SIZE                ; de = 1000 = 3E8h
-    mvi c, MASK & 0F0h         ; c  = 70h
+    mvi c, MASK & 11110000b    ; c  = 70h
     ani (1 << 3) - 1           ; a &= 7
     sui SIZE % 256             ; a -= 232 (wraps)
     call 0f815h                ; print A as hex
