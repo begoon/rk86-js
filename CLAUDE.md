@@ -134,6 +134,8 @@ loader/
 - `src/lib/catalog_data.ts` — catalog metadata from
   `static/catalog/*/info.md`
 - `src/lib/rk86_version.ts` — build timestamp
+- `static/catalog.json` — the same catalog metadata as plain JSON
+  (fetched at runtime, see Conventions)
 - `static/radio86-emulator.js` — bundled web component
 - `tests/cpu/*_data.ts` — CPU test tables (regenerate with
   `bun tests/generate_cpu_data.ts`)
@@ -146,6 +148,16 @@ on every build/dev.
 - Source of truth for programs: `static/files/` — every file must have
   `static/catalog/<name>/info.md`.
 - All text in UI is in Russian.
+- Toolbar icons live in `src/lib/icons/*.svg` and are inlined as
+  `data:` URLs through `icons["<name>"]` from `$lib/icons` (no per-icon
+  requests). `static/i/` holds only the screenshots used by docs.
+- Catalog metadata is not imported into page code: with
+  `bundleStrategy: "inline"` any import lands in every page. The
+  `/catalog` route gets it as page data (`catalog/+page.ts` fetches
+  `catalog.json`), `CatalogSelector.svelte` fetches it on first open.
+  Only the `CatalogEntry` type is imported from `$lib/catalog_data`.
+- The classic assembler iframe (`static/i8080asm/`) is mounted on the
+  first open of its dialog, not at page load.
 - `info/` is the documentation directory.
 - Hex-dump file format: text files starting with the shebang
   `#!rk86` (bytes `23 21 72 6B 38 36`) are parsed as hex dumps —

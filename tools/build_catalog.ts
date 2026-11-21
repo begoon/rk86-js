@@ -159,6 +159,10 @@ export const catalog: CatalogEntry[] = ${JSON.stringify(entries, null, 4)};
 `,
 );
 
+// Generate static/catalog.json — the same entries, fetched lazily by the
+// emulator page's catalog selector instead of being bundled into it.
+await Bun.write(join(root, "static/catalog.json"), JSON.stringify(entries));
+
 // Generate tape_catalog.ts
 await Bun.write(
     outTapeCatalog,

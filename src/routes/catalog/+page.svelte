@@ -1,6 +1,10 @@
 <script lang="ts">
     import { resolve, base } from "$app/paths";
-    import { catalog } from "$lib/catalog_data";
+    import type { CatalogEntry } from "$lib/catalog_data";
+    import type { PageData } from "./$types";
+
+    let { data }: { data: PageData } = $props();
+    const catalog = $derived(data.catalog);
 
     const hex4 = (n: number) => n.toString(16).toUpperCase().padStart(4, "0");
 
@@ -22,7 +26,7 @@
     let zoomImages = $state<string[]>([]);
     let zoomIndex = $state(0);
 
-    function openZoom(entry: (typeof catalog)[0], index: number) {
+    function openZoom(entry: CatalogEntry, index: number) {
         zoomImages = entry.screenshots.map((s) => `${resolve('/catalog')}/${entry.name}/${s}`);
         zoomIndex = index;
     }

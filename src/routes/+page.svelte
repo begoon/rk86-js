@@ -8,6 +8,7 @@
     import { asset, resolve } from "$app/paths";
     import { COLOR_MODES, COLOR_MODE_LABELS, type ColorMode } from "$lib/core/rk86_colors";
     import { version } from "$lib/rk86_version";
+    import { icons } from "$lib/icons";
     import { main as boot, type HostCallbacks } from "$lib/web/boot";
     import Debugger from "$lib/core/rk86_debugger";
     import { rk86_snapshot, rk86_snapshot_restore } from "$lib/core/rk86_snapshot";
@@ -290,7 +291,13 @@
         window.open(asset("/asm/"), "_blank", "noopener");
     }
 
+    // The classic assembler iframe is mounted on first open (and kept after
+    // that, to preserve the editor contents) so that ordinary page loads do
+    // not download the assembler.
+    let iasmMounted = $state(false);
+
     function openIasm() {
+        iasmMounted = true;
         iasmDialog?.showModal();
     }
 
@@ -728,20 +735,20 @@
         }}
     >
         <button class="icon" data-text="Сигнал RESET" onclick={() => machine?.reset()}>
-            <img class="icon" src="i/reset.svg" alt="Сигнал RESET" />
+            <img class="icon" src={icons["reset"]} alt="Сигнал RESET" />
         </button>
         <button class="icon" data-text="Перезапустить эмулятор" onclick={() => machine?.restart()}>
-            <img class="icon" src="i/power-off.svg" alt="Перезапустить эмулятор" />
+            <img class="icon" src={icons["power-off"]} alt="Перезапустить эмулятор" />
         </button>
         <button class="icon" data-text="Приостановить процессор" onclick={togglePaused}>
             {#if paused}
-                <img class="icon" src="i/paused.svg" alt="Процессор приостановлен" />
+                <img class="icon" src={icons["paused"]} alt="Процессор приостановлен" />
             {:else}
-                <img class="icon" src="i/pause.svg" alt="Приостановить процессор" />
+                <img class="icon" src={icons["pause"]} alt="Приостановить процессор" />
             {/if}
         </button>
         <button class="icon" data-text="Полноэкранный режим" onclick={toggleFullscreen}>
-            <img class="icon" src="i/fullscreen.svg" alt="Полноэкранный режим" />
+            <img class="icon" src={icons["fullscreen"]} alt="Полноэкранный режим" />
         </button>
         <button
             type="button"
@@ -750,7 +757,7 @@
             data-text="Клавиатура"
             onclick={() => (keyboardVisible = !keyboardVisible)}
         >
-            <img class="icon" src="i/keyboard.svg" alt="Клавиатура" />
+            <img class="icon" src={icons["keyboard"]} alt="Клавиатура" />
         </button>
         <button
             type="button"
@@ -758,19 +765,19 @@
             data-text="Помощь"
             onclick={() => window.open("https://github.com/begoon/rk86-js/blob/master/info/HELP.md", "_blank")}
         >
-            <img class="icon" src="i/help.svg" alt="Помощь" />
+            <img class="icon" src={icons["help"]} alt="Помощь" />
         </button>
         <a href={resolve("/catalog")} class="icon" data-text="Каталог программ">
-            <img class="icon" src="i/open-catalog.svg" alt="Каталог программ" />
+            <img class="icon" src={icons["open-catalog"]} alt="Каталог программ" />
         </a>
         <a href="/web/" target="_blank" rel="noopener" class="icon" data-text="Веб-компоненты">
-            <img class="icon" src="i/web.svg" alt="Веб-компоненты" />
+            <img class="icon" src={icons["web"]} alt="Веб-компоненты" />
         </a>
         <a href="https://hub.rk86.ru" target="_blank" rel="noopener" class="icon" data-text="Хаб">
-            <img class="icon" src="i/hub.svg" alt="Хаб" />
+            <img class="icon" src={icons["hub"]} alt="Хаб" />
         </a>
         <a href="https://github.com/begoon/rk86-js/issues" target="_blank" rel="noopener" class="icon" data-text="Сообщить об ошибке">
-            <img class="icon" src="i/bug.svg" alt="Сообщить об ошибке" />
+            <img class="icon" src={icons["bug"]} alt="Сообщить об ошибке" />
         </a>
         <a
             href="https://donate.stripe.com/eVa9ATeZr18u2o8289"
@@ -780,12 +787,12 @@
         >Поддержать проект</a>
         <!-- Кнопки справа -->
         <div style="display: flex; align-items: center; gap: 4px">
-            <button class="icon" data-text="Запись на ленту">
+            <button class="icon" data-text="Запись на ленту" aria-label="Запись на ленту">
                 {#if ui.tapeActivityActive}
                     {#if ui.tapeHighlight}
-                        <img class="icon" src="i/tape-data.svg" alt="Данные ленты" />
+                        <img class="icon" src={icons["tape-data"]} alt="Данные ленты" />
                     {:else}
-                        <img class="icon" src="i/tape-preamble.svg" alt="Преамбула ленты" />
+                        <img class="icon" src={icons["tape-preamble"]} alt="Преамбула ленты" />
                     {/if}
                 {/if}
             </button>
@@ -795,7 +802,7 @@
                 data-text="Выбрать файл из каталога"
                 onclick={() => openCatalog()}
             >
-                <img class="icon" src="i/catalog.svg" alt="Выбрать файл из каталога" />
+                <img class="icon" src={icons["catalog"]} alt="Выбрать файл из каталога" />
             </button>
             <input
                 bind:this={uploadInput}
@@ -808,10 +815,10 @@
                 }}
             />
             <button type="button" class="icon" data-text="Загрузить внешний файл" onclick={() => uploadInput?.click()}>
-                <img class="icon" src="i/upload.svg" alt="Загрузить внешний файл" />
+                <img class="icon" src={icons["upload"]} alt="Загрузить внешний файл" />
             </button>
             <button type="button" class="icon" data-text="Запустить программу" onclick={() => machine?.runLoadedFile()}>
-                <img class="icon" src="i/run.svg" alt="Запустить программу" />
+                <img class="icon" src={icons["run"]} alt="Запустить программу" />
             </button>
             <button
                 type="button"
@@ -819,7 +826,7 @@
                 data-text="Ассемблер"
                 onclick={openAssembler}
             >
-                <img class="icon" src="i/asm.svg" alt="Ассемблер" />
+                <img class="icon" src={icons["asm"]} alt="Ассемблер" />
             </button>
             <button
                 type="button"
@@ -827,7 +834,7 @@
                 data-text="Классический ассемблер"
                 onclick={openIasm}
             >
-                <img class="icon" src="i/iasm.svg" alt="Классический ассемблер" />
+                <img class="icon" src={icons["iasm"]} alt="Классический ассемблер" />
             </button>
             <button
                 type="button"
@@ -835,7 +842,7 @@
                 data-text="Компилятор C"
                 onclick={openC8080}
             >
-                <img class="icon" src="i/c8080.svg" alt="Компилятор C" />
+                <img class="icon" src={icons["c8080"]} alt="Компилятор C" />
             </button>
             <button
                 type="button"
@@ -843,7 +850,7 @@
                 data-text="Компилятор PL/M-80"
                 onclick={openPlm80}
             >
-                <img class="icon" src="i/plm80.svg" alt="Компилятор PL/M-80" />
+                <img class="icon" src={icons["plm80"]} alt="Компилятор PL/M-80" />
             </button>
             <button
                 type="button"
@@ -851,7 +858,7 @@
                 data-text="Кириллица → РК"
                 onclick={() => textConverterDialog?.showModal()}
             >
-                <img class="icon" src="i/koi7.svg" alt="Кириллица → РК" />
+                <img class="icon" src={icons["koi7"]} alt="Кириллица → РК" />
             </button>
             <button
                 type="button"
@@ -860,7 +867,7 @@
                 data-text="Турбо-режим"
                 onclick={toggleTurbo}
             >
-                <img class="icon" src="i/turbo.svg" alt="Турбо" />
+                <img class="icon" src={icons["turbo"]} alt="Турбо" />
             </button>
             <button
                 type="button"
@@ -869,7 +876,7 @@
                 data-text="Прямой ввод"
                 onclick={toggleQwerty}
             >
-                <img class="icon" src="i/qwerty.svg" alt="QWERTY → ЙЦУКЕН" />
+                <img class="icon" src={icons["qwerty"]} alt="QWERTY → ЙЦУКЕН" />
             </button>
             <button
                 type="button"
@@ -878,7 +885,7 @@
                 data-text="Аппаратный ID (STC×4)"
                 onclick={toggleHardwareId}
             >
-                <img class="icon" src="i/hwid.svg" alt="Аппаратный ID" />
+                <img class="icon" src={icons["hwid"]} alt="Аппаратный ID" />
             </button>
             <button
                 type="button"
@@ -887,7 +894,7 @@
                 data-text="Отладчик"
                 onclick={toggleDebugger}
             >
-                <img class="icon" src="i/debug.svg" alt="Отладчик" />
+                <img class="icon" src={icons["debug"]} alt="Отладчик" />
             </button>
             <button
                 type="button"
@@ -895,7 +902,7 @@
                 data-text="Визуализатор WAV-лент"
                 onclick={openTape}
             >
-                <img class="icon" src="i/tape.svg" alt="Визуализатор WAV-лент" />
+                <img class="icon" src={icons["tape"]} alt="Визуализатор WAV-лент" />
             </button>
             <button
                 type="button"
@@ -903,7 +910,7 @@
                 data-text="Анализатор РК-файла"
                 onclick={openFileAnalyzer}
             >
-                <img class="icon" src="i/file-analyzer.svg" alt="Анализатор РК-файла" />
+                <img class="icon" src={icons["file-analyzer"]} alt="Анализатор РК-файла" />
             </button>
             <button
                 type="button"
@@ -912,10 +919,10 @@
                 data-text="Визуализация"
                 onclick={toggleVisualizer}
             >
-                <img class="icon" src="i/visualizer.svg" alt="Визуализация" />
+                <img class="icon" src={icons["visualizer"]} alt="Визуализация" />
             </button>
             <button type="button" class="icon" data-text="Снимок экрана" onclick={() => machine?.ui.screenshot()}>
-                <img class="icon" src="i/screenshot.svg" alt="Снимок экрана" />
+                <img class="icon" src={icons["screenshot"]} alt="Снимок экрана" />
             </button>
             <button
                 type="button"
@@ -923,7 +930,7 @@
                 data-text="Сохранить память в файл"
                 onclick={openMemorySaveDialog}
             >
-                <img class="icon" src="i/memory.svg" alt="Сохранить память в файл" />
+                <img class="icon" src={icons["memory"]} alt="Сохранить память в файл" />
             </button>
             <button
                 type="button"
@@ -931,7 +938,7 @@
                 data-text="Сохранить полное состояние"
                 onclick={() => machine?.ui.emulator_snapshot()}
             >
-                <img class="icon" src="i/snapshot.svg" alt="Сохранить полное состояние" />
+                <img class="icon" src={icons["snapshot"]} alt="Сохранить полное состояние" />
             </button>
             <button
                 type="button"
@@ -940,7 +947,7 @@
                 data-text="Заморозить состояние ({freezes.length}/{FREEZE_CAP})"
                 onclick={freezeNow}
             >
-                <img class="icon" src="i/freeze.svg" alt="Заморозить состояние" />
+                <img class="icon" src={icons["freeze"]} alt="Заморозить состояние" />
             </button>
             <button
                 type="button"
@@ -949,7 +956,7 @@
                 data-text={freezes.length === 0 ? "Нет замороженных состояний" : `Восстановить состояние (${freezes.length})`}
                 onclick={openFreezeSelector}
             >
-                <img class="icon" src="i/restore.svg" alt="Восстановить состояние" />
+                <img class="icon" src={icons["restore"]} alt="Восстановить состояние" />
             </button>
             <button
                 type="button"
@@ -958,13 +965,13 @@
                 data-text="Профили оборудования"
                 onclick={openProfileEditor}
             >
-                <img class="icon" src="i/profile.svg" alt="Профили оборудования" />
+                <img class="icon" src={icons["profile"]} alt="Профили оборудования" />
             </button>
             <button type="button" class="icon" data-text="Включить/выключить звук" onclick={toggleSound}>
                 {#if soundEnabled}
-                    <img class="icon" src="i/sound.svg" alt="Включить звук" />
+                    <img class="icon" src={icons["sound"]} alt="Включить звук" />
                 {:else}
-                    <img class="icon" src="i/sound-muted.svg" alt="Выключить звук" />
+                    <img class="icon" src={icons["sound-muted"]} alt="Выключить звук" />
                 {/if}
             </button>
             <span id="sound_image" class={soundImageVisible ? "visible" : ""}>{soundEnabled ? "🔉" : "🔇"}</span>
@@ -1343,9 +1350,19 @@
 >
     <div class="iasm">
         <button type="button" class="iasm-close" title="Закрыть" onclick={() => iasmDialog?.close()}>✕</button>
-        <iframe class="iasm-frame" title="Классический ассемблер" src={asset("/i8080asm/")}></iframe>
+        {#if iasmMounted}
+            <iframe class="iasm-frame" title="Классический ассемблер" src={asset("/i8080asm/")}></iframe>
+        {/if}
     </div>
 </dialog>
+
+<svelte:head>
+    <title>Радио-86РК — эмулятор в браузере</title>
+    <meta
+        name="description"
+        content="Эмулятор советского компьютера Радио-86РК (Intel 8080) в браузере: каталог игр и программ, отладчик, ассемблер, загрузка и сохранение файлов."
+    />
+</svelte:head>
 
 <style>
     :global(body) {
