@@ -1077,7 +1077,7 @@
     {#if visualizerVisible}
         <Visualizer onclose={toggleVisualizer} />
     {/if}
-    <div id="footer" style="display: flex; gap: 10px" class={fullscreen ? "hidden" : ""}>
+    <div id="footer" style="gap: 10px" class={fullscreen ? "hidden" : ""}>
         <div class="gauge">
             <span class="dimmed">ИНСТР</span>
             <span>{Math.floor(ui.ips * 1000).toLocaleString()}</span>
@@ -1381,7 +1381,9 @@
         font-size: 0.75rem;
     }
     #header.hidden,
-    #footer.hidden,
+    #footer.hidden {
+        display: none;
+    }
     .icon {
         width: 2em;
         height: 2em;
