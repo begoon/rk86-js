@@ -1,5 +1,6 @@
 // Generates src/lib/component/embedded_monitors.ts with base64-encoded monitor ROMs.
-// Lets the <radio86-emulator> npm package boot without fetching ROM files from the host.
+// Lets the <radio86-emulator> npm package and the web app (src/lib/web/boot.ts) boot
+// without fetching ROM files from the host.
 
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";

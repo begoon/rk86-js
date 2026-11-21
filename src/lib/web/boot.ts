@@ -13,6 +13,7 @@ import { Memory } from "../core/rk86_memory.js";
 import { Runner } from "../core/rk86_runner.js";
 import { Screen } from "../core/rk86_screen.js";
 import { rk86_snapshot, rk86_snapshot_restore } from "../core/rk86_snapshot.js";
+import { EMBEDDED_MONITORS } from "../component/embedded_monitors.js";
 import { CanvasRenderer } from "./renderer.js";
 import { saveAs } from "./saver.js";
 import { Sound } from "./sound.js";
@@ -192,19 +193,48 @@ export function decode_data_url(url: string): DecodedDataURL | undefined {
     }
 }
 
+// Задержки перед повторными попытками скачивания. Ошибки сети и HTTP 5xx
+// повторяются, HTTP 4xx — нет (файла на сервере действительно нет).
+const FETCH_RETRY_DELAYS_MS = [300, 1000];
+
+class HttpStatusError extends Error {
+    constructor(public status: number) {
+        super(`ошибка HTTP: ${status}`);
+    }
+}
+
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
 async function fetch_file(name: string): Promise<number[] | undefined> {
     const inline = decode_data_url(name);
     if (inline) return inline.content;
+    // Мониторы встроены в бандл: эмулятор стартует без дополнительных
+    // запросов, даже если соединение с сервером рвётся после загрузки страницы.
+    const embedded = EMBEDDED_MONITORS[name];
+    if (embedded) {
+        const content = Array.from(atob(embedded), (char) => char.charCodeAt(0));
+        console.log(`взят встроенный файл [${name}] длиной ${content.length} байт`);
+        return content;
+    }
     const url = filenameURL(name);
     console.log(`скачиваем файл [${url}]`);
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`ошибка HTTP: ${response.status}`);
-        const content = Array.from(new Uint8Array(await response.arrayBuffer()));
-        console.log(`скачен файл [${basename(url)}] длиной ${content.length} байт`);
-        return content;
-    } catch (error) {
-        console.error(`ошибка загрузки файла ${url}: ${error}`);
+    for (let attempt = 0; ; attempt++) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new HttpStatusError(response.status);
+            const content = Array.from(new Uint8Array(await response.arrayBuffer()));
+            console.log(`скачен файл [${basename(url)}] длиной ${content.length} байт`);
+            return content;
+        } catch (error) {
+            const final = error instanceof HttpStatusError && error.status < 500;
+            if (final || attempt >= FETCH_RETRY_DELAYS_MS.length) {
+                console.error(`ошибка загрузки файла ${url}: ${error}`);
+                return undefined;
+            }
+            const delay = FETCH_RETRY_DELAYS_MS[attempt];
+            console.warn(`ошибка загрузки файла ${url}: ${error}, повтор через ${delay} мс`);
+            await sleep(delay);
+        }
     }
 }
 
