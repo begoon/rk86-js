@@ -106,6 +106,71 @@
         });
     });
 
+    // Копирует скриншот экрана в буфер обмена. Вызывается синхронно из
+    // обработчика клика: Safari разрешает запись в буфер только так,
+    // поэтому blob передаётся в ClipboardItem как промис.
+    function copyScreenshotToClipboard(): boolean {
+        if (!canvas || typeof ClipboardItem === "undefined" || !navigator.clipboard?.write) return false;
+        const target = canvas;
+        const png = new Promise<Blob>((ok, fail) =>
+            target.toBlob((blob) => (blob ? ok(blob) : fail(new Error("toBlob failed"))), "image/png"),
+        );
+        navigator.clipboard.write([new ClipboardItem({ "image/png": png })]).catch(() => {});
+        return true;
+    }
+
+    function issueUrl(screenshotCopied: boolean): string {
+        const hex = (n: number) => n.toString(16).toUpperCase().padStart(4, "0");
+        const program = ui.selectedFileName
+            ? ui.selectedFileName +
+              (ui.selectedFileSize
+                  ? ` (${hex(ui.selectedFileStart)}-${hex(ui.selectedFileEnd)}, G${hex(ui.selectedFileEntry)})`
+                  : "")
+            : "—";
+        const body = [
+            "### Что случилось",
+            "<!-- Кратко опишите проблему -->",
+            "",
+            "### Как воспроизвести",
+            "1. Загрузить программу …",
+            "2. Нажать …",
+            "3. …",
+            "",
+            "### Что ожидалось",
+            "<!-- Как должно было работать (например, на реальном РК86 или в другом эмуляторе) -->",
+            "",
+            "### Скриншот / видео",
+            screenshotCopied
+                ? "<!-- Скриншот экрана эмулятора уже скопирован в буфер обмена — вставьте его сюда (Ctrl+V / ⌘V) -->"
+                : "<!-- Перетащите сюда скриншот экрана эмулятора -->",
+            "",
+            "### Снимок состояния (очень помогает!)",
+            "<!-- Кнопка «Сохранить полное состояние» → перетащите сюда полученный файл.",
+            "     Если программы нет в каталоге — приложите и её файл (.rk, .gam, ...). -->",
+            "",
+            "---",
+            "<!-- Заполнено автоматически, не удаляйте -->",
+            `- Версия: ${version}`,
+            `- Программа: ${program}`,
+            `- Профиль: ${ui.profileName}`,
+            `- Турбо: ${turboMode ? "вкл" : "выкл"}, звук: ${soundEnabled ? "вкл" : "выкл"}`,
+            `- Адрес: ${location.href}`,
+            `- Браузер: ${navigator.userAgent}`,
+            `- Экран: ${screen.width}x${screen.height} @${devicePixelRatio}x`,
+        ].join("\n");
+        const params = new URLSearchParams({
+            title: ui.selectedFileName ? `[${ui.selectedFileName}] ` : "",
+            body,
+        });
+        return `https://github.com/begoon/rk86-js/issues/new?${params}`;
+    }
+
+    function reportIssue(e: MouseEvent) {
+        e.preventDefault();
+        const copied = copyScreenshotToClipboard();
+        window.open(issueUrl(copied), "_blank", "noopener");
+    }
+
     function freezeNow() {
         if (!machine || !canvas) return;
         const snapshot = rk86_snapshot(machine, version);
@@ -776,7 +841,14 @@
         <a href="https://hub.rk86.ru" target="_blank" rel="noopener" class="icon" data-text="Хаб">
             <img class="icon" src={icons["hub"]} alt="Хаб" />
         </a>
-        <a href="https://github.com/begoon/rk86-js/issues" target="_blank" rel="noopener" class="icon" data-text="Сообщить об ошибке">
+        <a
+            href="https://github.com/begoon/rk86-js/issues/new"
+            target="_blank"
+            rel="noopener"
+            class="icon"
+            data-text="Сообщить об ошибке"
+            onclick={reportIssue}
+        >
             <img class="icon" src={icons["bug"]} alt="Сообщить об ошибке" />
         </a>
         <a
